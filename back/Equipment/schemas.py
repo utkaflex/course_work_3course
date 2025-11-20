@@ -2,8 +2,8 @@ from datetime import datetime
 from pydantic import BaseModel
 from typing import List, Optional
 
-from back.EquipmentSpecification.schemas import SEquipmentSpecification
-from back.EquipmentStatus.schemas import SEquipmentStatus
+from EquipmentSpecification.schemas import SEquipmentSpecification
+from EquipmentStatus.schemas import SEquipmentStatus
 
 class SEquipmentBase(BaseModel):
     model: str

@@ -1,7 +1,7 @@
 from typing import List
 from fastapi import APIRouter, HTTPException
-from back.Job.schemas import SJob, SJobCreate
-from back.Job import crud
+from Job.schemas import SJob, SJobCreate
+from Job import crud
 
 router = APIRouter(
     prefix="/job",

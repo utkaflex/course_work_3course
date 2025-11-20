@@ -11,10 +11,10 @@ from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 import pandas as pd
-from back.Equipment.schemas import SEquipment, SEquipmentCreate, SEquipmentWithResponsible
-from back.Equipment import crud
-from back.User.depends import get_current_user
-from back.User.models import User
+from Equipment.schemas import SEquipment, SEquipmentCreate, SEquipmentWithResponsible
+from Equipment import crud
+from User.depends import get_current_user
+from User.models import User
 
 router = APIRouter(
     prefix="/equipment",

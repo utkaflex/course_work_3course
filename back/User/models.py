@@ -1,7 +1,9 @@
 import passlib.hash
-from sqlalchemy import Column, ForeignKey, Integer, String, Boolean
-from back.database import Base
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
+
+from database import Base
+
 
 class User(Base):
     __tablename__ = "users"

@@ -2,8 +2,8 @@ from typing import List, Optional
 from pydantic import BaseModel
 from datetime import datetime
 
-from back.Contract.schemas import SContract
-from back.License.schemas import SLicense
+from Contract.schemas import SContract
+from License.schemas import SLicense
 
 class SSoftwareBase(BaseModel):
     name: str

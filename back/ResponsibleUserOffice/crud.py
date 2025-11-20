@@ -1,9 +1,9 @@
 from fastapi import HTTPException
 from sqlalchemy import select
-from back.database import async_session
+from database import async_session
 
-from back.ResponsibleUserOffice.models import ResponsibleUserOffice
-from back.ResponsibleUserOffice.schemas import SResponsibleUserOffice, SResponsibleUserOfficeCreate
+from ResponsibleUserOffice.models import ResponsibleUserOffice
+from ResponsibleUserOffice.schemas import SResponsibleUserOffice, SResponsibleUserOfficeCreate
 
 async def get_office(office_id: int):
     async with async_session() as session:

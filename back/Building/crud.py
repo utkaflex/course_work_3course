@@ -1,9 +1,9 @@
 from fastapi import HTTPException
 from sqlalchemy import select
-from back.database import async_session
 
-from back.Building.models import Building
-from back.Building.schemas import SBuilding, SBuildingCreate
+from Building.models import Building
+from Building.schemas import SBuilding, SBuildingCreate
+from database import async_session
 
 async def get_building(building_id: int):
     async with async_session() as session:

@@ -1,15 +1,16 @@
+import io
 from datetime import datetime, timedelta, timezone
 from typing import List
+
+import openpyxl
+import pandas as pd
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
-import pandas as pd
-import io
-import openpyxl
 
-from back.User.depends import get_current_user
-from back.User.models import User
-from back.User.schemas import SUser, SUserCreate, SUserAllSchema
-from back.User import crud
+from User import crud
+from User.depends import get_current_user
+from User.models import User
+from User.schemas import SUser, SUserAllSchema, SUserCreate
 
 router = APIRouter(
     prefix="/user",

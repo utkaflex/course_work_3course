@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from back.Contract.schemas import SContract, SContractCreate
-from back.Contract import crud
+from Contract.schemas import SContract, SContractCreate
+from Contract import crud
 from typing import List
 
 router = APIRouter(

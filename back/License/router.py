@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from back.License.schemas import SLicense, SLicenseCreate
-from back.License import crud
+from License.schemas import SLicense, SLicenseCreate
+from License import crud
 from typing import List
 
 router = APIRouter(

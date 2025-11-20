@@ -1,7 +1,7 @@
 from typing import List
 from fastapi import APIRouter, HTTPException
-from back.EquipmentStatusType.schemas import SEquipmentStatusType, SEquipmentStatusTypeCreate
-from back.EquipmentStatusType import crud
+from EquipmentStatusType.schemas import SEquipmentStatusType, SEquipmentStatusTypeCreate
+from EquipmentStatusType import crud
 
 router = APIRouter(
     prefix="/equipment_status_type",

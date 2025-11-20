@@ -1,9 +1,9 @@
 from fastapi import HTTPException
 from sqlalchemy import select
-from back.database import async_session
+from database import async_session
 
-from back.EquipmentSpecification.models import EquipmentSpecification
-from back.EquipmentSpecification.schemas import SEquipmentSpecification, SEquipmentSpecificationCreate
+from EquipmentSpecification.models import EquipmentSpecification
+from EquipmentSpecification.schemas import SEquipmentSpecification, SEquipmentSpecificationCreate
 
 async def get_equipment_specifications(spec_id: int):
     async with async_session() as session:

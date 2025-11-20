@@ -1,21 +1,23 @@
+import os
 from datetime import datetime, timedelta, timezone
 from typing import List
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, Response, Cookie
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from jwt.exceptions import JWTException
-from jose import ExpiredSignatureError, JWTError, jwt
-import os
 
-from back.User.depends import get_current_user, get_user_refresh_token
-from back.Token.schemas import Token
-from back.User.models import User
-from back.User.schemas import SUser, SUserCreate
-from back import auth
-from back.config import settings
-from back.User import crud
+from fastapi import (APIRouter, Cookie, Depends, File, HTTPException, Response,
+                     UploadFile)
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import ExpiredSignatureError, JWTError, jwt
+from jwt.exceptions import JWTException
 from sqlalchemy.ext.asyncio import AsyncSession
-from back.SessionLog.crud import session_log_event
-from back.SessionLog.schemas import SSessionLogCreate
+
+import auth
+from config import settings
+from SessionLog.crud import session_log_event
+from SessionLog.schemas import SSessionLogCreate
+from Token.schemas import Token
+from User import crud
+from User.depends import get_current_user, get_user_refresh_token
+from User.models import User
+from User.schemas import SUser, SUserCreate
 
 router = APIRouter(
     prefix="/auth",

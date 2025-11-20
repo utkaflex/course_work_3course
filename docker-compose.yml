@@ -1,6 +1,7 @@
 services:
   backend:
-    build: .
+    build:
+      context: ./back
     ports:
       - "8000:8000"
     environment:

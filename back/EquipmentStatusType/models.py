@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
-from back.database import Base
+from database import Base
 
 class EquipmentStatusType(Base):
     __tablename__ = "equipment_status_types"

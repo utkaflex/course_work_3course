@@ -1,11 +1,11 @@
 from typing import Optional
 from fastapi import HTTPException
 from sqlalchemy import select
-from back.database import async_session
+from database import async_session
 from sqlalchemy.orm import joinedload
 
-from back.ResponsibleUser.models import ResponsibleUser
-from back.ResponsibleUser.schemas import SAllResponsibleUser, SResponsibleUser, SResponsibleUserCreate
+from ResponsibleUser.models import ResponsibleUser
+from ResponsibleUser.schemas import SAllResponsibleUser, SResponsibleUser, SResponsibleUserCreate
 
 async def get_responsible_user(user_id: int):
     async with async_session() as session:

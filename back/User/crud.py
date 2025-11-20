@@ -1,12 +1,14 @@
 from typing import List
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from sqlalchemy.orm import joinedload
-from back.User.models import User
-from back.User.schemas import SUser, SUserBase, SUserCreate, SUserAllSchema
-from back.database import async_session
-from passlib.hash import bcrypt
+
 from fastapi import Depends, HTTPException
+from passlib.hash import bcrypt
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
+
+from database import async_session
+from User.models import User
+from User.schemas import SUser, SUserAllSchema, SUserBase, SUserCreate
 
 
 async def get_all_users() -> list[SUserAllSchema]:

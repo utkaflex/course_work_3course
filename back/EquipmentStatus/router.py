@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from back.EquipmentStatus.schemas import SEquipmentStatus, SEquipmentStatusCreate
-from back.EquipmentStatus import crud
+from EquipmentStatus.schemas import SEquipmentStatus, SEquipmentStatusCreate
+from EquipmentStatus import crud
 
 router = APIRouter(
     prefix="/equipment_status",

@@ -1,25 +1,28 @@
 import os
+
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
-from back.config import settings
-from back.SystemRole.router import router as router_roles
-from back.User.router import router as router_auth
-from back.User.user_router import router as router_users
-from back.Job.router import router as router_jobs
-from back.Office.router import router as router_offices
-from back.License.router import router as router_license
-from back.Contract.router import router as router_contract
-from back.Software.router import router as router_software
-from back.SessionLog.router import router as router_session_log
-from back.EquipmentStatusType.router import router as router_equipment_status_type
-from back.Building.router import router as router_building
-from back.ResponsibleUser.router import router as router_responsible_user
-from back.EquipmentType.router import router as router_equipment_type
-from back.Equipment.router import router as router_equipment
-from back.EquipmentSpecification.router import router as router_equipment_specs
-from back.EquipmentStatus.router import router as router_equipment_status
-from back.Database.router import router as router_database
+
+from Building.router import router as router_building
+from config import settings
+from Contract.router import router as router_contract
+from Database.router import router as router_database
+from Equipment.router import router as router_equipment
+from EquipmentSpecification.router import router as router_equipment_specs
+from EquipmentStatus.router import router as router_equipment_status
+from EquipmentStatusType.router import \
+    router as router_equipment_status_type
+from EquipmentType.router import router as router_equipment_type
+from Job.router import router as router_jobs
+from License.router import router as router_license
+from Office.router import router as router_offices
+from ResponsibleUser.router import router as router_responsible_user
+from SessionLog.router import router as router_session_log
+from Software.router import router as router_software
+from SystemRole.router import router as router_roles
+from User.router import router as router_auth
+from User.user_router import router as router_users
 
 app = FastAPI(
     title="SATS"

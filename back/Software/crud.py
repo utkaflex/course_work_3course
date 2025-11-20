@@ -3,12 +3,12 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import delete, select
 from sqlalchemy.orm import joinedload
-from back.Software.models import Software
-from back.Contract.models import Contract
-from back.License.models import License
-from back.SoftwareContract.models import SoftwareContract
-from back.Software.schemas import SSoftwareAll, SSoftwareCreate, SSoftware
-from back.database import async_session
+from Software.models import Software
+from Contract.models import Contract
+from License.models import License
+from SoftwareContract.models import SoftwareContract
+from Software.schemas import SSoftwareAll, SSoftwareCreate, SSoftware
+from database import async_session
 from passlib.hash import bcrypt
 from fastapi import Depends
 

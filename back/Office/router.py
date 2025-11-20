@@ -1,7 +1,7 @@
 from typing import List
 from fastapi import APIRouter, HTTPException
-from back.Office.schemas import SOffice, SOfficeCreate
-from back.Office import crud
+from Office.schemas import SOffice, SOfficeCreate
+from Office import crud
 
 router = APIRouter(
     prefix="/office",

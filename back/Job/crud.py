@@ -1,9 +1,9 @@
 from fastapi import HTTPException
 from sqlalchemy import select
-from back.database import async_session
+from database import async_session
 
-from back.Job.models import Job
-from back.Job.schemas import SJob, SJobCreate
+from Job.models import Job
+from Job.schemas import SJob, SJobCreate
 
 async def get_job(job_id: int):
     async with async_session() as session:
