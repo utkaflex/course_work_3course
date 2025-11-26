@@ -116,6 +116,12 @@ async def create_equipment(equipment: SEquipmentCreate):
         raise HTTPException(status_code=400, detail="Equipment with this serial number already exists")
     return await crud.create_equipment(equipment=equipment)
 
+@router.get("/check_inventory/{inventory_number}")
+async def check_inventory_number(inventory_number: str):
+    equipment = await crud.get_equipment_by_inventory_number(inventory_number)
+    if equipment:
+        raise HTTPException(status_code=400, detail="Equipment with this inventory number already exists")
+
 @router.get("/all")
 async def get_all_equipment(user: User = Depends(get_current_user)) -> List[SEquipmentWithResponsible]:
     return await crud.get_all_equipment(user_role_id=user.system_role_id)

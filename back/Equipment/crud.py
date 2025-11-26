@@ -22,6 +22,12 @@ async def get_equipment_by_serial_number(serial_number: str):
         query = select(Equipment).filter(Equipment.serial_number == serial_number)
         result = await session.execute(query)
         return result.scalar_one_or_none()
+    
+async def get_equipment_by_inventory_number(inventory_number: str):
+    async with async_session() as session:
+        query = select(Equipment).filter(Equipment.inventory_number == inventory_number)
+        result = await session.execute(query)
+        return result.scalar_one_or_none()
 
 async def get_equipment_for_word(equipment_id: int) -> SEquipmentWithResponsible:
     async with async_session() as session:

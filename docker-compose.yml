@@ -9,6 +9,8 @@ services:
       - APP_CORS_ORIGINS=${APP_CORS_ORIGINS}
     env_file:
       - .env
+    volumes:
+      - ./sats.db:/app/back/sats.db
 
   frontend:
     build:
