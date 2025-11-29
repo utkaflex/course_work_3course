@@ -107,7 +107,7 @@ const EquipmentAddForm = () => {
     const reqId = ++invCheckReqId.current
 
     try {
-      const res = await axios.get(API_URL + "/check_inventory/" + num)
+      const res = await axios.get(API_URL + "/equipment/check_inventory/" + num)
 
       if (reqId !== invCheckReqId.current) return
       setInvExists(false)
