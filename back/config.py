@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     APP_CORS_ORIGINS: str
     
     SERVER_IP: str
+    API_URL: str
     APP_ENV: str
 
     NEXT_PUBLIC_API_URL: str

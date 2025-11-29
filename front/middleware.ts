@@ -1,6 +1,10 @@
 import { NextResponse, NextRequest } from "next/server";
-import { WEBSITE_URL, signingPages, imgExtensions, closedPages, API_URL, firstRolePages, secondRolePages, thirdRolePages } from "@/constants"
-import axios from "axios";
+import { WEBSITE_URL, signingPages, imgExtensions, closedPages, firstRolePages, secondRolePages, thirdRolePages } from "@/constants"
+import axios, {AxiosError} from "axios";
+
+console.log(process.env.API_URL)
+
+const API_URL = process.env.API_URL || "http://backend:8000";
 
 async function GetAccessToken(req: NextRequest) {
     const accessToken = req.cookies.get("Authorization")?.value
@@ -25,12 +29,12 @@ async function GetAccessToken(req: NextRequest) {
         return [false, accessToken]
     }
     catch (e) {
-        if (e.status === 401) {
-            console.log("Access token expired, refreshing it.")
-            return await RefreshAccessToken(req)
-        }
-        console.log("Unexpected error during checking access token!")
-        console.log(e)
+        const err = e as AxiosError;
+
+        console.log("Axios error message:", err.message);
+        console.log("Axios error code:", err.code);
+        console.log("Axios response status:", err.response?.status);
+        console.log("Axios response data:", err.response?.data);
     }
 
     return [true, undefined]

@@ -16,8 +16,8 @@ services:
     build:
       context: ./front
       args:
-        - NEXT_PUBLIC_API_URL=http://${SERVER_IP}:8000
-        - NEXT_PUBLIC_WEBSITE_URL=http://${SERVER_IP}:3000
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+        - NEXT_PUBLIC_WEBSITE_URL=${NEXT_PUBLIC_WEBSITE_URL}
     ports:
       - "3000:3000"
     environment:

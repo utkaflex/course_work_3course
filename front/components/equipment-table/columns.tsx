@@ -25,50 +25,106 @@ export const EquipmentTableColumns: ColumnDef<z.infer<typeof EquipmentSchema>>[]
         id: "additional_info",
         header: "Подробная информация",
         cell: ({ row }) => {
+            const actionsData = [
+                {
+                    title: "Изменить оборудование",
+                    description: <>Заполните все поля и нажмите кнопку <b>Изменить</b></>,
+                    form: <EquipmentUpdateForm id={row.getValue("id")} />,
+                    dropdownButtonText: "Изменить"
+                },
+                {
+                    title: "Удалить оборудование",
+                    description: <>Вы уверены что хотите удалить оборудование <b>{row.getValue("model")}</b>? Это удалит его характеристики и статусы (при наличии).</>,
+                    form: <DeleteRowForm
+                      apiEndpoint={API_URL + `/equipment/${row.getValue("id")}`}
+                      toastText="Оборудование успешно удалено"
+                      calledFrom="equipment"
+                    />,
+                    dropdownButtonText: "Удалить"
+                }
+            ]
             return (
-                <Link href={`characteristics/${row.getValue("id")}`}>
-                    <Button className="h-8 w-fit p-2 bg-gray-100 hover:text-white hover:bg-gray-400
-                        border-[1px] border-gray-400 text-black">
-                        Показать
-                    </Button>
-                </Link>
+                <>
+                    <Link href={`characteristics/${row.getValue("id")}`}>
+                        <Button className="h-8 w-fit p-2 bg-gray-100 hover:text-white hover:bg-gray-400
+                            border-[1px] border-gray-400 text-black">
+                            Показать
+                        </Button>
+                    </Link>
+
+                    <ActionsButton actionsData={actionsData} />
+                </>
             )
         }
     },
+    // {
+    //     id: "actions",
+    //     cell: ({ row }) => {
+    //         const actionsData = [
+    //             {
+    //                 title: "Изменить оборудование",
+    //                 description: <>Заполните все поля и нажмите кнопку <b>Изменить</b></>,
+    //                 form: <EquipmentUpdateForm id={row.getValue("id")} />,
+    //                 dropdownButtonText: "Изменить"
+    //             },
+    //             {
+    //                 title: "Удалить оборудование",
+    //                 description: <>Вы уверены что хотите удалить оборудование <b>{row.getValue("model")}</b>? Это удалит его характеристики и статусы (при наличии).</>,
+    //                 form: <DeleteRowForm
+    //                   apiEndpoint={API_URL + `/equipment/${row.getValue("id")}`}
+    //                   toastText="Оборудование успешно удалено"
+    //                   calledFrom="equipment"
+    //                 />,
+    //                 dropdownButtonText: "Удалить"
+    //             }
+    //         ]
+    //         return (
+    //           <ActionsButton actionsData={actionsData} />
+    //         )
+    //     },
+    // },
     {
         accessorKey: "serial_number",
         header: "Серийный номер",
     },
     {
         accessorKey: "inventory_number",
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                >
-                    Инвентарный номер
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-            )
-        },
+        header: "Инвентарный номер",
+        // header: ({ column }) => {
+        //     return (
+        //         <Button
+        //             variant="ghost"
+        //             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        //         >
+        //             Инвентарный номер
+        //             <ArrowUpDown className="ml-2 h-4 w-4" />
+        //         </Button>
+        //     )
+        // },
     },
     {
-        accessorKey: "accepted_date",
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                >
-                    Дата принятия к учету
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-            )
-        },
+        accessorKey: "responsible_user_office",
+        header: "Подразделение ответственного"
+    },
+    {
+        accessorKey: "responsible_user_full_name",
+        header: "ФИО ответственного",
+    },
+    {
+        accessorKey: "last_status_type",
+        header: "Статус оборудования",
         cell: ({ row }) => {
-            return row.getValue("accepted_date") ? DateFromDbForm(row.getValue("accepted_date")) : "Отсутствует"
+            const color: string = row.getValue("last_status_color");
+            return (
+              <span style={{ color }}>
+                    {row.getValue("last_status_type")}
+                </span>
+            );
         }
+    },
+    {
+        accessorKey: "building_adress",
+        header: "Адрес корпуса"
     },
     {
         accessorKey: "network_name",
@@ -85,54 +141,21 @@ export const EquipmentTableColumns: ColumnDef<z.infer<typeof EquipmentSchema>>[]
         }
     },
     {
-        accessorKey: "responsible_user_office",
-        header: "Подразделение ответственного"
-    },
-    {
-        accessorKey: "responsible_user_full_name",
-        header: "ФИО ответственного",
-    },
-    {
-        accessorKey: "last_status_type",
-        header: "Статус оборудования",
-        cell: ({ row }) => {
-            const color: string = row.getValue("last_status_color");
+        accessorKey: "accepted_date",
+        header: ({ column }) => {
             return (
-                <span style={{ color }}>
-                    {row.getValue("last_status_type")}
-                </span>
-            );
-        }
-    },
-    {
-        accessorKey: "building_adress",
-        header: "Адрес корпуса"
-    },
-    {
-        id: "actions",
-        cell: ({ row }) => {
-            const actionsData = [
-                {
-                    title: "Изменить оборудование",
-                    description: <>Заполните все поля и нажмите кнопку <b>Изменить</b></>,
-                    form: <EquipmentUpdateForm id={row.getValue("id")} />,
-                    dropdownButtonText: "Изменить"
-                },
-                {
-                    title: "Удалить оборудование",
-                    description: <>Вы уверены что хотите удалить оборудование <b>{row.getValue("model")}</b>? Это удалит его характеристики и статусы (при наличии).</>,
-                    form: <DeleteRowForm
-                        apiEndpoint={API_URL + `/equipment/${row.getValue("id")}`}
-                        toastText="Оборудование успешно удалено"
-                        calledFrom="equipment"
-                    />,
-                    dropdownButtonText: "Удалить"
-                }
-            ]
-            return (
-                <ActionsButton actionsData={actionsData} />
+              <Button
+                variant="ghost"
+                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+              >
+                  Дата принятия к учету
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+              </Button>
             )
         },
+        cell: ({ row }) => {
+            return row.getValue("accepted_date") ? DateFromDbForm(row.getValue("accepted_date")) : "Отсутствует"
+        }
     },
     {
         accessorKey: "id"
