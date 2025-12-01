@@ -1,4 +1,4 @@
-export const sidebarLinks = [
+export const navbarLinks = [
     {
         label: 'Учёт ПО',
         route: "/software",

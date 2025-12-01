@@ -6,14 +6,18 @@ export const useUser = (
     dep?: any
 ) => {
     const [userRole, setUserRole] = useState<number>(0)
+    const [username, setUsername] = useState<string>("")
     const [isLoadingUser, setIsLoadingUser] = useState<boolean>(true)
 
     useEffect(() => {
         const fetchUserRole = async () => {
             try {
                 axios.defaults.withCredentials = true
-                const userRole = (await axios.get(`${API_URL}/auth/me`)).data["system_role_id"]
+                const data = (await axios.get(`${API_URL}/auth/me`)).data
+                const userRole = data["system_role_id"]
+                const username = data["first_name"]
                 setUserRole(userRole)
+                setUsername(username)
             } catch(e) {
                 if (e.response.data.detail === "Token absent" && e.response.status === 401) {
                     console.log("useUser: accessToken absent")
@@ -29,5 +33,5 @@ export const useUser = (
         setIsLoadingUser(false)
     }, [dep])
 
-    return { userRole, isLoadingUser }
+    return { userRole, isLoadingUser, username }
 }

@@ -56,13 +56,18 @@ export function ContractsDataTable<TData, TValue>({
     selected: false
   })
   const [rowSelection, setRowSelection] = React.useState({})
-  const [currentPageNumber, setCurrentPageNumber] = React.useState<number>(1)
+
+  const [pagination, setPagination] = React.useState({
+    pageIndex: 0,
+    pageSize: 10,
+  })
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(), onSortingChange: setSorting,
+    onPaginationChange: setPagination,
     getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
@@ -72,7 +77,8 @@ export function ContractsDataTable<TData, TValue>({
       sorting,
       columnFilters,
       columnVisibility,
-      rowSelection
+      rowSelection,
+      pagination
     }
   });
 
@@ -159,14 +165,13 @@ export function ContractsDataTable<TData, TValue>({
         </div>
         <div className="flex items-center justify-end space-x-2 py-4">
           <div className="flex-1 text-sm text-muted-foreground">
-            {currentPageNumber} из {Math.max(table.getPageOptions().length, 1)} {" "} {CorrectPagesCase(table.getPageOptions().length)}
+            {pagination.pageIndex + 1} из {Math.max(table.getPageOptions().length, 1)} {" "} {CorrectPagesCase(table.getPageOptions().length)}
           </div>
           <Button
             variant="outline"
             type="button"
             size="sm"
             onClick={() => {
-              setCurrentPageNumber(currentPageNumber - 1)
               table.previousPage()
             }}
             disabled={!table.getCanPreviousPage()}
@@ -178,7 +183,6 @@ export function ContractsDataTable<TData, TValue>({
             type="button"
             size="sm"
             onClick={() => {
-              setCurrentPageNumber(currentPageNumber + 1)
               table.nextPage()
             }}
             disabled={!table.getCanNextPage()}

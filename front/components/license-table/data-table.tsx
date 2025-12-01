@@ -43,13 +43,18 @@ export function LicenseDataTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
     id: false
   })
-  const [currentPageNumber, setCurrentPageNumber] = React.useState<number>(1)
+
+  const [pagination, setPagination] = React.useState({
+    pageIndex: 0,
+    pageSize: 10,
+  })
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    onPaginationChange: setPagination,
     getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
@@ -57,6 +62,7 @@ export function LicenseDataTable<TData, TValue>({
     state: {
       columnFilters,
       columnVisibility,
+      pagination
     }
   })
 
@@ -136,13 +142,12 @@ export function LicenseDataTable<TData, TValue>({
         </div>
         <div className="flex items-center justify-end space-x-2 py-4">
           <div className="flex-1 text-sm text-muted-foreground">
-            {currentPageNumber} из {Math.max(table.getPageOptions().length, 1)} {" "} {CorrectPagesCase(table.getPageOptions().length)}
+            {pagination.pageIndex + 1} из {Math.max(table.getPageOptions().length, 1)} {" "} {CorrectPagesCase(table.getPageOptions().length)}
           </div>
           <Button
             variant="outline"
             size="sm"
             onClick={() => {
-              setCurrentPageNumber(currentPageNumber - 1)
               table.previousPage()
             }}
             disabled={!table.getCanPreviousPage()}
@@ -153,7 +158,6 @@ export function LicenseDataTable<TData, TValue>({
             variant="outline"
             size="sm"
             onClick={() => {
-              setCurrentPageNumber(currentPageNumber + 1)
               table.nextPage()
             }}
             disabled={!table.getCanNextPage()}

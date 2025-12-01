@@ -65,7 +65,10 @@ export function EquipmentDataTable<TData, TValue>({
     actions: !forStatus && actionsAllowed,
     building_adress: !forStatus && actionsAllowed,
   })
-  const [currentPageNumber, setCurrentPageNumber] = React.useState<number>(1)
+  const [pagination, setPagination] = React.useState({
+    pageIndex: 0,
+    pageSize: 10,
+  })
 
   const [filterOptions, setFilterOptions] = React.useState({
     types: [] as { value: string; label: string }[],
@@ -80,6 +83,7 @@ export function EquipmentDataTable<TData, TValue>({
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(), onSortingChange: setSorting,
+    onPaginationChange: setPagination,
     getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
@@ -88,6 +92,7 @@ export function EquipmentDataTable<TData, TValue>({
       sorting,
       columnFilters,
       columnVisibility,
+      pagination
     }
   })
 
@@ -140,6 +145,16 @@ export function EquipmentDataTable<TData, TValue>({
     fetchAll()
   }, [])
 
+  const acceptedDateFilter = (table.getColumn("accepted_date")?.getFilterValue() as
+    { from?: string; to?: string }) ?? {}
+
+  const setAcceptedDateFilter = (patch: Partial<{ from?: string; to?: string }>) => {
+    table.getColumn("accepted_date")?.setFilterValue({
+      ...acceptedDateFilter,
+      ...patch,
+    })
+  }
+
   return (
     <>
       <Action
@@ -150,124 +165,153 @@ export function EquipmentDataTable<TData, TValue>({
         setIsOpen={setIsFormOpen}
       />
       <div className="w-full h-full">
-        {!forStatus && <div className="flex items-start justify-between py-4">
+        {!forStatus && <div className="flex items-end justify-between py-4">
           <Accordion type="single" collapsible>
             <AccordionItem value="item-1" className="border-0 px-1">
             <AccordionTrigger className="flex h-[40px] min-w-[100px] max-w-[100px] py-0">Фильтры</AccordionTrigger>
-            <AccordionContent className="flex flex-col gap-2 p-1">
-              {/*TODO оставил закомментированным*/}
-              {/*<Input*/}
-              {/*  placeholder="Фильтр по типу оборудования..."*/}
-              {/*  value={(table.getColumn("type_name")?.getFilterValue() as string) ?? ""}*/}
-              {/*  onChange={(event) =>*/}
-              {/*    table.getColumn("type_name")?.setFilterValue(event.target.value)*/}
-              {/*  }*/}
-              {/*  className="w-[300px]"*/}
-              {/*/>*/}
-              <DataTableComboboxFilter
-                column={table.getColumn("type_name")}
-                options={filterOptions.types}
-                placeholder="Фильтр по типу оборудования..."
-                searchPlaceholder="Поиск типа..."
-                emptyText="Типы не найдены"
-              />
+            <AccordionContent className="flex flex-wrap gap-2 p-1">
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-muted-foreground">Тип оборудования</label>
+                <DataTableComboboxFilter
+                  column={table.getColumn("type_name")}
+                  options={filterOptions.types}
+                  placeholder="Фильтр по типу оборудования..."
+                  searchPlaceholder="Поиск типа..."
+                  emptyText="Типы не найдены"
+                />
+              </div>
 
-              <Input
-                placeholder="Фильтр по модели оборудования..."
-                value={(table.getColumn("model")?.getFilterValue() as string) ?? ""}
-                onChange={(event) =>
-                  table.getColumn("model")?.setFilterValue(event.target.value)
-                }
-                className="w-[300px]"
-              />
-              <Input
-                placeholder="Фильтр по серийному номеру..."
-                value={(table.getColumn("serial_number")?.getFilterValue() as string) ?? ""}
-                onChange={(event) =>
-                  table.getColumn("serial_number")?.setFilterValue(event.target.value)
-                }
-                className="w-[300px]"
-              />
-              <Input
-                placeholder="Фильтр по инвентарному номеру..."
-                value={(table.getColumn("inventory_number")?.getFilterValue() as string) ?? ""}
-                onChange={(event) =>
-                  table.getColumn("inventory_number")?.setFilterValue(event.target.value)
-                }
-                className="w-[300px]"
-              />
-              <Input
-                placeholder="Фильтр по сетевому имени..."
-                value={(table.getColumn("network_name")?.getFilterValue() as string) ?? ""}
-                onChange={(event) =>
-                  table.getColumn("network_name")?.setFilterValue(event.target.value)
-                }
-                className="w-[300px]"
-              />
-              {/*{actionsAllowed && <Input*/}
-              {/*  placeholder="Фильтр по ФИО ответственного лица..."*/}
-              {/*  value={(table.getColumn("responsible_user_full_name")?.getFilterValue() as string) ?? ""}*/}
-              {/*  onChange={(event) =>*/}
-              {/*    table.getColumn("responsible_user_full_name")?.setFilterValue(event.target.value)*/}
-              {/*  }*/}
-              {/*  className="w-[300px]"*/}
-              {/*/>*/}
-              {/*}*/}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-muted-foreground">Модель</label>
+                <Input
+                  placeholder="Фильтр по модели оборудования..."
+                  value={(table.getColumn("model")?.getFilterValue() as string) ?? ""}
+                  onChange={(event) =>
+                    table.getColumn("model")?.setFilterValue(event.target.value)
+                  }
+                  className="w-[300px]"
+                />
+              </div>
 
-              {actionsAllowed && <DataTableComboboxFilter
-                column={table.getColumn("responsible_user_full_name")}
-                options={filterOptions.responsible_users}
-                placeholder="Фильтр по ответственному лицу..."
-                searchPlaceholder="Поиск ответственного лица..."
-                emptyText="Ответственное лицо не найдено"
-              />
-              }
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-muted-foreground">Серийный номер</label>
+                <Input
+                  placeholder="Фильтр по серийному номеру..."
+                  value={(table.getColumn("serial_number")?.getFilterValue() as string) ?? ""}
+                  onChange={(event) =>
+                    table.getColumn("serial_number")?.setFilterValue(event.target.value)
+                  }
+                  className="w-[300px]"
+                />
+              </div>
 
-              {/*{actionsAllowed && <Input*/}
-              {/*  placeholder="Фильтр по статусу..."*/}
-              {/*  value={(table.getColumn("last_status_type")?.getFilterValue() as string) ?? ""}*/}
-              {/*  onChange={(event) =>*/}
-              {/*    table.getColumn("last_status_type")?.setFilterValue(event.target.value)*/}
-              {/*  }*/}
-              {/*  className="w-[300px]"*/}
-              {/*/>}*/}
-              {actionsAllowed && <DataTableComboboxFilter
-                column={table.getColumn("last_status_type")}
-                options={filterOptions.statuses}
-                placeholder="Фильтр по статусу..."
-                searchPlaceholder="Поиск статуса..."
-                emptyText="Статус не найден"
-              />}
-              {/*{actionsAllowed && <Input*/}
-              {/*  placeholder="Фильтр по адресу..."*/}
-              {/*  value={(table.getColumn("building_adress")?.getFilterValue() as string) ?? ""}*/}
-              {/*  onChange={(event) =>*/}
-              {/*    table.getColumn("building_adress")?.setFilterValue(event.target.value)*/}
-              {/*  }*/}
-              {/*  className="w-[300px]"*/}
-              {/*/>}*/}
-              {actionsAllowed && <DataTableComboboxFilter
-                column={table.getColumn("building_adress")}
-                options={filterOptions.buildings}
-                placeholder="Фильтр по адресу..."
-                searchPlaceholder="Поиск адреса..."
-                emptyText="Адрес не найден"
-              />}
-              {/*{actionsAllowed && <Input*/}
-              {/*  placeholder="Фильтр по подразделению..."*/}
-              {/*  value={(table.getColumn("responsible_user_office")?.getFilterValue() as string) ?? ""}*/}
-              {/*  onChange={(event) =>*/}
-              {/*    table.getColumn("responsible_user_office")?.setFilterValue(event.target.value)*/}
-              {/*  }*/}
-              {/*  className="w-[300px]"*/}
-              {/*/>}*/}
-              {actionsAllowed && <DataTableComboboxFilter
-                column={table.getColumn("responsible_user_office")}
-                options={filterOptions.offices}
-                placeholder="Фильтр по подразделению..."
-                searchPlaceholder="Поиск подразделения..."
-                emptyText="Подразделение не найдено"
-              />}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-muted-foreground">Инвентарный номер</label>
+                <Input
+                  placeholder="Фильтр по инвентарному номеру..."
+                  value={(table.getColumn("inventory_number")?.getFilterValue() as string) ?? ""}
+                  onChange={(event) =>
+                    table.getColumn("inventory_number")?.setFilterValue(event.target.value)
+                  }
+                  className="w-[300px]"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-muted-foreground">Сетевое имя</label>
+                <Input
+                  placeholder="Фильтр по сетевому имени..."
+                  value={(table.getColumn("network_name")?.getFilterValue() as string) ?? ""}
+                  onChange={(event) =>
+                    table.getColumn("network_name")?.setFilterValue(event.target.value)
+                  }
+                  className="w-[300px]"
+                />
+              </div>
+
+              {actionsAllowed && (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-muted-foreground">Ответственное лицо</label>
+                  <DataTableComboboxFilter
+                    column={table.getColumn("responsible_user_full_name")}
+                    options={filterOptions.responsible_users}
+                    placeholder="Фильтр по ответственному лицу..."
+                    searchPlaceholder="Поиск ответственного лица..."
+                    emptyText="Ответственное лицо не найдено"
+                  />
+                </div>
+              )}
+
+              {actionsAllowed && (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-muted-foreground">Статус</label>
+                  <DataTableComboboxFilter
+                    column={table.getColumn("last_status_type")}
+                    options={filterOptions.statuses}
+                    placeholder="Фильтр по статусу..."
+                    searchPlaceholder="Поиск статуса..."
+                    emptyText="Статус не найден"
+                  />
+                </div>
+              )}
+
+              {actionsAllowed && (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-muted-foreground">Адрес</label>
+                  <DataTableComboboxFilter
+                    column={table.getColumn("building_adress")}
+                    options={filterOptions.buildings}
+                    placeholder="Фильтр по адресу..."
+                    searchPlaceholder="Поиск адреса..."
+                    emptyText="Адрес не найден"
+                  />
+                </div>
+              )}
+
+              {actionsAllowed && (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-muted-foreground">Подразделение</label>
+                  <DataTableComboboxFilter
+                    column={table.getColumn("responsible_user_office")}
+                    options={filterOptions.offices}
+                    placeholder="Фильтр по подразделению..."
+                    searchPlaceholder="Поиск подразделения..."
+                    emptyText="Подразделение не найдено"
+                  />
+                </div>
+              )}
+
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-muted-foreground">Дата принятия к учёту</label>
+                <div className="flex gap-2 items-center">
+                  <Input
+                    type="date"
+                    className="w-[145px]"
+                    value={acceptedDateFilter.from ?? ""}
+                    onChange={(e) =>
+                      setAcceptedDateFilter({ from: e.target.value || undefined })
+                    }
+                  />
+                  <span className="text-sm text-muted-foreground">—</span>
+                  <Input
+                    type="date"
+                    className="w-[145px]"
+                    value={acceptedDateFilter.to ?? ""}
+                    onChange={(e) =>
+                      setAcceptedDateFilter({ to: e.target.value || undefined })
+                    }
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      table.getColumn("accepted_date")?.setFilterValue(undefined)
+                    }
+                  >
+                    Сброс
+                  </Button>
+                </div>
+              </div>
             </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -287,13 +331,13 @@ export function EquipmentDataTable<TData, TValue>({
           </div>
         </div>}
         <div className="rounded-md border overflow-y-auto">
-          <Table className={"text-"}>
+          <Table className={"text-sm text-center"}>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
                     return (
-                      <TableHead key={header.id}>
+                      <TableHead key={header.id} className='text-center'>
                         {header.isPlaceholder
                           ? null
                           : flexRender(
@@ -332,13 +376,12 @@ export function EquipmentDataTable<TData, TValue>({
         </div>
         {!forStatus && <div className="flex items-center justify-end space-x-2 py-4">
           <div className="flex-1 text-sm text-muted-foreground">
-            {currentPageNumber} из {Math.max(table.getPageOptions().length, 1)} {" "} {CorrectPagesCase(table.getPageOptions().length)}
+            {pagination.pageIndex + 1} из {Math.max(table.getPageOptions().length, 1)} {" "} {CorrectPagesCase(table.getPageOptions().length)}
           </div>
           <Button
             variant="outline"
             size="sm"
             onClick={() => {
-              setCurrentPageNumber(currentPageNumber - 1)
               table.previousPage()
             }}
             disabled={!table.getCanPreviousPage()}
@@ -349,7 +392,6 @@ export function EquipmentDataTable<TData, TValue>({
             variant="outline"
             size="sm"
             onClick={() => {
-              setCurrentPageNumber(currentPageNumber + 1)
               table.nextPage()
             }}
             disabled={!table.getCanNextPage()}
