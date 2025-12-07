@@ -11,8 +11,8 @@ from fastapi.responses import StreamingResponse
 import aiofiles
 from aiofiles import os as async_os
 
-from back.User.depends import get_current_user
-from back.User.models import User
+from User.depends import get_current_user
+from User.models import User
 
 router = APIRouter(
     prefix="/backup",

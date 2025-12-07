@@ -61,6 +61,12 @@ export default function EquipmentStatusTable({
                     } as z.infer<typeof EquipmentStatusTableSchema>
                 }))
 
+                newData.sort(
+                  (a, b) =>
+                    new Date(b.status_change_date).getTime() -
+                    new Date(a.status_change_date).getTime()
+                );
+
                 setData(newData)
             } catch (error) {
                 console.error("Error loading equipment status data:", error)

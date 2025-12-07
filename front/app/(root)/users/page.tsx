@@ -57,7 +57,7 @@ const UsersPage = () => {
 
     return (
         <section
-            className='flex flex-col gap-5 bg-light-3 p-6
+            className='flex flex-col gap-5 bg-light-3 pt-6 pb-6
             rounded-[14px] border border-gray-300 shadow'
         >
             <TabsShower tabs={tabs} userRole={userRole} startTab={lastTab} />

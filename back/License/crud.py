@@ -1,9 +1,9 @@
 from fastapi import HTTPException
 from sqlalchemy import select
-from back.database import async_session
+from database import async_session
 
-from back.License.models import License
-from back.License.schemas import SLicense, SLicenseCreate
+from License.models import License
+from License.schemas import SLicense, SLicenseCreate
 
 async def get_license(license_id: int):
     async with async_session() as session:

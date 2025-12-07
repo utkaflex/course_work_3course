@@ -10,26 +10,26 @@ from os.path import abspath, dirname
 
 sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
-from back.database import Base
-from back.SystemRole.models import SystemRole
-from back.Job.models import Job
-from back.Office.models import Office
-from back.User.models import User
-from back.License.models import License
-from back.Contract.models import Contract
-from back.Software.models import Software
-from back.SoftwareContract.models import SoftwareContract
-from back.SessionLog.models import SessionLog
-from back.Building.models import Building
-from back.EquipmentType.models import EquipmentType
-from back.EquipmentStatusType.models import EquipmentStatusType
-from back.ResponsibleUserJob.models import ResponsibleUserJob
-from back.ResponsibleUserOffice.models import ResponsibleUserOffice
-from back.ResponsibleUser.models import ResponsibleUser
-from back.Equipment.models import Equipment
-from back.EquipmentStatus.models import EquipmentStatus
-from back.EquipmentSpecification.models import EquipmentSpecification
-from back.config import settings
+from database import Base
+from SystemRole.models import SystemRole
+from Job.models import Job
+from Office.models import Office
+from User.models import User
+from License.models import License
+from Contract.models import Contract
+from Software.models import Software
+from SoftwareContract.models import SoftwareContract
+from SessionLog.models import SessionLog
+from Building.models import Building
+from EquipmentType.models import EquipmentType
+from EquipmentStatusType.models import EquipmentStatusType
+from ResponsibleUserJob.models import ResponsibleUserJob
+from ResponsibleUserOffice.models import ResponsibleUserOffice
+from ResponsibleUser.models import ResponsibleUser
+from Equipment.models import Equipment
+from EquipmentStatus.models import EquipmentStatus
+from EquipmentSpecification.models import EquipmentSpecification
+from config import settings
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

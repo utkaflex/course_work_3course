@@ -34,6 +34,8 @@ function CRUDFormForTables<TData extends FieldValues, TComboboxData extends Fiel
   textFields,
   comboboxFields,
   isProcessing,
+  inventoryWarning,
+  onInventoryBlur,
   children
 } : {
   buttonText: string
@@ -45,6 +47,8 @@ function CRUDFormForTables<TData extends FieldValues, TComboboxData extends Fiel
   textFields?: TextField[]
   comboboxFields?: ComboboxField<TComboboxData>[]
   isProcessing?: boolean
+  inventoryWarning?: boolean
+  onInventoryBlur?: (value: string) => void
   children?: React.ReactNode
 }) {
   if (loading) {
@@ -59,13 +63,22 @@ function CRUDFormForTables<TData extends FieldValues, TComboboxData extends Fiel
       >
         <div className="space-y-4">
           {textFields && textFields.map((formItem, index) => {
-            return <FormTextField
-              key={index}
-              control={form.control}
-              name={formItem.name as Path<TData>}
-              label={formItem.label}
-              placeholder={formItem.placeholder}
-            />
+            const isInventory = formItem.name === "inventory_number"
+            return <div key={index}>
+              <FormTextField
+                control={form.control}
+                name={formItem.name as Path<TData>}
+                label={formItem.label}
+                placeholder={formItem.placeholder}
+                onBlurValue={isInventory ? onInventoryBlur  : undefined}
+                className={isInventory && inventoryWarning  ? "bg-yellow-50 border-yellow-400 focus-visible:ring-yellow-400" : ""}
+              />
+              {isInventory && inventoryWarning  && (
+                <p className="mt-1 text-sm text-yellow-700">
+                  Оборудование с таким инвентарным номером уже есть в базе
+                </p>
+              )}
+            </div>
           })}
           {comboboxFields && comboboxFields.map((formItem, index) => {
             return <FormComboboxField

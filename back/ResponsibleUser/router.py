@@ -1,11 +1,11 @@
 from typing import List
 from fastapi import APIRouter, HTTPException
-from back.ResponsibleUser.schemas import SAllResponsibleUser, SResponsibleUser, SResponsibleUserCreate
-from back.ResponsibleUserJob.schemas import SResponsibleUserJob, SResponsibleUserJobCreate
-from back.ResponsibleUserOffice.schemas import SResponsibleUserOffice, SResponsibleUserOfficeCreate
-from back.ResponsibleUser import crud
-from back.ResponsibleUserJob import crud as crud_responsible_user_job
-from back.ResponsibleUserOffice import crud as crud_responsible_user_office
+from ResponsibleUser.schemas import SAllResponsibleUser, SResponsibleUser, SResponsibleUserCreate
+from ResponsibleUserJob.schemas import SResponsibleUserJob, SResponsibleUserJobCreate
+from ResponsibleUserOffice.schemas import SResponsibleUserOffice, SResponsibleUserOfficeCreate
+from ResponsibleUser import crud
+from ResponsibleUserJob import crud as crud_responsible_user_job
+from ResponsibleUserOffice import crud as crud_responsible_user_office
 
 
 router = APIRouter(

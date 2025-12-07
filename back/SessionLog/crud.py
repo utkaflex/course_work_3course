@@ -1,13 +1,13 @@
 from fastapi import Depends, HTTPException, Request
 from sqlalchemy import delete, select
 from sqlalchemy.orm import joinedload
-from back.database import async_session
+from database import async_session
 from datetime import datetime, timedelta, timezone
 
-from back.User.models import User
-from back.User.depends import get_current_user
-from back.SessionLog.models import SessionLog
-from back.SessionLog.schemas import SSessionLog, SSessionLogAll, SSessionLogCreate
+from User.models import User
+from User.depends import get_current_user
+from SessionLog.models import SessionLog
+from SessionLog.schemas import SSessionLog, SSessionLogAll, SSessionLogCreate
 
 async def session_log_event(session_log: SSessionLogCreate, user: User = Depends(get_current_user)):
     async with async_session() as session:

@@ -44,13 +44,18 @@ export function UserLogDataTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
     // id: false
   })
-  const [currentPageNumber, setCurrentPageNumber] = React.useState<number>(1)
+
+  const [pagination, setPagination] = React.useState({
+    pageIndex: 0,
+    pageSize: 10,
+  })
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(), onSortingChange: setSorting,
+    onPaginationChange: setPagination,
     getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
@@ -59,16 +64,17 @@ export function UserLogDataTable<TData, TValue>({
       sorting,
       columnFilters,
       columnVisibility,
+      pagination
     }
   })
 
   return (
     <div className="w-full h-full">
-      <div className="flex items-start justify-between py-4">
+      <div className="flex items-end justify-between py-4">
         <Accordion type="single" collapsible>
           <AccordionItem value="item-1" className="border-0 px-1">
             <AccordionTrigger className="flex h-[40px] min-w-[100px] max-w-[100px] py-0">Фильтры</AccordionTrigger>
-            <AccordionContent className="flex flex-col gap-2 p-1">
+            <AccordionContent className="flex flex-wrap gap-2 p-1">
               <Input
                 placeholder="Поиск по логину пользователя..."
                 value={(table.getColumn("username")?.getFilterValue() as string) ?? ""}
@@ -143,14 +149,13 @@ export function UserLogDataTable<TData, TValue>({
       </div>
       <div className="flex items-center justify-end space-x-2 py-4">
         <div className="flex-1 text-sm text-muted-foreground">
-          {currentPageNumber} из{" "}
+          {pagination.pageIndex + 1} из{" "}
           {table.getPageOptions().length} {" "} {CorrectPagesCase(table.getPageOptions().length)}
         </div>
         <Button
           variant="outline"
           size="sm"
           onClick={() => {
-            setCurrentPageNumber(currentPageNumber - 1)
             table.previousPage()
           }}
           disabled={!table.getCanPreviousPage()}
@@ -161,7 +166,6 @@ export function UserLogDataTable<TData, TValue>({
           variant="outline"
           size="sm"
           onClick={() => {
-            setCurrentPageNumber(currentPageNumber + 1)
             table.nextPage()
           }}
           disabled={!table.getCanNextPage()}

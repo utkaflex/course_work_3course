@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, UniqueConstraint, DateTime, Table
 from sqlalchemy.orm import relationship
-from back.database import Base
+from database import Base
 
 class SoftwareContract(Base):
     __tablename__ = "software_contracts"

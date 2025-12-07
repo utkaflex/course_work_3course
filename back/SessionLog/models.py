@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, ForeignKey, DateTime, String
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone, timedelta
-from back.database import Base
+from database import Base
 
 class SessionLog(Base):
     __tablename__ = "session_logs"

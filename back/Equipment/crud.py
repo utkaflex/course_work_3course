@@ -1,15 +1,15 @@
 from typing import List
 from fastapi import Depends, HTTPException
 from sqlalchemy import select
-from back.EquipmentStatus.models import EquipmentStatus
-from back.ResponsibleUser.models import ResponsibleUser
-from back.User.depends import get_current_user
-from back.User.models import User
-from back.database import async_session
+from EquipmentStatus.models import EquipmentStatus
+from ResponsibleUser.models import ResponsibleUser
+from User.depends import get_current_user
+from User.models import User
+from database import async_session
 from sqlalchemy.orm import joinedload
 
-from back.Equipment.models import Equipment
-from back.Equipment.schemas import SEquipment, SEquipmentCreate, SEquipmentWithResponsible
+from Equipment.models import Equipment
+from Equipment.schemas import SEquipment, SEquipmentCreate, SEquipmentWithResponsible
 
 async def get_equipment(equipment_id: int):
     async with async_session() as session:
@@ -20,6 +20,12 @@ async def get_equipment(equipment_id: int):
 async def get_equipment_by_serial_number(serial_number: str):
     async with async_session() as session:
         query = select(Equipment).filter(Equipment.serial_number == serial_number)
+        result = await session.execute(query)
+        return result.scalar_one_or_none()
+    
+async def get_equipment_by_inventory_number(inventory_number: str):
+    async with async_session() as session:
+        query = select(Equipment).filter(Equipment.inventory_number == inventory_number)
         result = await session.execute(query)
         return result.scalar_one_or_none()
 

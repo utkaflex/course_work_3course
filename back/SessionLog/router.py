@@ -3,15 +3,15 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 import pandas as pd
 from sqlalchemy import select
-from back.SessionLog.models import SessionLog
-from back.SessionLog.schemas import SSessionLog, SSessionLogAll, SSessionLogCreate
-from back.SessionLog import crud
+from SessionLog.models import SessionLog
+from SessionLog.schemas import SSessionLog, SSessionLogAll, SSessionLogCreate
+from SessionLog import crud
 from datetime import datetime, timedelta, timezone
 from typing import List
-from back.database import async_session
+from database import async_session
 from sqlalchemy.orm import joinedload
-from back.User.depends import get_current_user
-from back.User.models import User
+from User.depends import get_current_user
+from User.models import User
 
 router = APIRouter(
     prefix="/sessionlog",

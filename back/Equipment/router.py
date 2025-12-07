@@ -11,10 +11,10 @@ from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 import pandas as pd
-from back.Equipment.schemas import SEquipment, SEquipmentCreate, SEquipmentWithResponsible
-from back.Equipment import crud
-from back.User.depends import get_current_user
-from back.User.models import User
+from Equipment.schemas import SEquipment, SEquipmentCreate, SEquipmentWithResponsible
+from Equipment import crud
+from User.depends import get_current_user
+from User.models import User
 
 router = APIRouter(
     prefix="/equipment",
@@ -115,6 +115,12 @@ async def create_equipment(equipment: SEquipmentCreate):
     if db_equipment:
         raise HTTPException(status_code=400, detail="Equipment with this serial number already exists")
     return await crud.create_equipment(equipment=equipment)
+
+@router.get("/check_inventory/{inventory_number}")
+async def check_inventory_number(inventory_number: str):
+    equipment = await crud.get_equipment_by_inventory_number(inventory_number)
+    if equipment:
+        raise HTTPException(status_code=400, detail="Equipment with this inventory number already exists")
 
 @router.get("/all")
 async def get_all_equipment(user: User = Depends(get_current_user)) -> List[SEquipmentWithResponsible]:

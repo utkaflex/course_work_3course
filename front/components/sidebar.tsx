@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 
-import { sidebarLinks } from '@/constants'
+import { navbarLinks } from '@/constants'
 import { usePathname } from 'next/navigation'
 
 import { cn } from '@/lib/utils'
@@ -23,8 +23,7 @@ const Sidebar = () => {
     const [isLoading, setIsLoading] = useState<boolean>(true)
 
     useEffect(() => {
-        console.log("In UseEffect")
-        const linksFilteredArr = sidebarLinks.filter(link => link.min_needed_role <= userRole)
+        const linksFilteredArr = navbarLinks.filter(link => link.min_needed_role <= userRole)
         setLinksFiltered(linksFilteredArr)
         setIsLoading(false)
     }, [userRole])

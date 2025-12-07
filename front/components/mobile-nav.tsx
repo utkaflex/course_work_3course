@@ -5,7 +5,7 @@ import React from 'react'
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import Image from "next/image"
 import Link from "next/link"
-import { WebSiteName, sidebarLinks } from "@/constants"
+import { WebSiteName, navbarLinks } from "@/constants"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import LogOutButton from './auth/logout-button'
@@ -40,7 +40,7 @@ const MobileNav = () => {
                     <div className="flex h-[calc(100vh-72px)] flex-col justify-between overflow-y-auto">
                         <SheetClose asChild>
                             <section className="flex h-full flex-col gap-6 pt-16">
-                                {sidebarLinks.map((link) => {
+                                {navbarLinks.map((link) => {
                                     const isActive = pathname === link.route || pathname.startsWith(`${link.route}/`);
 
                                     return (

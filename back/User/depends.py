@@ -1,12 +1,13 @@
 from datetime import datetime, timezone
-from fastapi import Depends, HTTPException, Request, status
-from jose import jwt, JWTError
-from jwt.exceptions import JWTException
-from back.User.models import User
-from back.database import async_session
 
-from back.User import crud
-from back.config import settings
+from fastapi import Depends, HTTPException, Request, status
+from jose import JWTError, jwt
+from jwt.exceptions import JWTException
+
+from config import settings
+from database import async_session
+from User import crud
+from User.models import User
 
 
 def get_token(request: Request):

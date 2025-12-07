@@ -81,7 +81,7 @@ const EquipmentPage = () => {
 
     return (
         <section className='flex size-full flex-col gap-5
-        bg-light-3 p-6 rounded-[14px] border shadow-sm max-sm:w-screen'
+        bg-light-3 pb-6 pt-6 rounded-[14px] border shadow-sm max-sm:w-screen'
         >
             <TabsShower tabs={tabs} userRole={userRole} startTab={lastTab} />
         </section>

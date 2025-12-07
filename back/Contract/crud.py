@@ -1,9 +1,9 @@
 from fastapi import HTTPException
 from sqlalchemy import select
-from back.database import async_session
+from database import async_session
 
-from back.Contract.models import Contract
-from back.Contract.schemas import SContract, SContractCreate
+from Contract.models import Contract
+from Contract.schemas import SContract, SContractCreate
 
 async def get_contract(contract_id: int):
     async with async_session() as session:

@@ -20,6 +20,9 @@ const EquipmentAddForm = () => {
   const [loading, setLoading] = useState<boolean>(true)
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
 
+  const [invExists, setInvExists] = useState(false)
+  const invCheckReqId = React.useRef(0)
+
   const { toast } = useToast()
 
   useEffect(() => {
@@ -94,6 +97,33 @@ const EquipmentAddForm = () => {
       })
   }
 
+  const checkInventoryNumber = async (value: string) => {
+    const num = value.trim()
+    if (!num) {
+      setInvExists(false)
+      return
+    }
+
+    const reqId = ++invCheckReqId.current
+
+    try {
+      const res = await axios.get(API_URL + "/equipment/check_inventory/" + num)
+
+      if (reqId !== invCheckReqId.current) return
+      setInvExists(false)
+
+    } catch (e: any) {
+      if (reqId !== invCheckReqId.current) return
+
+      if (e?.response?.status === 400) {
+        setInvExists(true)
+      } else {
+        console.log("Ошибка при проверке inventory_number", e)
+        setInvExists(false)
+      }
+    }
+  }
+
   return (
     <CRUDFormForTables
       buttonText="Создать"
@@ -105,6 +135,8 @@ const EquipmentAddForm = () => {
       loading={loading}
       textFields={textFields}
       comboboxFields={comboboxFields}
+      inventoryWarning={invExists}
+      onInventoryBlur={checkInventoryNumber}
     />
   )
 }

@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import Column, Integer, String, ForeignKey, UniqueConstraint, DateTime
 from sqlalchemy.orm import relationship
-from back.database import Base
+from database import Base
 
 class Equipment(Base):
     __tablename__ = "equipment"

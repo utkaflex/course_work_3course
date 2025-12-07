@@ -3,19 +3,19 @@ import io
 import openpyxl
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
-from back.Contract.schemas import SContract
-from back.Software.models import Software
-from back.Software.schemas import SSoftware, SSoftwareAll, SSoftwareCreate
-from back.Software import crud
-from back.License import crud as license_crud
-from back.Contract import crud as contract_crud
+from Contract.schemas import SContract
+from Software.models import Software
+from Software.schemas import SSoftware, SSoftwareAll, SSoftwareCreate
+from Software import crud
+from License import crud as license_crud
+from Contract import crud as contract_crud
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import List
 
-from back.SoftwareContract.models import SoftwareContract
-from back.User.depends import get_current_user
-from back.User.models import User
+from SoftwareContract.models import SoftwareContract
+from User.depends import get_current_user
+from User.models import User
 
 router = APIRouter(
     prefix="/software",

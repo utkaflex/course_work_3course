@@ -2,6 +2,7 @@ import React, { HTMLInputTypeAttribute } from 'react'
 import { Control, FieldValues, Path } from 'react-hook-form';
 import { FormControl, FormField, FormLabel, FormItem, FormMessage } from "@/components/ui/form"
 import { Input } from "./ui/input"
+import {cn} from "@/lib/utils";
 
 interface FormTextFieldProps<TSchema extends FieldValues, TTextFieldName> {
     control: Control<TSchema>
@@ -9,6 +10,9 @@ interface FormTextFieldProps<TSchema extends FieldValues, TTextFieldName> {
     label: string;
     placeholder: string;
     type?: HTMLInputTypeAttribute | undefined;
+
+    onBlurValue?: (value: string) => void
+    className?: string
 }
 
 function FormTextField<TSchema extends FieldValues, TTextFieldName extends Path<TSchema>>({
@@ -16,7 +20,9 @@ function FormTextField<TSchema extends FieldValues, TTextFieldName extends Path<
     name,
     label,
     placeholder,
-    type = undefined
+    type = undefined,
+    onBlurValue,
+    className
 }: FormTextFieldProps<TSchema, TTextFieldName>) {
   return (
     <FormField
@@ -30,6 +36,11 @@ function FormTextField<TSchema extends FieldValues, TTextFieldName extends Path<
                         {...field}
                         placeholder={placeholder}
                         type={type}
+                        className={cn(className)}
+                        onBlur={(e) => {
+                          field.onBlur()
+                          onBlurValue?.(e.target.value)
+                        }}
                     />
                 </FormControl>
                 <FormMessage />

@@ -45,13 +45,18 @@ export function ResponsibleUserDataTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
     id: false
   })
-  const [currentPageNumber, setCurrentPageNumber] = React.useState<number>(1)
+
+  const [pagination, setPagination] = React.useState({
+    pageIndex: 0,
+    pageSize: 10,
+  })
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    onPaginationChange: setPagination,
     getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
@@ -59,6 +64,7 @@ export function ResponsibleUserDataTable<TData, TValue>({
     state: {
       columnFilters,
       columnVisibility,
+      pagination
     }
   })
 
@@ -74,35 +80,46 @@ export function ResponsibleUserDataTable<TData, TValue>({
         setIsOpen={setIsFormOpen}
       />
       <div className="w-full h-full">
-        <div className="flex items-start justify-between py-4">
+        <div className="flex items-end justify-between py-4">
             <Accordion type="single" collapsible>
               <AccordionItem value="item-1" className="border-0 px-1">
               <AccordionTrigger className="flex h-[40px] min-w-[100px] max-w-[100px] py-0">Фильтры</AccordionTrigger>
-              <AccordionContent className="flex flex-col gap-2 p-1">
-                <Input
-                  placeholder="Поиск по ФИО..."
-                  value={(table.getColumn("full_name")?.getFilterValue() as string) ?? ""}
-                  onChange={(event) =>
-                  table.getColumn("full_name")?.setFilterValue(event.target.value)
-                  }
-                  className="w-[300px]"
-                />
-                <Input
-                  placeholder="Поиск по должности..."
-                  value={(table.getColumn("job_name")?.getFilterValue() as string) ?? ""}
-                  onChange={(event) =>
-                  table.getColumn("job_name")?.setFilterValue(event.target.value)
-                  }
-                  className="w-[300px]"
-                />
-                <Input
-                  placeholder="Поиск по подразделению..."
-                  value={(table.getColumn("office_name")?.getFilterValue() as string) ?? ""}
-                  onChange={(event) =>
-                  table.getColumn("office_name")?.setFilterValue(event.target.value)
-                  }
-                  className="w-[300px]"
-                />
+              <AccordionContent className="flex flex-wrap gap-2 p-1">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-muted-foreground">ФИО</label>
+                  <Input
+                    placeholder="Поиск по ФИО..."
+                    value={(table.getColumn("full_name")?.getFilterValue() as string) ?? ""}
+                    onChange={(event) =>
+                      table.getColumn("full_name")?.setFilterValue(event.target.value)
+                    }
+                    className="w-[300px]"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-muted-foreground">Должность</label>
+                  <Input
+                    placeholder="Поиск по должности..."
+                    value={(table.getColumn("job_name")?.getFilterValue() as string) ?? ""}
+                    onChange={(event) =>
+                      table.getColumn("job_name")?.setFilterValue(event.target.value)
+                    }
+                    className="w-[300px]"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-muted-foreground">Подразделение</label>
+                  <Input
+                    placeholder="Поиск по подразделению..."
+                    value={(table.getColumn("office_name")?.getFilterValue() as string) ?? ""}
+                    onChange={(event) =>
+                      table.getColumn("office_name")?.setFilterValue(event.target.value)
+                    }
+                    className="w-[300px]"
+                  />
+                </div>
               </AccordionContent>
               </AccordionItem>
             </Accordion>
@@ -161,13 +178,12 @@ export function ResponsibleUserDataTable<TData, TValue>({
         </div>
         <div className="flex items-center justify-end space-x-2 py-4">
           <div className="flex-1 text-sm text-muted-foreground">
-            {currentPageNumber} из {Math.max(table.getPageOptions().length, 1)} {" "} {CorrectPagesCase(table.getPageOptions().length)}
+            {pagination.pageIndex + 1} из {Math.max(table.getPageOptions().length, 1)} {" "} {CorrectPagesCase(table.getPageOptions().length)}
           </div>
           <Button
             variant="outline"
             size="sm"
             onClick={() => {
-              setCurrentPageNumber(currentPageNumber - 1)
               table.previousPage()
             }}
             disabled={!table.getCanPreviousPage()}
@@ -178,7 +194,6 @@ export function ResponsibleUserDataTable<TData, TValue>({
             variant="outline"
             size="sm"
             onClick={() => {
-              setCurrentPageNumber(currentPageNumber + 1)
               table.nextPage()
             }}
             disabled={!table.getCanNextPage()}

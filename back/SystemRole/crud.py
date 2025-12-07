@@ -1,9 +1,9 @@
 from fastapi import HTTPException
 from sqlalchemy import select
-from back.database import async_session
+from database import async_session
 
-from back.SystemRole.models import SystemRole
-from back.SystemRole.schemas import SSystemRole, SSystemRoleBase, SSystemRoleCreate
+from SystemRole.models import SystemRole
+from SystemRole.schemas import SSystemRole, SSystemRoleBase, SSystemRoleCreate
 
 async def get_system_role(system_role_id: int):
     async with async_session() as session:

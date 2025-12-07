@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
-from back.database import Base
+from database import Base
 
 class ResponsibleUserJob(Base):
     __tablename__ = "responsible_user_jobs"

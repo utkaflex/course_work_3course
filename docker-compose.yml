@@ -1,6 +1,7 @@
 services:
   backend:
-    build: .
+    build:
+      context: ./back
     ports:
       - "8000:8000"
     environment:
@@ -8,13 +9,15 @@ services:
       - APP_CORS_ORIGINS=${APP_CORS_ORIGINS}
     env_file:
       - .env
+    volumes:
+      - ./sats.db:/app/back/sats.db
 
   frontend:
     build:
       context: ./front
       args:
-        - NEXT_PUBLIC_API_URL=http://${SERVER_IP}:8000
-        - NEXT_PUBLIC_WEBSITE_URL=http://${SERVER_IP}:3000
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+        - NEXT_PUBLIC_WEBSITE_URL=${NEXT_PUBLIC_WEBSITE_URL}
     ports:
       - "3000:3000"
     environment:
