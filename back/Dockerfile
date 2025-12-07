@@ -14,7 +14,7 @@ RUN mkdir back
 
 COPY . /app/back 
 
-RUN uv sync --locked
+RUN uv sync
 
 EXPOSE 8000
 

@@ -23,9 +23,17 @@ from Software.router import router as router_software
 from SystemRole.router import router as router_roles
 from User.router import router as router_auth
 from User.user_router import router as router_users
+from pathlib import Path
+import tomllib
+
+def load_version() -> str:
+    pyproject_path = Path(__file__).resolve().parent / "pyproject.toml"
+    data = tomllib.loads(pyproject_path.read_text(encoding="utf-8"))
+    return data["project"]["version"]
 
 app = FastAPI(
-    title="SATS"
+    title="SATS",
+    version=load_version(),
 )
 
 app.include_router(router_roles)
