@@ -4,7 +4,7 @@ from . import crud
 from sqlalchemy.exc import IntegrityError
 
 router = APIRouter(
-    prefix="/category_types",
+    prefix="/category_type",
     tags=["Типы по категориям"],
 )
 

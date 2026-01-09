@@ -25,6 +25,8 @@ from User.router import router as router_auth
 from User.user_router import router as router_users
 from Category.router import router as router_categories
 from CategoryType.router import router as category_types_router
+from Rooms.router import router as rooms_router
+from RoomTypes.router import router as room_types_router
 from pathlib import Path
 import tomllib
 
@@ -57,6 +59,8 @@ app.include_router(router_equipment_status)
 app.include_router(router_database)
 app.include_router(router_categories)
 app.include_router(category_types_router)
+app.include_router(rooms_router)
+app.include_router(room_types_router)
 
 origins = (settings.APP_CORS_ORIGINS).split(",")
 

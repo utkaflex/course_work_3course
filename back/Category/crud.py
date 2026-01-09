@@ -1,11 +1,14 @@
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from database import async_session
 
 from Category.models import Category
-from Category.schemas import SCategoryCreate
+from Category.schemas import SCategoryCreate, SCategoryCreateWithTypes, SCategoryUpdateWithTypes
+
+from EquipmentType.models import EquipmentType
+from CategoryType.models import CategoryType
 
 async def get_category_by_name(name: str) -> Category|None:
     async with async_session() as session:
@@ -65,3 +68,63 @@ async def rename_category(category_id: int, new_name: str) -> Category | None:
             raise
         await session.refresh(category)
         return category
+
+async def create_category_with_types(body: SCategoryCreateWithTypes) -> Category:
+    async with async_session() as session:
+        cat = Category(category_name=body.category_name)
+        session.add(cat)
+        try:
+            await session.flush()
+        except IntegrityError:
+            await session.rollback()
+            raise
+
+        type_ids = list(dict.fromkeys(body.type_ids))
+        if type_ids:
+            res = await session.execute(
+                select(EquipmentType.id).where(EquipmentType.id.in_(type_ids))
+            )
+            existing = set(res.scalars().all())
+            missing = [tid for tid in type_ids if tid not in existing]
+            if missing:
+                await session.rollback()
+                raise LookupError(f"TYPE_NOT_FOUND:{missing[0]}")
+
+            session.add_all([CategoryType(category_id=cat.id, type_id=tid) for tid in type_ids])
+
+        await session.commit()
+        await session.refresh(cat)
+        return cat
+
+async def update_category_with_types(category_id: int, body: SCategoryUpdateWithTypes) -> Category | None:
+    async with async_session() as session:
+        cat = await session.get(Category, category_id)
+        if not cat:
+            return None
+
+        cat.category_name = body.category_name
+        if body.type_ids is not None:
+            type_ids = list(dict.fromkeys(body.type_ids))
+            if type_ids:
+                res = await session.execute(
+                    select(EquipmentType.id).where(EquipmentType.id.in_(type_ids))
+                )
+                existing = set(res.scalars().all())
+                missing = [tid for tid in type_ids if tid not in existing]
+                if missing:
+                    await session.rollback()
+                    raise LookupError(f"TYPE_NOT_FOUND:{missing[0]}")
+            await session.execute(
+                delete(CategoryType).where(CategoryType.category_id == category_id)
+            )
+            if type_ids:
+                session.add_all([CategoryType(category_id=category_id, type_id=tid) for tid in type_ids])
+
+        try:
+            await session.commit()
+        except IntegrityError:
+            await session.rollback()
+            raise
+
+        await session.refresh(cat)
+        return cat

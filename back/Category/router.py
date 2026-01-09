@@ -1,11 +1,12 @@
 from fastapi import APIRouter, HTTPException
-from Category.schemas import SCategory, SCategoryCreate, SCategoryUpdate, SCategoryWithTypes
+from Category.schemas import SCategory, SCategoryCreate, SCategoryUpdate, SCategoryWithTypes, SCategoryCreateWithTypes, SCategoryUpdateWithTypes
 from typing import List
+from sqlalchemy.exc import IntegrityError
 
 from . import crud
 
 router = APIRouter(
-    prefix = "/categories",
+    prefix = "/category",
     tags = ["Категории типов оборудования"],
 )
 
@@ -48,3 +49,42 @@ async def delete_category(category_id: int):
     if not ok:
         raise HTTPException(status_code=404, detail="Category not found")
     return {"ok": True}
+
+@router.post("/create_with_types", response_model=SCategoryWithTypes)
+async def create_with_types(body: SCategoryCreateWithTypes):
+    if await crud.get_category_by_name(body.category_name):
+        raise HTTPException(status_code=409, detail="Category already exists")
+    try:
+        cat = await crud.create_category_with_types(body)
+    except IntegrityError:
+        raise HTTPException(status_code=409, detail="Category already exists")
+    except LookupError as e:
+        msg = str(e)
+        if msg.startswith("TYPE_NOT_FOUND:"):
+            tid = msg.split(":", 1)[1]
+            raise HTTPException(status_code=404, detail=f"Type not found: {tid}")
+        raise
+    return await crud.get_category_with_types(cat.id)
+
+
+@router.put("/{category_id}/with_types", response_model=SCategoryWithTypes)
+async def update_with_types(category_id: int, body: SCategoryUpdateWithTypes):
+    db_category = await crud.get_category_by_name(body.category_name)
+    if db_category and db_category.id != category_id:
+        raise HTTPException(status_code=409, detail="Category already exists")
+
+    try:
+        updated = await crud.update_category_with_types(category_id, body)
+    except IntegrityError:
+        raise HTTPException(status_code=409, detail="Category already exists")
+    except LookupError as e:
+        msg = str(e)
+        if msg.startswith("TYPE_NOT_FOUND:"):
+            tid = msg.split(":", 1)[1]
+            raise HTTPException(status_code=404, detail=f"Type not found: {tid}")
+        raise
+
+    if not updated:
+        raise HTTPException(status_code=404, detail="Category not found")
+
+    return await crud.get_category_with_types(category_id)

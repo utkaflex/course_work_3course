@@ -31,6 +31,8 @@ from EquipmentStatus.models import EquipmentStatus
 from EquipmentSpecification.models import EquipmentSpecification
 from Category.models import Category
 from CategoryType.models import CategoryType
+from Rooms.models import Rooms
+from RoomTypes.models import RoomTypes
 from config import settings
 
 # this is the Alembic Config object, which provides
