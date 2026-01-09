@@ -1,0 +1,18 @@
+from pydantic import BaseModel, ConfigDict
+from EquipmentType.schemas import SEquipmentType
+
+class SCategory(BaseModel):
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    category_name: str
+
+class SCategoryCreate(BaseModel):
+    category_name: str
+
+class SCategoryWithTypes(SCategory):
+    types: list[SEquipmentType] = []
+
+class SCategoryUpdate(BaseModel):
+    category_name: str

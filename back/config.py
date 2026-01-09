@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     NEXT_PUBLIC_WEBSITE_URL: str
 
     class Config:
-        env_file = ".env"
+        env_file = "../.env"
 
 
 settings = Settings()

@@ -9,3 +9,6 @@ class EquipmentType(Base):
     type_name = Column(String(50), nullable=False, unique=True)
 
     equipment = relationship("Equipment", back_populates="type", cascade="all, delete")
+    category_types = relationship("CategoryType", back_populates = "type", cascade = "all, delete-orphan")
+
+    categories = relationship("Category", secondary="category_type", viewonly=True)
