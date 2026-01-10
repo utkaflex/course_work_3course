@@ -41,5 +41,5 @@ async def edit_room_type_name(room_type_id: int, body: SRoomTypeUpdate):
 async def delete_room_type(room_type_id: int):
     ok = await crud.delete_room_type(room_type_id)
     if not ok:
-        raise HTTPException(status_code=404, detail="Room type not found")
+        raise HTTPException(status_code=409, detail="Room type has rooms or not found")
     return {"ok": True}

@@ -1,7 +1,8 @@
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from database import async_session
+from Rooms.models import Rooms
 
 from RoomTypes.models import RoomTypes
 from RoomTypes.schemas import SRoomTypeCreate
@@ -54,6 +55,13 @@ async def delete_room_type(room_type_id: int) -> bool:
         room_type = await session.get(RoomTypes, room_type_id)
         if not room_type:
             return False
+
+        rooms_count = await session.scalar(
+            select(func.count()).select_from(Rooms).where(Rooms.room_type_id == room_type_id)
+        )
+        if (rooms_count or 0) > 0:
+            return False
+
         await session.delete(room_type)
         await session.commit()
         return True
