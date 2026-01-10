@@ -209,7 +209,9 @@ async def get_all_equipment(user_role_id: int) -> list[SEquipmentWithResponsible
                         responsible_user_full_name=responsible_user_full_name if responsible_user_full_name else None,
                         type_name=equipment.type.type_name,
                         building_adress=last_building_adress if last_building_adress else None,
-                        responsible_user_office=responsible_user_office if responsible_user_office else None
+                        responsible_user_office=responsible_user_office if responsible_user_office else None,
+                        statuses=equipment.statuses,
+                        specifications=equipment.equipment_specification,
                     )
                 )
                 
