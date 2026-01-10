@@ -1,12 +1,12 @@
-##from fastapi import APIRouter, HTTPException
-##from CategoryType.schemas import SCategoryType, SCategoryTypeCreate
-##from . import crud
-##from sqlalchemy.exc import IntegrityError
+from fastapi import APIRouter, HTTPException
+from CategoryType.schemas import SCategoryType, SCategoryTypeCreate
+from . import crud
+from sqlalchemy.exc import IntegrityError
 
-##router = APIRouter(
-##    prefix="/category_type",
-##    tags=["Типы по категориям"],
-##)
+router = APIRouter(
+   prefix="/category_type",
+   tags=["Типы по категориям"],
+)
 
 ##@router.post("/add", response_model=SCategoryType)
 ##async def add(body: SCategoryTypeCreate):

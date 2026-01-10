@@ -8,6 +8,7 @@ from sqlalchemy.orm import joinedload
 
 from Equipment.models import Equipment
 from Equipment.schemas import SEquipmentCreate, SEquipmentWithResponsible
+from Rooms.models import Rooms
 
 async def get_equipment(equipment_id: int) -> SEquipmentWithResponsible | None:
     async with async_session() as session:
@@ -16,6 +17,8 @@ async def get_equipment(equipment_id: int) -> SEquipmentWithResponsible | None:
             joinedload(Equipment.statuses).joinedload(EquipmentStatus.status_type),
             joinedload(Equipment.statuses).joinedload(EquipmentStatus.responsible_user).joinedload(ResponsibleUser.office),
             joinedload(Equipment.statuses).joinedload(EquipmentStatus.building),
+            joinedload(Equipment.statuses).joinedload(EquipmentStatus.room).joinedload(Rooms.building),
+            joinedload(Equipment.statuses).joinedload(EquipmentStatus.room).joinedload(Rooms.room_type),
             joinedload(Equipment.equipment_specification)
         ).filter(Equipment.id == equipment_id)
         result = await session.execute(query)
@@ -62,7 +65,8 @@ async def get_equipment(equipment_id: int) -> SEquipmentWithResponsible | None:
             responsible_user_full_name=responsible_user_full_name,
             type_name=equipment.type.type_name,
             building_adress=last_building_adress,
-            responsible_user_office=responsible_user_office
+            responsible_user_office=responsible_user_office,
+            statuses=equipment.statuses,
         )
 
 async def get_equipment_by_serial_number(serial_number: str):
@@ -84,6 +88,8 @@ async def get_equipment_for_word(equipment_id: int) -> SEquipmentWithResponsible
                 joinedload(Equipment.statuses).joinedload(EquipmentStatus.status_type),
                 joinedload(Equipment.statuses).joinedload(EquipmentStatus.responsible_user).joinedload(ResponsibleUser.office),
                 joinedload(Equipment.statuses).joinedload(EquipmentStatus.building),
+                joinedload(Equipment.statuses).joinedload(EquipmentStatus.room).joinedload(Rooms.building),
+                joinedload(Equipment.statuses).joinedload(EquipmentStatus.room).joinedload(Rooms.room_type),
             ).filter(Equipment.id == equipment_id)
         
         result = await session.execute(query)
@@ -141,6 +147,8 @@ async def get_all_equipment(user_role_id: int) -> list[SEquipmentWithResponsible
                 joinedload(Equipment.statuses).joinedload(EquipmentStatus.status_type),
                 joinedload(Equipment.statuses).joinedload(EquipmentStatus.responsible_user).joinedload(ResponsibleUser.office),
                 joinedload(Equipment.statuses).joinedload(EquipmentStatus.building),
+                joinedload(Equipment.statuses).joinedload(EquipmentStatus.room).joinedload(Rooms.building),
+                joinedload(Equipment.statuses).joinedload(EquipmentStatus.room).joinedload(Rooms.room_type),
                 joinedload(Equipment.equipment_specification)
             )
             result = await session.execute(query)
@@ -214,6 +222,8 @@ async def get_equipment_for_excel(user_role_id: int, equipment_list: List[SEquip
             joinedload(Equipment.statuses).joinedload(EquipmentStatus.status_type),
             joinedload(Equipment.statuses).joinedload(EquipmentStatus.responsible_user).joinedload(ResponsibleUser.office),
             joinedload(Equipment.statuses).joinedload(EquipmentStatus.building),
+            joinedload(Equipment.statuses).joinedload(EquipmentStatus.room).joinedload(Rooms.building),
+            joinedload(Equipment.statuses).joinedload(EquipmentStatus.room).joinedload(Rooms.room_type),
             joinedload(Equipment.equipment_specification)
         ).where(Equipment.id.in_(equipment_ids))
         

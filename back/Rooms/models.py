@@ -14,3 +14,4 @@ class Rooms(Base):
 
     building = relationship("Building", back_populates="rooms")
     room_type = relationship("RoomTypes", back_populates="rooms")
+    statuses = relationship("EquipmentStatus", back_populates="room")

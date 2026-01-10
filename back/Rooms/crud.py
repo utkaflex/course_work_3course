@@ -1,5 +1,5 @@
 from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import selectinload
 from database import async_session
 
 from Rooms.models import Rooms
@@ -7,14 +7,23 @@ from Building.models import Building
 from RoomTypes.models import RoomTypes
 from Rooms.schemas import SRoomCreate, SRoomUpdate
 
-
 async def get_room_by_id(room_id: int) -> Rooms | None:
     async with async_session() as session:
-        return await session.get(Rooms, room_id)
+        res = await session.execute(select(Rooms).where(Rooms.id == room_id).options(
+                selectinload(Rooms.building),
+                selectinload(Rooms.room_type),
+            ))
+        return res.scalar_one_or_none()
 
 async def get_all_rooms() -> list[Rooms]:
     async with async_session() as session:
-        res = await session.execute(select(Rooms))
+        res = await session.execute(
+            select(Rooms)
+            .options(
+                selectinload(Rooms.building),
+                selectinload(Rooms.room_type),
+            )
+        )
         return list(res.scalars().all())
 
 async def get_rooms_by_building(building_id: int) -> list[Rooms]:
@@ -35,9 +44,10 @@ async def create_room(body: SRoomCreate) -> Rooms:
             room_type_id=body.room_type_id,
         )
         session.add(room)
+        await session.flush()
+        new_id = room.id
         await session.commit()
-        await session.refresh(room)
-        return room
+        return await get_room_by_id(new_id)
 
 async def update_room(room_id: int, body: SRoomUpdate) -> Rooms | None:
     async with async_session() as session:

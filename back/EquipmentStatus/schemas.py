@@ -1,6 +1,7 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from datetime import datetime
+from Rooms.schemas import SRoom
 
 class SEquipmentStatusBase(BaseModel):
     equipment_id: int
@@ -11,11 +12,13 @@ class SEquipmentStatusBase(BaseModel):
     building_id: int
     audience_id: Optional[int] = None
 
+    room_id: Optional[int] = None
+
 class SEquipmentStatusCreate(SEquipmentStatusBase):
     pass
 
 class SEquipmentStatus(SEquipmentStatusBase):
-    id: int
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        from_attributes = True
+    id: int
+    room: Optional[SRoom] = None
