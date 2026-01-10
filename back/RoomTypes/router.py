@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from RoomTypes.schemas import SRoomTypeCreate, SRoomTypeUpdate, SRoomType, SRoomTypeWithRooms
+from RoomTypes.schemas import SRoomTypeCreate, SRoomTypeUpdate, SRoomType
 from RoomTypes import crud
 from typing import List
 
@@ -19,13 +19,9 @@ async def create_room_type(body: SRoomTypeCreate):
 async def get_all_room_types():
     return await crud.get_all_room_types()
 
-@router.get("/get_all_with_types", response_model=List[SRoomTypeWithRooms])
-async def get_all_with_rooms():
-    return await crud.get_all_room_types_with_rooms()
-
-@router.get("/{room_type_id}", response_model = SRoomTypeWithRooms)
+@router.get("/{room_type_id}", response_model = SRoomType)
 async def get_room_type(room_type_id: int):
-    room_type = await crud.get_room_type_with_rooms(room_type_id)
+    room_type = await crud.get_room_type(room_type_id)
     if not room_type:
         raise HTTPException(status_code=404, detail="Room type not found")
     return room_type

@@ -24,9 +24,9 @@ async def create_room(body: SRoomCreate):
 async def get_all_rooms():
     return await crud.get_all_rooms()
 
-@router.get("/by_building/{building_id}", response_model=List[SRoom])
-async def get_rooms_by_building(building_id: int):
-    return await crud.get_rooms_by_building(building_id)
+##router.get("/by_building/{building_id}", response_model=List[SRoom])
+##async def get_rooms_by_building(building_id: int):
+##   return await crud.get_rooms_by_building(building_id)
 
 @router.get("/{room_id}", response_model=SRoom)
 async def get_room(room_id: int):

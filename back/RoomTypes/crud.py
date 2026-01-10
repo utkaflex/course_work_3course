@@ -25,18 +25,11 @@ async def get_all_room_types() -> list[RoomTypes]:
         result = await session.execute(select(RoomTypes))
         return list(result.scalars().all())
 
-async def get_all_room_types_with_rooms() -> list[RoomTypes]:
-    async with async_session() as session:
-        query = select(RoomTypes).options(selectinload(RoomTypes.rooms))
-        result = await session.execute(query)
-        return list(result.scalars().all())
-
-async def get_room_type_with_rooms(room_type_id: int) -> RoomTypes | None:
+async def get_room_type(room_type_id: int) -> RoomTypes | None:
     async with async_session() as session:
         query = (
             select(RoomTypes)
             .where(RoomTypes.id == room_type_id)
-            .options(selectinload(RoomTypes.rooms))
         )
         result = await session.execute(query)
         return result.scalar_one_or_none()
