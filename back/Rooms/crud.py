@@ -69,8 +69,8 @@ async def update_room(room_id: int, body: SRoomUpdate) -> Rooms | None:
             room.name = body.name
 
         await session.commit()
-        await session.refresh(room)
-        return room
+        updated_id = room.id
+        return await get_room_by_id(updated_id)
 
 async def delete_room(room_id: int) -> bool:
     async with async_session() as session:
