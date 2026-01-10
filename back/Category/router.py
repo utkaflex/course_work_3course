@@ -10,7 +10,7 @@ router = APIRouter(
     tags = ["Категории типов оборудования"],
 )
 
-@router.get("/get_all", response_model=List[SCategoryWithTypes])
+@router.get("/all", response_model=List[SCategoryWithTypes])
 async def get_all_with_types():
     return await crud.get_all_categories_with_types()
 

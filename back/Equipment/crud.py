@@ -67,6 +67,7 @@ async def get_equipment(equipment_id: int) -> SEquipmentWithResponsible | None:
             building_adress=last_building_adress,
             responsible_user_office=responsible_user_office,
             statuses=equipment.statuses,
+            specifications=equipment.equipment_specification,
         )
 
 async def get_equipment_by_serial_number(serial_number: str):
@@ -135,6 +136,7 @@ async def get_equipment_for_word(equipment_id: int) -> SEquipmentWithResponsible
                         type_name=equipment.type.type_name,
                         building_adress=last_building_adress if last_building_adress else None,
                         responsible_user_office=responsible_user_office if responsible_user_office else None
+                        
         )
 
 async def get_all_equipment(user_role_id: int) -> list[SEquipmentWithResponsible]:
@@ -303,31 +305,29 @@ async def create_equipment(equipment: SEquipmentCreate):
         return db_equipment
 
 async def update_equipment(equipment_id: int, updated_equipment: SEquipmentCreate):
-    equipment = await get_equipment(equipment_id)
-    
-    if equipment is None:
-        raise HTTPException(status_code=404, detail="Equipment not found")
-    
-    equipment.type_id = updated_equipment.type_id
-    equipment.model = updated_equipment.model
-    equipment.serial_number = updated_equipment.serial_number
-    equipment.inventory_number = updated_equipment.inventory_number
-    equipment.network_name = updated_equipment.network_name
-    equipment.remarks = updated_equipment.remarks
-    equipment.accepted_date = updated_equipment.accepted_date
-    
     async with async_session() as session:
-        session.add(equipment)
+        db_equipment = await session.get(Equipment, equipment_id)
+        if not db_equipment:
+            raise HTTPException(status_code=404, detail="Equipment not found")
+
+        db_equipment.type_id = updated_equipment.type_id
+        db_equipment.model = updated_equipment.model
+        db_equipment.serial_number = updated_equipment.serial_number
+        db_equipment.inventory_number = updated_equipment.inventory_number
+        db_equipment.network_name = updated_equipment.network_name
+        db_equipment.remarks = updated_equipment.remarks
+        db_equipment.accepted_date = updated_equipment.accepted_date
+
         await session.commit()
-        await session.refresh(equipment)
-    
-    return equipment
+
+    return await get_equipment(equipment_id)
+
 
 async def delete_equipment(equipment_id: int):
     async with async_session() as session:
-        equipment = await get_equipment(equipment_id)
-        if not equipment:
+        db_equipment = await session.get(Equipment, equipment_id)
+        if not db_equipment:
             raise HTTPException(status_code=404, detail="Equipment not found")
-        await session.delete(equipment)
+        await session.delete(db_equipment)
         await session.commit()
         return {"detail": "Equipment deleted successfully"}
