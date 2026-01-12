@@ -4,7 +4,7 @@ from datetime import datetime
 
 class SBackupAutoSet(BaseModel):
     cron: str
-    timezone: str = "Asia/Yekaerinburg"
+    timezone: str = "Asia/Yekaterinburg"
     enabled: bool = True
 
 class SBackupAutoGet(SBackupAutoSet):
