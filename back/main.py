@@ -8,6 +8,7 @@ from Building.router import router as router_building
 from config import settings
 from Contract.router import router as router_contract
 from Database.router import router as router_database
+from Database.router import start_auto_backup_scheduler, stop_auto_backup_scheduler
 from Equipment.router import router as router_equipment
 from EquipmentSpecification.router import router as router_equipment_specs
 from EquipmentStatus.router import router as router_equipment_status
@@ -39,6 +40,14 @@ app = FastAPI(
     title="SATS",
     version=load_version(),
 )
+
+@app.on_event("startup")
+async def _startup():
+    await start_auto_backup_scheduler()
+
+@app.on_event("shutdown")
+async def _shutdown():
+    await stop_auto_backup_scheduler()
 
 app.include_router(router_roles)
 app.include_router(router_auth)

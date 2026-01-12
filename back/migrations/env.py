@@ -31,6 +31,7 @@ from EquipmentStatus.models import EquipmentStatus
 from EquipmentSpecification.models import EquipmentSpecification
 from Category.models import Category
 from CategoryType.models import CategoryType
+from Database.models import BackupAutoSettings
 from Rooms.models import Rooms
 from RoomTypes.models import RoomTypes
 from config import settings
