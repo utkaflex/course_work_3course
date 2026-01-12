@@ -7,5 +7,5 @@ class BackupAutoSettings(Base):
     id = Column(Integer, primary_key=True)
     enabled = Column(Boolean, nullable=False, default=False)
     cron = Column(String, nullable=True)
-    timezone = Column(String, nullable=False, default="Europe/Moscow")
+    timezone = Column(String, nullable=False, default="Asia/Yekaerinburg")
     last_backup_at = Column(DateTime, nullable=True)

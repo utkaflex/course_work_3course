@@ -86,7 +86,7 @@ async def get_auto_backup(user: User = Depends(get_current_user)):
     cfg = await crud.get_auto_settings()
     if cfg is None:
         return SBackupAutoGet(cron="",
-                             timezone="Europe/Moscow",
+                             timezone="Asia/Yekaerinburg",
                              enabled=False,
                              last_backup_at=None,
                              next_backup_at=None)
