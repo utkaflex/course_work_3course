@@ -2,6 +2,7 @@ import asyncio
 import logging
 import shutil
 from pathlib import Path
+from config import settings
 from datetime import datetime, timedelta, timezone
 from contextlib import contextmanager
 from sqlite3 import connect as sqlite_connect
@@ -28,7 +29,7 @@ router = APIRouter(
 )
 
 BACKUP_DIR = Path("backups")
-DB_FILE = Path("sats.db")
+DB_FILE = Path(settings.DB_NAME)
 BACKUP_DIR.mkdir(exist_ok=True)
 _scheduler: AsyncIOScheduler | None = None
 JOB_ID = "auto_backup_job"
