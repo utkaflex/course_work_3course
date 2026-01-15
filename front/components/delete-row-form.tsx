@@ -1,14 +1,14 @@
-import { useToast } from '@/hooks/use-toast';
+import {useToast} from '@/hooks/use-toast';
 import axios from 'axios';
-import React, { useState } from 'react'
-import { useForm } from 'react-hook-form';
+import React, {useState} from 'react'
+import {useForm} from 'react-hook-form';
 import CRUDFormForTables from './crud-form-for-tables';
 
 const DeleteRowForm = ({
-  apiEndpoint,
-  toastText,
-  calledFrom
-} : {
+                         apiEndpoint,
+                         toastText,
+                         calledFrom
+                       }: {
   apiEndpoint: string
   toastText: string
   calledFrom?: string
@@ -16,7 +16,7 @@ const DeleteRowForm = ({
   const [error, setError] = useState<string | undefined>("");
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
 
-  const { toast } = useToast()
+  const {toast} = useToast()
 
   const form = useForm();
 
@@ -24,23 +24,23 @@ const DeleteRowForm = ({
     setError("")
     setIsProcessing(true)
     axios.delete(apiEndpoint)
-    .then(() => {
-      if (calledFrom) {
-        localStorage.setItem("last_tab", calledFrom)
-      }
-      window.location.reload()
-      toast({
-        title: toastText,
-        description: "Данные удалены из БД",
-        className: "bg-white"
+      .then(() => {
+        if (calledFrom) {
+          localStorage.setItem("last_tab", calledFrom)
+        }
+        window.location.reload()
+        toast({
+          title: toastText,
+          description: "Данные удалены из БД",
+          className: "bg-white"
+        })
       })
-    })
-    .catch((e) => {
-      setError("Произошла непредвиденная ошибка при удалении записи")
-      console.log("Error while deleting row")
-      console.log(e)
-      setIsProcessing(false)
-    })
+      .catch((e) => {
+        setError("Произошла непредвиденная ошибка при удалении записи")
+        console.log("Error while deleting row")
+        console.log(e)
+        setIsProcessing(false)
+      })
   }
 
   return (

@@ -8,7 +8,7 @@ from sqlalchemy import pool
 from alembic import context
 from os.path import abspath, dirname
 
-sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
+from pathlib import Path
 
 from database import Base
 from SystemRole.models import SystemRole
@@ -29,13 +29,19 @@ from ResponsibleUser.models import ResponsibleUser
 from Equipment.models import Equipment
 from EquipmentStatus.models import EquipmentStatus
 from EquipmentSpecification.models import EquipmentSpecification
+from Category.models import Category
+from CategoryType.models import CategoryType
+from Database.models import BackupAutoSettings
+from Rooms.models import Rooms
+from RoomTypes.models import RoomTypes
 from config import settings
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
-config.set_main_option("sqlalchemy.url", "sqlite:///./sats.db")
+from config import settings
+config.set_main_option("sqlalchemy.url", f"sqlite:///{settings.DB_NAME}")
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

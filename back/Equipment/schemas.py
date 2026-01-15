@@ -4,6 +4,7 @@ from typing import List, Optional
 
 from EquipmentSpecification.schemas import SEquipmentSpecification
 from EquipmentStatus.schemas import SEquipmentStatus
+from Rooms.schemas import SRoom
 
 class SEquipmentBase(BaseModel):
     model: str

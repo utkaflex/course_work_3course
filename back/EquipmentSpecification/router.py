@@ -18,9 +18,9 @@ async def get_equipment_specification(spec_id: int):
         raise HTTPException(status_code=404, detail="Equipment specification not found")
     return spec
 
-@router.get("/by_equipment/{equipment_id}", response_model=list[SEquipmentSpecification])
-async def get_equipment_specifications_by_equipment(equipment_id: int):
-    return await crud.get_equipment_specifications_by_equipment(equipment_id=equipment_id)
+# @router.get("/by_equipment/{equipment_id}", response_model=list[SEquipmentSpecification])
+# async def get_equipment_specifications_by_equipment(equipment_id: int):
+#     return await crud.get_equipment_specifications_by_equipment(equipment_id=equipment_id)
 
 @router.put("/{spec_id}", response_model=SEquipmentSpecification)
 async def update_equipment_specification(spec_id: int, updated_spec: SEquipmentSpecificationCreate):

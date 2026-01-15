@@ -6,7 +6,7 @@ from Building import crud
 from Building.schemas import SBuilding, SBuildingCreate
 
 router = APIRouter(
-    prefix="/buildings",
+    prefix="/building",
     tags=["Работа с корпусами"]
 )
 

@@ -10,7 +10,6 @@ from docx.shared import Pt
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
-import pandas as pd
 from Equipment.schemas import SEquipment, SEquipmentCreate, SEquipmentWithResponsible
 from Equipment import crud
 from User.depends import get_current_user
@@ -126,7 +125,7 @@ async def check_inventory_number(inventory_number: str):
 async def get_all_equipment(user: User = Depends(get_current_user)) -> List[SEquipmentWithResponsible]:
     return await crud.get_all_equipment(user_role_id=user.system_role_id)
 
-@router.get("/{equipment_id}", response_model=SEquipment)
+@router.get("/{equipment_id}", response_model=SEquipmentWithResponsible)
 async def get_equipment(equipment_id: int):
     equipment = await crud.get_equipment(equipment_id)
     if not equipment:

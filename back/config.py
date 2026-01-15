@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from pydantic import model_validator
 from pydantic_settings import BaseSettings
 
@@ -27,7 +25,7 @@ class Settings(BaseSettings):
     NEXT_PUBLIC_WEBSITE_URL: str
 
     class Config:
-        env_file = ".env"
+        env_file = "../.env"
 
 
 settings = Settings()

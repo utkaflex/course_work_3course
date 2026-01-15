@@ -1,5 +1,5 @@
-import { LicenseSchema } from "@/schemas";
-import { z } from "zod";
+import {LicenseSchema} from "@/schemas";
+import {z} from "zod";
 
 export type TextFieldName = "name" | "short_name" | "program_link" | "version" | "version_date";
 export type ComboboxFieldName = "license_id"

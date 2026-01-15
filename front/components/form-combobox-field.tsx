@@ -1,12 +1,12 @@
 import React from 'react'
 
-import { FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form"
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { FieldValues, Path, UseFormReturn } from 'react-hook-form';
-import { Button } from './ui/button';
-import { cn } from '@/lib/utils';
-import { Check, ChevronsUpDown } from 'lucide-react';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "./ui/command";
+import {FormControl, FormField, FormItem, FormLabel} from "@/components/ui/form"
+import {Popover, PopoverContent, PopoverTrigger} from "./ui/popover";
+import {FieldValues, Path, UseFormReturn} from 'react-hook-form';
+import {Button} from './ui/button';
+import {cn} from '@/lib/utils';
+import {Check, ChevronsUpDown} from 'lucide-react';
+import {Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList} from "./ui/command";
 
 interface FormComboboxFieldProps<TFormSchema extends FieldValues, TTextFieldName extends Path<TFormSchema>, TDataSchema extends FieldValues> {
   form: UseFormReturn<TFormSchema>
@@ -21,21 +21,21 @@ interface FormComboboxFieldProps<TFormSchema extends FieldValues, TTextFieldName
 }
 
 function FormComboboxField<TFormSchema extends FieldValues, TTextFieldName extends Path<TFormSchema>, TDataSchema extends FieldValues>({
-  form,
-  name,
-  label,
-  data,
-  value_field,
-  id_field,
-  frontText,
-  inputPlaceholder,
-  emptyText
-}: FormComboboxFieldProps<TFormSchema, TTextFieldName, TDataSchema>){
+                                                                                                                                         form,
+                                                                                                                                         name,
+                                                                                                                                         label,
+                                                                                                                                         data,
+                                                                                                                                         value_field,
+                                                                                                                                         id_field,
+                                                                                                                                         frontText,
+                                                                                                                                         inputPlaceholder,
+                                                                                                                                         emptyText
+                                                                                                                                       }: FormComboboxFieldProps<TFormSchema, TTextFieldName, TDataSchema>) {
   return (
     <FormField
       control={form.control}
       name={name}
-      render={({ field }) => (
+      render={({field}) => (
         <FormItem className="flex flex-col">
           <FormLabel>{label}</FormLabel>
           <Popover>
@@ -50,19 +50,19 @@ function FormComboboxField<TFormSchema extends FieldValues, TTextFieldName exten
                   )}
                 >
                   {field.value
-                    ? data.map((elem) => {
+                    ? data.map((elem, index) => {
                       if (elem[id_field] === field.value)
-                        return <span key="1" style={{ color: elem["color"] }}>
+                        return <span key={index} style={{color: elem["color"]}}>
                           {elem[value_field]}
                         </span>
                     })
                     : frontText
                   }
-                  <ChevronsUpDown className="opacity-50" />
+                  <ChevronsUpDown className="opacity-50"/>
                 </Button>
               </FormControl>
             </PopoverTrigger>
-            <PopoverContent className="p-0">
+            <PopoverContent className="p-0" onWheelCapture={(e) => e.stopPropagation()}>
               <Command>
                 <CommandInput
                   placeholder={inputPlaceholder}
@@ -81,7 +81,7 @@ function FormComboboxField<TFormSchema extends FieldValues, TTextFieldName exten
                       >
                         {!elem["color"] && elem[value_field]}
                         {elem["color"] &&
-                          <span style={{ color: elem["color"] }}>
+                          <span style={{color: elem["color"]}}>
                             {elem[value_field]}
                           </span>
                         }

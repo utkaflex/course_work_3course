@@ -6,27 +6,20 @@ import * as React from "react"
 import {
   ColumnDef,
   ColumnFiltersState,
-  VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
+  VisibilityState,
 } from "@tanstack/react-table"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import {Button} from "@/components/ui/button"
+import {Input} from "@/components/ui/input"
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { CorrectPagesCase } from "../helper-functions"
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table"
+import {CorrectPagesCase} from "../helper-functions"
 import Action from "../action"
 
 interface UserJobDataTableProps<TData, TValue> {
@@ -35,9 +28,9 @@ interface UserJobDataTableProps<TData, TValue> {
 }
 
 export function UserJobDataTable<TData, TValue>({
-  columns,
-  data,
-}: UserJobDataTableProps<TData, TValue>) {
+                                                  columns,
+                                                  data,
+                                                }: UserJobDataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   )
@@ -74,7 +67,7 @@ export function UserJobDataTable<TData, TValue>({
       <Action
         title="Создать должность"
         description={<>Заполните все поля и нажмите кнопку <b>Создать</b></>}
-        form={<UserJobAddForm />}
+        form={<UserJobAddForm/>}
         isOpen={isFormOpen}
         setIsOpen={setIsFormOpen}
       />

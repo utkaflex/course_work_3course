@@ -6,28 +6,21 @@ import * as React from "react"
 import {
   ColumnDef,
   ColumnFiltersState,
-  VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
+  VisibilityState,
 } from "@tanstack/react-table"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import {Button} from "@/components/ui/button"
+import {Input} from "@/components/ui/input"
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { CorrectPagesCase } from "../helper-functions"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion"
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table"
+import {CorrectPagesCase} from "../helper-functions"
+import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "../ui/accordion"
 import Action from "../action"
 
 interface ResponsibleUserDataTableProps<TData, TValue> {
@@ -36,9 +29,9 @@ interface ResponsibleUserDataTableProps<TData, TValue> {
 }
 
 export function ResponsibleUserDataTable<TData, TValue>({
-  columns,
-  data,
-}: ResponsibleUserDataTableProps<TData, TValue>) {
+                                                          columns,
+                                                          data,
+                                                        }: ResponsibleUserDataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   )
@@ -75,14 +68,14 @@ export function ResponsibleUserDataTable<TData, TValue>({
       <Action
         title="Создать ответственное лицо"
         description={<>Заполните все поля и нажмите кнопку <b>Создать</b></>}
-        form={<ResponsibleUserAddForm />}
+        form={<ResponsibleUserAddForm/>}
         isOpen={isFormOpen}
         setIsOpen={setIsFormOpen}
       />
       <div className="w-full h-full">
         <div className="flex items-end justify-between py-4">
-            <Accordion type="single" collapsible>
-              <AccordionItem value="item-1" className="border-0 px-1">
+          <Accordion type="single" collapsible>
+            <AccordionItem value="item-1" className="border-0 px-1">
               <AccordionTrigger className="flex h-[40px] min-w-[100px] max-w-[100px] py-0">Фильтры</AccordionTrigger>
               <AccordionContent className="flex flex-wrap gap-2 p-1">
                 <div className="flex flex-col gap-1">
@@ -121,8 +114,8 @@ export function ResponsibleUserDataTable<TData, TValue>({
                   />
                 </div>
               </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+            </AccordionItem>
+          </Accordion>
           <div className="flex gap-2">
             <Button
               className="bg-blue-2 hover:bg-blue-700"

@@ -2,11 +2,9 @@ import React, {useEffect, useState} from 'react'
 
 import Image from 'next/image'
 import Link from 'next/link'
-import MobileNav from './mobile-nav'
-import { PC_CENTER_PAGE, WebSiteName } from '@/constants'
+import {navbarLinks, PC_CENTER_PAGE, WebSiteName} from '@/constants'
 import LogOutButton from './auth/logout-button'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip'
-import { navbarLinks } from '@/constants'
+import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from './ui/tooltip'
 import {usePathname} from "next/navigation";
 import {useUser} from "@/hooks/use-user";
 import {cn} from "@/lib/utils";
@@ -20,7 +18,7 @@ type NavbarLink = {
 const Navbar = () => {
 
   const pathname = usePathname();
-  const { userRole, isLoadingUser, username } = useUser()
+  const {userRole, isLoadingUser, username} = useUser()
 
   const [linksFiltered, setLinksFiltered] = useState<NavbarLink[]>([])
 
@@ -44,7 +42,8 @@ const Navbar = () => {
                   alt='Site-logo'
                   className='max-sm:size-10'
                 />
-                <p className='text-[26px] text-blue-2 font-extrabold max-sm:hidden transition-colors hover:text-blue-500'> {WebSiteName} </p>
+                <p
+                  className='text-[26px] text-blue-2 font-extrabold max-sm:hidden transition-colors hover:text-blue-500'> {WebSiteName} </p>
               </Link>
             </TooltipTrigger>
             <TooltipContent>

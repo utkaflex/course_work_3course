@@ -4,26 +4,19 @@ import * as React from "react"
 import {
   ColumnDef,
   ColumnFiltersState,
-  SortingState,
-  VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  SortingState,
   useReactTable,
+  VisibilityState,
 } from "@tanstack/react-table"
 
-import { Button } from "@/components/ui/button"
+import {Button} from "@/components/ui/button"
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table"
 import EquipmentStatusAddForm from "./equipment-status-add-form"
 import Action from "../action"
 import {CorrectPagesCase} from "@/components/helper-functions";
@@ -35,10 +28,10 @@ interface EquipmentStatusDataTableProps<TData, TValue> {
 }
 
 export function EquipmentStatusDataTable<TData, TValue>({
-  columns,
-  data,
-  equipmentId
-}: EquipmentStatusDataTableProps<TData, TValue>) {
+                                                          columns,
+                                                          data,
+                                                          equipmentId
+                                                        }: EquipmentStatusDataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []

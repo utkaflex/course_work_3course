@@ -1,21 +1,74 @@
 from typing import List
-from fastapi import Depends, HTTPException
+from fastapi import HTTPException
 from sqlalchemy import select
 from EquipmentStatus.models import EquipmentStatus
 from ResponsibleUser.models import ResponsibleUser
-from User.depends import get_current_user
-from User.models import User
 from database import async_session
 from sqlalchemy.orm import joinedload
 
 from Equipment.models import Equipment
-from Equipment.schemas import SEquipment, SEquipmentCreate, SEquipmentWithResponsible
+from Equipment.schemas import SEquipmentCreate, SEquipmentWithResponsible
+from Rooms.models import Rooms
 
-async def get_equipment(equipment_id: int):
+async def get_equipment(equipment_id: int) -> SEquipmentWithResponsible | None:
     async with async_session() as session:
-        query = select(Equipment).filter(Equipment.id == equipment_id)
+        query = select(Equipment).options(
+            joinedload(Equipment.type),
+            joinedload(Equipment.statuses).joinedload(EquipmentStatus.status_type),
+            joinedload(Equipment.statuses).joinedload(EquipmentStatus.responsible_user).joinedload(ResponsibleUser.office),
+            joinedload(Equipment.statuses).joinedload(EquipmentStatus.building),
+            joinedload(Equipment.statuses).joinedload(EquipmentStatus.room).joinedload(Rooms.building),
+            joinedload(Equipment.statuses).joinedload(EquipmentStatus.room).joinedload(Rooms.room_type),
+            joinedload(Equipment.equipment_specification)
+        ).filter(Equipment.id == equipment_id)
         result = await session.execute(query)
-        return result.scalar_one_or_none()
+        equipment = result.unique().scalar_one_or_none()
+        
+        if equipment is None:
+            return None
+        
+        last_status_type = None
+        last_status_color = None
+        last_building_adress = None
+        responsible_user_full_name = None
+        responsible_user_office = None
+        
+        if equipment.statuses:
+            sorted_statuses = sorted(
+                equipment.statuses, 
+                key=lambda x: x.status_change_date, 
+                reverse=True
+            )
+            latest_status = sorted_statuses[0]
+            last_status_type = latest_status.status_type.status_type_name
+            last_status_color = latest_status.status_type.status_type_color
+            last_building_adress = latest_status.building.building_address if latest_status.building else None
+            if latest_status.responsible_user:
+                responsible_user_full_name = (
+                    f"{latest_status.responsible_user.last_name} "
+                    f"{latest_status.responsible_user.first_name} "
+                    f"{latest_status.responsible_user.paternity}"
+                )
+                responsible_user_office = latest_status.responsible_user.office.office_name
+                
+        return SEquipmentWithResponsible(
+            id=equipment.id,
+            type_id=equipment.type_id,
+            model=equipment.model,
+            serial_number=equipment.serial_number,
+            inventory_number=equipment.inventory_number,
+            network_name=equipment.network_name,
+            remarks=equipment.remarks,
+            accepted_date=equipment.accepted_date,
+            last_status_type=last_status_type,
+            last_status_color=last_status_color,
+            responsible_user_full_name=responsible_user_full_name,
+            type_name=equipment.type.type_name,
+            building_adress=last_building_adress,
+            responsible_user_office=responsible_user_office,
+            statuses=equipment.statuses,
+            specifications=equipment.equipment_specification,
+        )
 
 async def get_equipment_by_serial_number(serial_number: str):
     async with async_session() as session:
@@ -36,6 +89,8 @@ async def get_equipment_for_word(equipment_id: int) -> SEquipmentWithResponsible
                 joinedload(Equipment.statuses).joinedload(EquipmentStatus.status_type),
                 joinedload(Equipment.statuses).joinedload(EquipmentStatus.responsible_user).joinedload(ResponsibleUser.office),
                 joinedload(Equipment.statuses).joinedload(EquipmentStatus.building),
+                joinedload(Equipment.statuses).joinedload(EquipmentStatus.room).joinedload(Rooms.building),
+                joinedload(Equipment.statuses).joinedload(EquipmentStatus.room).joinedload(Rooms.room_type),
             ).filter(Equipment.id == equipment_id)
         
         result = await session.execute(query)
@@ -81,6 +136,7 @@ async def get_equipment_for_word(equipment_id: int) -> SEquipmentWithResponsible
                         type_name=equipment.type.type_name,
                         building_adress=last_building_adress if last_building_adress else None,
                         responsible_user_office=responsible_user_office if responsible_user_office else None
+                        
         )
 
 async def get_all_equipment(user_role_id: int) -> list[SEquipmentWithResponsible]:
@@ -93,6 +149,8 @@ async def get_all_equipment(user_role_id: int) -> list[SEquipmentWithResponsible
                 joinedload(Equipment.statuses).joinedload(EquipmentStatus.status_type),
                 joinedload(Equipment.statuses).joinedload(EquipmentStatus.responsible_user).joinedload(ResponsibleUser.office),
                 joinedload(Equipment.statuses).joinedload(EquipmentStatus.building),
+                joinedload(Equipment.statuses).joinedload(EquipmentStatus.room).joinedload(Rooms.building),
+                joinedload(Equipment.statuses).joinedload(EquipmentStatus.room).joinedload(Rooms.room_type),
                 joinedload(Equipment.equipment_specification)
             )
             result = await session.execute(query)
@@ -151,7 +209,9 @@ async def get_all_equipment(user_role_id: int) -> list[SEquipmentWithResponsible
                         responsible_user_full_name=responsible_user_full_name if responsible_user_full_name else None,
                         type_name=equipment.type.type_name,
                         building_adress=last_building_adress if last_building_adress else None,
-                        responsible_user_office=responsible_user_office if responsible_user_office else None
+                        responsible_user_office=responsible_user_office if responsible_user_office else None,
+                        statuses=equipment.statuses,
+                        specifications=equipment.equipment_specification,
                     )
                 )
                 
@@ -166,6 +226,8 @@ async def get_equipment_for_excel(user_role_id: int, equipment_list: List[SEquip
             joinedload(Equipment.statuses).joinedload(EquipmentStatus.status_type),
             joinedload(Equipment.statuses).joinedload(EquipmentStatus.responsible_user).joinedload(ResponsibleUser.office),
             joinedload(Equipment.statuses).joinedload(EquipmentStatus.building),
+            joinedload(Equipment.statuses).joinedload(EquipmentStatus.room).joinedload(Rooms.building),
+            joinedload(Equipment.statuses).joinedload(EquipmentStatus.room).joinedload(Rooms.room_type),
             joinedload(Equipment.equipment_specification)
         ).where(Equipment.id.in_(equipment_ids))
         
@@ -245,31 +307,29 @@ async def create_equipment(equipment: SEquipmentCreate):
         return db_equipment
 
 async def update_equipment(equipment_id: int, updated_equipment: SEquipmentCreate):
-    equipment = await get_equipment(equipment_id)
-    
-    if equipment is None:
-        raise HTTPException(status_code=404, detail="Equipment not found")
-    
-    equipment.type_id = updated_equipment.type_id
-    equipment.model = updated_equipment.model
-    equipment.serial_number = updated_equipment.serial_number
-    equipment.inventory_number = updated_equipment.inventory_number
-    equipment.network_name = updated_equipment.network_name
-    equipment.remarks = updated_equipment.remarks
-    equipment.accepted_date = updated_equipment.accepted_date
-    
     async with async_session() as session:
-        session.add(equipment)
+        db_equipment = await session.get(Equipment, equipment_id)
+        if not db_equipment:
+            raise HTTPException(status_code=404, detail="Equipment not found")
+
+        db_equipment.type_id = updated_equipment.type_id
+        db_equipment.model = updated_equipment.model
+        db_equipment.serial_number = updated_equipment.serial_number
+        db_equipment.inventory_number = updated_equipment.inventory_number
+        db_equipment.network_name = updated_equipment.network_name
+        db_equipment.remarks = updated_equipment.remarks
+        db_equipment.accepted_date = updated_equipment.accepted_date
+
         await session.commit()
-        await session.refresh(equipment)
-    
-    return equipment
+
+    return await get_equipment(equipment_id)
+
 
 async def delete_equipment(equipment_id: int):
     async with async_session() as session:
-        equipment = await get_equipment(equipment_id)
-        if not equipment:
+        db_equipment = await session.get(Equipment, equipment_id)
+        if not db_equipment:
             raise HTTPException(status_code=404, detail="Equipment not found")
-        await session.delete(equipment)
+        await session.delete(db_equipment)
         await session.commit()
         return {"detail": "Equipment deleted successfully"}

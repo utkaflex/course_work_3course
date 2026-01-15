@@ -10,7 +10,8 @@ services:
     env_file:
       - .env
     volumes:
-      - ./sats.db:/app/back/sats.db
+      - ./back/sats.db:/app/back/sats.db
+      - /mnt/backups:/app/back/backups
 
   frontend:
     build:

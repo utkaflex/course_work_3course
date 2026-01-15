@@ -1,13 +1,13 @@
 "use client"
 
-import { ResponsibleUserDataTable } from "./data-table"
-import { ResponsibleUserSchema } from "@/schemas"
-import { ResponsibleUserTableColumns } from "./columns"
+import {ResponsibleUserDataTable} from "./data-table"
+import {ResponsibleUserSchema} from "@/schemas"
+import {ResponsibleUserTableColumns} from "./columns"
 
-import { useEffect, useState } from "react"
+import {useEffect, useState} from "react"
 import axios from "axios"
-import { API_URL } from "@/constants"
-import { z } from "zod"
+import {API_URL} from "@/constants"
+import {z} from "zod"
 
 
 export default function ResponsibleUserTable() {
@@ -33,5 +33,5 @@ export default function ResponsibleUserTable() {
     return <div>Loading responsible users...</div>
   }
 
-  return <ResponsibleUserDataTable columns={ResponsibleUserTableColumns} data={data} />
+  return <ResponsibleUserDataTable columns={ResponsibleUserTableColumns} data={data}/>
 }

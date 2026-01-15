@@ -1,6 +1,6 @@
 [project]
 name = "course-work-3course"
-version = "1.0.0"
+version = "2.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -10,7 +10,8 @@ dependencies = [
     "alembic==1.14.0",
     "annotated-types==0.7.0",
     "anyio==4.6.2.post1",
-    "bcrypt==4.2.1",
+    "apscheduler>=3.11.2",
+    "bcrypt==4.0.1",
     "certifi==2024.8.30",
     "cffi==1.17.1",
     "click==8.1.7",
