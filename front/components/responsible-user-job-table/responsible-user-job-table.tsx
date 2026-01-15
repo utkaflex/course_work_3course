@@ -1,13 +1,13 @@
 "use client"
 
-import { ResponsibleUserJobDataTable } from "./data-table"
-import { ResponsibleUserJobSchema } from "@/schemas"
-import { ResponsibleUserJobTableColumns } from "./columns"
+import {ResponsibleUserJobDataTable} from "./data-table"
+import {ResponsibleUserJobSchema} from "@/schemas"
+import {ResponsibleUserJobTableColumns} from "./columns"
 
-import { useEffect, useState } from "react"
+import {useEffect, useState} from "react"
 import axios from "axios"
-import { API_URL } from "@/constants"
-import { z } from "zod"
+import {API_URL} from "@/constants"
+import {z} from "zod"
 
 export default function ResponsibleUserJobTable() {
   const [data, setData] = useState<z.infer<typeof ResponsibleUserJobSchema>[]>([])
@@ -32,5 +32,5 @@ export default function ResponsibleUserJobTable() {
     return <div>Loading jobs...</div>
   }
 
-  return <ResponsibleUserJobDataTable columns={ResponsibleUserJobTableColumns} data={data} />
+  return <ResponsibleUserJobDataTable columns={ResponsibleUserJobTableColumns} data={data}/>
 }

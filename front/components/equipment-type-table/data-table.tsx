@@ -6,27 +6,20 @@ import * as React from "react"
 import {
   ColumnDef,
   ColumnFiltersState,
-  VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
+  VisibilityState,
 } from "@tanstack/react-table"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import {Button} from "@/components/ui/button"
+import {Input} from "@/components/ui/input"
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { CorrectPagesCase } from "../helper-functions"
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table"
+import {CorrectPagesCase} from "../helper-functions"
 import Action from "../action"
 
 interface EquipmentTypeDataTableProps<TData, TValue> {
@@ -35,9 +28,9 @@ interface EquipmentTypeDataTableProps<TData, TValue> {
 }
 
 export function EquipmentTypeDataTable<TData, TValue>({
-  columns,
-  data,
-}: EquipmentTypeDataTableProps<TData, TValue>) {
+                                                        columns,
+                                                        data,
+                                                      }: EquipmentTypeDataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   )
@@ -74,7 +67,7 @@ export function EquipmentTypeDataTable<TData, TValue>({
       <Action
         title="Создать оборудования"
         description={<>Заполните все поля и нажмите кнопку <b>Создать</b></>}
-        form={<EquipmentTypeAddForm />}
+        form={<EquipmentTypeAddForm/>}
         isOpen={isFormOpen}
         setIsOpen={setIsFormOpen}
       />

@@ -1,13 +1,13 @@
 "use client"
 
-import { EquipmentStatusTypeDataTable } from "./data-table"
-import { EquipmentStatusTypeSchema } from "@/schemas"
-import { EquipmentStatusTypeTableColumns } from "./columns"
+import {EquipmentStatusTypeDataTable} from "./data-table"
+import {EquipmentStatusTypeSchema} from "@/schemas"
+import {EquipmentStatusTypeTableColumns} from "./columns"
 
-import { useEffect, useState } from "react"
+import {useEffect, useState} from "react"
 import axios from "axios"
-import { API_URL } from "@/constants"
-import { z } from "zod"
+import {API_URL} from "@/constants"
+import {z} from "zod"
 
 export default function EquipmentStatusTypeTable() {
   const [data, setData] = useState<z.infer<typeof EquipmentStatusTypeSchema>[]>([])
@@ -32,5 +32,5 @@ export default function EquipmentStatusTypeTable() {
     return <div>Loading statuses...</div>
   }
 
-  return <EquipmentStatusTypeDataTable columns={EquipmentStatusTypeTableColumns} data={data} />
+  return <EquipmentStatusTypeDataTable columns={EquipmentStatusTypeTableColumns} data={data}/>
 }

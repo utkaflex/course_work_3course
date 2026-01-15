@@ -2,18 +2,18 @@
 
 import * as z from "zod"
 import axios from "axios";
-import { API_URL } from "@/constants";
-import { zodResolver } from "@hookform/resolvers/zod"
+import {API_URL} from "@/constants";
+import {zodResolver} from "@hookform/resolvers/zod"
 
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { useForm } from "react-hook-form"
-import { useEffect, useState } from "react";
-import { SoftwareSchema } from "@/schemas";
+import {FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form"
+import {useForm} from "react-hook-form"
+import {useEffect, useState} from "react";
+import {SoftwareSchema} from "@/schemas";
 
-import { DateToDbForm } from "../helper-functions";
+import {DateToDbForm} from "../helper-functions";
 import ContractsTable from "../contracts-table/contracts-table";
-import { useToast } from "@/hooks/use-toast";
-import { textFields, comboboxFields } from './fields';
+import {useToast} from "@/hooks/use-toast";
+import {comboboxFields, textFields} from './fields';
 import CRUDFormForTables from '../crud-form-for-tables';
 
 export const SoftwareAddForm = () => {
@@ -22,7 +22,7 @@ export const SoftwareAddForm = () => {
   const [selectedContractIds, setSelectedContractIds] = useState<number[]>([]);
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
 
-  const { toast } = useToast()
+  const {toast} = useToast()
 
   useEffect(() => {
     setLoading(true)
@@ -31,8 +31,7 @@ export const SoftwareAddForm = () => {
         const response = (await axios.get(API_URL + `/license/all`)).data
         comboboxFields[0].data = response
         setLoading(false)
-      }
-      catch(e) {
+      } catch (e) {
         console.log("Ошибка при получении данных о лицензиях")
         console.log(e)
       }
@@ -85,21 +84,21 @@ export const SoftwareAddForm = () => {
     }
 
     axios.post(API_URL + '/software/create', toApi)
-    .then(() => {
-      localStorage.setItem("last_tab", "software")
-      window.location.reload()
-      toast({
-        title: "Запись добавлена",
-        description: "Данные записаны в БД",
-        className: "bg-white"
+      .then(() => {
+        localStorage.setItem("last_tab", "software")
+        window.location.reload()
+        toast({
+          title: "Запись добавлена",
+          description: "Данные записаны в БД",
+          className: "bg-white"
+        })
       })
-    })
-    .catch((e) => {
-      setError("Во время добавления записи произошла непредвиденная ошибка!")
-      console.log("Unexpected error occured while adding row.")
-      console.log(e)
-      setIsProcessing(false)
-    })
+      .catch((e) => {
+        setError("Во время добавления записи произошла непредвиденная ошибка!")
+        console.log("Unexpected error occured while adding row.")
+        console.log(e)
+        setIsProcessing(false)
+      })
   }
 
   return (
@@ -114,17 +113,17 @@ export const SoftwareAddForm = () => {
       textFields={textFields}
       comboboxFields={comboboxFields}
     >
-    <FormField
-      control={form.control}
-      name="contracts"
-      render={() => (
-        <FormItem>
+      <FormField
+        control={form.control}
+        name="contracts"
+        render={() => (
+          <FormItem>
             <FormLabel>
               Договоры
             </FormLabel>
             <FormControl>
               <section
-                  className='flex flex-col gap-5 bg-light-3 p-1
+                className='flex flex-col gap-5 bg-light-3 p-1
                   rounded-[10px] border border-gray-300'
               >
                 <ContractsTable
@@ -134,10 +133,10 @@ export const SoftwareAddForm = () => {
                 />
               </section>
             </FormControl>
-            <FormMessage />
-        </FormItem>
-      )}
-    />
+            <FormMessage/>
+          </FormItem>
+        )}
+      />
     </CRUDFormForTables>
   )
 }

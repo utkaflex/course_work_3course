@@ -10,8 +10,6 @@ RUN sh /uv-installer.sh && rm /uv-installer.sh
 
 ENV PATH="/root/.local/bin/:$PATH"
 
-RUN mkdir back
-
 COPY . /app/back 
 
 RUN uv sync

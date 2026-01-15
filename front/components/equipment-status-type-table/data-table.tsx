@@ -6,27 +6,20 @@ import * as React from "react"
 import {
   ColumnDef,
   ColumnFiltersState,
-  VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
+  VisibilityState,
 } from "@tanstack/react-table"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import {Button} from "@/components/ui/button"
+import {Input} from "@/components/ui/input"
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { CorrectPagesCase } from "../helper-functions"
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table"
+import {CorrectPagesCase} from "../helper-functions"
 import Action from "../action"
 
 interface EquipmentStatusTypeDataTableProps<TData, TValue> {
@@ -35,9 +28,9 @@ interface EquipmentStatusTypeDataTableProps<TData, TValue> {
 }
 
 export function EquipmentStatusTypeDataTable<TData, TValue>({
-  columns,
-  data,
-}: EquipmentStatusTypeDataTableProps<TData, TValue>) {
+                                                              columns,
+                                                              data,
+                                                            }: EquipmentStatusTypeDataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   )
@@ -75,7 +68,7 @@ export function EquipmentStatusTypeDataTable<TData, TValue>({
       <Action
         title="Создать статус"
         description={<>Заполните все поля и нажмите кнопку <b>Создать</b></>}
-        form={<EquipmentStatusTypeAddForm />}
+        form={<EquipmentStatusTypeAddForm/>}
         isOpen={isFormOpen}
         setIsOpen={setIsFormOpen}
       />

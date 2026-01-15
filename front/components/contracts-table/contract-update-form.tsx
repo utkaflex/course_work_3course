@@ -1,27 +1,27 @@
 "use client"
 
-import { useToast } from '@/hooks/use-toast'
-import { ContractFormSchema } from '@/schemas'
-import React, { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { z } from 'zod'
-import { zodResolver } from "@hookform/resolvers/zod"
+import {useToast} from '@/hooks/use-toast'
+import {ContractFormSchema} from '@/schemas'
+import React, {useEffect, useState} from 'react'
+import {useForm} from 'react-hook-form'
+import {z} from 'zod'
+import {zodResolver} from "@hookform/resolvers/zod"
 import axios from 'axios'
-import { API_URL } from '@/constants'
-import { DateFromDbForm, DateToDbForm } from '../helper-functions'
-import { textFields } from './fields';
+import {API_URL} from '@/constants'
+import {DateFromDbForm, DateToDbForm} from '../helper-functions'
+import {textFields} from './fields';
 import CRUDFormForTables from '../crud-form-for-tables'
 
 const ContractUpdateForm = ({
-    id
-}: {
-    id: number
+                              id
+                            }: {
+  id: number
 }) => {
   const [error, setError] = useState<string | undefined>("")
   const [loading, setLoading] = useState<boolean>(true)
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
 
-  const { toast } = useToast()
+  const {toast} = useToast()
 
   const form = useForm<z.infer<typeof ContractFormSchema>>({
     resolver: zodResolver(ContractFormSchema),
@@ -59,25 +59,25 @@ const ContractUpdateForm = ({
         contract_id: id
       }
     })
-    .then(() => {
-      localStorage.setItem("last_tab", "contracts")
-      window.location.reload()
-      toast({
-        title: "Запись обновлена",
-        description: "Данные записаны в БД",
-        className: "bg-white"
+      .then(() => {
+        localStorage.setItem("last_tab", "contracts")
+        window.location.reload()
+        toast({
+          title: "Запись обновлена",
+          description: "Данные записаны в БД",
+          className: "bg-white"
+        })
       })
-    })
-    .catch((e) => {
-      if (e.response.data.detail == "Contract number already exists"){
-        setError("Договор с таким номером уже существует")
-      } else {
-        setError("Произошла непредвиденная ошибка при обновлении записи!")
-        console.log("Error while updating row!")
-        console.log(e)
-      }
-      setIsProcessing(false)
-    })
+      .catch((e) => {
+        if (e.response.data.detail == "Contract number already exists") {
+          setError("Договор с таким номером уже существует")
+        } else {
+          setError("Произошла непредвиденная ошибка при обновлении записи!")
+          console.log("Error while updating row!")
+          console.log(e)
+        }
+        setIsProcessing(false)
+      })
   }
 
   return (

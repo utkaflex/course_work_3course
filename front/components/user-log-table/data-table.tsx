@@ -4,29 +4,22 @@ import * as React from "react"
 import {
   ColumnDef,
   ColumnFiltersState,
-  SortingState,
-  VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  SortingState,
   useReactTable,
+  VisibilityState,
 } from "@tanstack/react-table"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import {Button} from "@/components/ui/button"
+import {Input} from "@/components/ui/input"
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { CorrectPagesCase } from "../helper-functions"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion"
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table"
+import {CorrectPagesCase} from "../helper-functions"
+import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "../ui/accordion"
 
 interface UserLogDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -34,9 +27,9 @@ interface UserLogDataTableProps<TData, TValue> {
 }
 
 export function UserLogDataTable<TData, TValue>({
-  columns,
-  data,
-}: UserLogDataTableProps<TData, TValue>) {
+                                                  columns,
+                                                  data,
+                                                }: UserLogDataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []

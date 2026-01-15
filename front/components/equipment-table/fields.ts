@@ -1,5 +1,5 @@
-import { TypeSchema } from "@/schemas";
-import { z } from "zod";
+import {TypeSchema} from "@/schemas";
+import {z} from "zod";
 
 export type TextFieldName = "model" | "serial_number" | "inventory_number" | "network_name" | "remarks";
 export type ComboboxFieldName = "type_id"

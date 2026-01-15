@@ -2,32 +2,27 @@
 
 import * as z from "zod"
 import axios from "axios";
-import { API_URL } from "@/constants";
-import { zodResolver } from "@hookform/resolvers/zod"
+import {API_URL} from "@/constants";
+import {zodResolver} from "@hookform/resolvers/zod"
 
-import { useForm } from "react-hook-form"
-import { useEffect, useState } from "react";
-import {
-  StatusSchema,
-  ResponsibleUserSchema,
-  BuildingSchema,
-  EquipmentStatusFormSchema
-} from "@/schemas";
+import {useForm} from "react-hook-form"
+import {useEffect, useState} from "react";
+import {BuildingSchema, EquipmentStatusFormSchema, ResponsibleUserSchema, StatusSchema} from "@/schemas";
 
-import { useToast } from "@/hooks/use-toast";
-import { textFields, comboboxFields, DataArray } from './fields';
+import {useToast} from "@/hooks/use-toast";
+import {comboboxFields, DataArray, textFields} from './fields';
 import CRUDFormForTables from '../crud-form-for-tables';
 
 const EquipmentStatusUpdateForm = ({
-  id
-} : {
+                                     id
+                                   }: {
   id: number
 }) => {
   const [error, setError] = useState<string | undefined>("");
   const [loading, setLoading] = useState<boolean>(true)
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
 
-  const { toast } = useToast()
+  const {toast} = useToast()
 
   useEffect(() => {
     setLoading(true)
@@ -50,15 +45,15 @@ const EquipmentStatusUpdateForm = ({
           const user_office = user.office_name
 
           return {
-            value:  user_fio +
-                    (user_job ? ", " + user_job : "") +
-                    (user_office ? ", " + user_office : ""),
+            value: user_fio +
+              (user_job ? ", " + user_job : "") +
+              (user_office ? ", " + user_office : ""),
             id: user.id
           } as DataArray
         })) as DataArray[]
         comboboxFields[1].data = responsible_users_for_combobox
 
-        const buildings = (await axios.get(API_URL + `/buildings/all`)).data as z.infer<typeof BuildingSchema>[]
+        const buildings = (await axios.get(API_URL + `/building/all`)).data as z.infer<typeof BuildingSchema>[]
         const buildings_for_combobox = await Promise.all(buildings.map(async building => {
           return {
             value: building.building_address,
@@ -66,21 +61,28 @@ const EquipmentStatusUpdateForm = ({
           } as DataArray
         })) as DataArray[]
         comboboxFields[2].data = buildings_for_combobox
+
+        const rooms = (await axios.get(API_URL + `/room/all`)).data
+        const rooms_for_combobox = rooms.map((room: any) => ({
+          id: room.id,
+          value: `${room.name} ${room.building?.building_address ?? ""}`,
+        })) as DataArray[]
+
+        comboboxFields[3].data = rooms_for_combobox
         try {
           const status = (await axios.get(API_URL + `/equipment_status/${id}`)).data
           form.reset({
             ...status,
-            audience_id: status.audience_id.toString()
+            audience_id: status.audience_id.toString(),
+            room_id: status.room_id ?? 0
           })
           setLoading(false)
-        }
-        catch(e) {
+        } catch (e) {
           console.log("Ошибка при получении данных о статусе")
           console.log(e)
         }
 
-      }
-      catch(e) {
+      } catch (e) {
         console.log("Ошибка при получении общих данных о статусе")
         console.log(e)
       }
@@ -98,6 +100,7 @@ const EquipmentStatusUpdateForm = ({
       status_type_id: 0,
       responsible_user_id: 0,
       building_id: 0,
+      room_id: 0,
       equipment_id: 0
     }
   });
@@ -112,22 +115,24 @@ const EquipmentStatusUpdateForm = ({
       status_type_id: data.status_type_id,
       responsible_user_id: data.responsible_user_id,
       building_id: data.building_id,
+      room_id: data.room_id,
       equipment_id: data.equipment_id,
     })
-    .then(() => {
-      window.location.reload()
-      toast({
-        title: "Статус обновлен",
-        description: "Данные записаны в БД",
-        className: "bg-white"
+      .then(() => {
+        window.location.reload()
+        toast({
+          title: "Статус обновлен",
+          description: "Данные записаны в БД",
+          className: "bg-white"
+        })
       })
-    })
-    .catch((e) => {
-      setError("Во время добавления записи произошла непредвиденная ошибка!")
-      console.log("Unexpected error occured while adding row.")
-      console.log(e)
-      setIsProcessing(false)
-    })
+      .catch((e) => {
+        if (e.response.data.detail === 'Room does not belong to building')
+          setError("Указанное помещение относиться к другому адресу!")
+        console.log("Unexpected error occured while adding row.")
+        console.log(e)
+        setIsProcessing(false)
+      })
   }
 
   return (

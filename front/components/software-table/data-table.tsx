@@ -4,32 +4,25 @@ import * as React from "react"
 import {
   ColumnDef,
   ColumnFiltersState,
-  SortingState,
-  VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  SortingState,
   useReactTable,
+  VisibilityState,
 } from "@tanstack/react-table"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import {Button} from "@/components/ui/button"
+import {Input} from "@/components/ui/input"
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { CorrectPagesCase } from "../helper-functions"
-import { SoftwareAddForm } from "./software-add-form"
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table"
+import {CorrectPagesCase} from "../helper-functions"
+import {SoftwareAddForm} from "./software-add-form"
 import DownloadButton from "../download-button"
-import { API_URL } from "@/constants"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion"
+import {API_URL} from "@/constants"
+import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "../ui/accordion"
 import Action from "../action"
 
 interface SoftwareDataTableProps<TData, TValue> {
@@ -39,10 +32,10 @@ interface SoftwareDataTableProps<TData, TValue> {
 }
 
 export function SoftwareDataTable<TData, TValue>({
-  columns,
-  data,
-  userRole
-}: SoftwareDataTableProps<TData, TValue>) {
+                                                   columns,
+                                                   data,
+                                                   userRole
+                                                 }: SoftwareDataTableProps<TData, TValue>) {
   const seesContracts = userRole >= 2
   const actionsAllowed = userRole >= 3
 
@@ -86,7 +79,7 @@ export function SoftwareDataTable<TData, TValue>({
       <Action
         title="Создать ПО"
         description={<>Заполните все поля и нажмите кнопку <b>Создать</b></>}
-        form={<SoftwareAddForm />}
+        form={<SoftwareAddForm/>}
         isOpen={isFormOpen}
         setIsOpen={setIsFormOpen}
       />

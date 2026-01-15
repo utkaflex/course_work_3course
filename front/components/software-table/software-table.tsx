@@ -1,16 +1,16 @@
 "use client"
 
-import { SoftwareDataTable } from "./data-table"
-import { SoftwareTableColumns } from "./columns"
-import { useEffect, useState } from "react"
-import { SoftwareTableSchema } from "@/schemas"
+import {SoftwareDataTable} from "./data-table"
+import {SoftwareTableColumns} from "./columns"
+import {useEffect, useState} from "react"
+import {SoftwareTableSchema} from "@/schemas"
 import axios from "axios"
-import { API_URL } from "@/constants"
-import { z } from "zod"
+import {API_URL} from "@/constants"
+import {z} from "zod"
 
 export default function SoftwareTable({
-  userRole
-} : {
+                                        userRole
+                                      }: {
   userRole: number
 }) {
   const [data, setData] = useState<z.infer<typeof SoftwareTableSchema>[]>([])
@@ -41,5 +41,5 @@ export default function SoftwareTable({
     return <div>Loading software data...</div>
   }
 
-  return <SoftwareDataTable columns={SoftwareTableColumns} data={data} userRole={userRole} />
+  return <SoftwareDataTable columns={SoftwareTableColumns} data={data} userRole={userRole}/>
 }

@@ -2,25 +2,25 @@
 
 import * as z from "zod"
 import axios from "axios";
-import { API_URL } from "@/constants";
-import { zodResolver } from "@hookform/resolvers/zod"
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { useForm } from "react-hook-form"
-import { useEffect, useState } from "react";
-import { ContractSchema, SoftwareSchema } from "@/schemas";
-import { useToast } from "@/hooks/use-toast"
-import { DateFromDbForm, DateToDbForm } from "../helper-functions";
+import {API_URL} from "@/constants";
+import {zodResolver} from "@hookform/resolvers/zod"
+import {FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form"
+import {useForm} from "react-hook-form"
+import {useEffect, useState} from "react";
+import {ContractSchema, SoftwareSchema} from "@/schemas";
+import {useToast} from "@/hooks/use-toast"
+import {DateFromDbForm, DateToDbForm} from "../helper-functions";
 import ContractsTable from "../contracts-table/contracts-table";
-import { textFields, comboboxFields } from './fields';
+import {comboboxFields, textFields} from './fields';
 import CRUDFormForTables from '../crud-form-for-tables';
 
-export const SoftwareUpdateForm = ({ id }: { id: number }) => {
+export const SoftwareUpdateForm = ({id}: { id: number }) => {
   const [error, setError] = useState<string | undefined>("")
   const [loading, setLoading] = useState<boolean>(true)
   const [selectedContractIds, setSelectedContractIds] = useState<number[]>([]);
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
 
-  const { toast } = useToast()
+  const {toast} = useToast()
 
   const handleSelectedRowsChange = (selectedIds: number[]) => {
     setSelectedContractIds(selectedIds);
@@ -43,8 +43,7 @@ export const SoftwareUpdateForm = ({ id }: { id: number }) => {
           console.log("Ошибка загрузки данных")
           console.log(e)
         }
-      }
-      catch(e) {
+      } catch (e) {
         console.log("Ошибка при получении данных о лицензиях")
         console.log(e)
       }
@@ -83,21 +82,21 @@ export const SoftwareUpdateForm = ({ id }: { id: number }) => {
         software_id: id
       }
     })
-    .then(() => {
-      localStorage.setItem("last_tab", "software")
-      window.location.reload()
-      toast({
-        title: "Запись обновлена",
-        description: "Данные записаны в БД",
-        className: "bg-white"
+      .then(() => {
+        localStorage.setItem("last_tab", "software")
+        window.location.reload()
+        toast({
+          title: "Запись обновлена",
+          description: "Данные записаны в БД",
+          className: "bg-white"
+        })
       })
-    })
-    .catch((e) => {
-      setError("Произошла непредвиденная ошибка при обновлении записи!")
-      console.log("Error while updating row!")
-      console.log(e)
-      setIsProcessing(false)
-    })
+      .catch((e) => {
+        setError("Произошла непредвиденная ошибка при обновлении записи!")
+        console.log("Error while updating row!")
+        console.log(e)
+        setIsProcessing(false)
+      })
   }
 
   return (
@@ -116,25 +115,25 @@ export const SoftwareUpdateForm = ({ id }: { id: number }) => {
         control={form.control}
         name="contracts"
         render={() => (
-            <FormItem>
-                <FormLabel>
-                  Договоры
-                </FormLabel>
-                <FormControl>
-                  <section
-                      className='flex flex-col gap-5 bg-light-3 p-1
+          <FormItem>
+            <FormLabel>
+              Договоры
+            </FormLabel>
+            <FormControl>
+              <section
+                className='flex flex-col gap-5 bg-light-3 p-1
                       rounded-[10px] border border-gray-300'
-                  >
-                    <ContractsTable
-                      checkboxes={true}
-                      actions={false}
-                      selected_contract_ids={selectedContractIds}
-                      onSelectedRowsChange={handleSelectedRowsChange}
-                    />
-                  </section>
-                </FormControl>
-                <FormMessage />
-            </FormItem>
+              >
+                <ContractsTable
+                  checkboxes={true}
+                  actions={false}
+                  selected_contract_ids={selectedContractIds}
+                  onSelectedRowsChange={handleSelectedRowsChange}
+                />
+              </section>
+            </FormControl>
+            <FormMessage/>
+          </FormItem>
         )}
       />
     </CRUDFormForTables>
