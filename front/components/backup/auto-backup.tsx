@@ -159,9 +159,7 @@ const AutoBackup = () => {
   const weekdayButtonLabel =
     selectedWeekdayLabels.length === 0
       ? "Выберите дни недели..."
-      : selectedWeekdayLabels.length <= 4
-        ? selectedWeekdayLabels.join(", ")
-        : `${selectedWeekdayLabels.slice(0, 4).join(", ")} +${selectedWeekdayLabels.length - 4}`
+      : selectedWeekdayLabels.join(", ")
 
   const toggleWeekday = (d: WeekdayNum) => {
     setWeekdays((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]))
@@ -256,11 +254,11 @@ const AutoBackup = () => {
       </div>
 
       <div className="flex flex-col gap-1">
-        <div className="text-sm text-muted-foreground">Таймзона</div>
+        <div className="text-sm text-muted-foreground">Часовой пояс</div>
         <select
           value={timezone}
           onChange={(e) => setTimezone(e.target.value as UiSettings["timezone"])}
-          className="h-10 w-full rounded-md border-2 bg-white px-3 text-sm"
+          className="h-10 w-full rounded-md border-2 bg-white px-3 cursor-pointer text-sm hover:bg-accent"
           disabled={isProcessing}
         >
           {timezoneOptions.map((t) => (
@@ -296,7 +294,7 @@ const AutoBackup = () => {
             onWheelCapture={(e) => e.stopPropagation()}
           >
             <Command className="bg-light-3">
-              <CommandInput placeholder="Поиск..." className="h-9 border-b border-black/20"/>
+              <CommandInput placeholder="Поиск..." className="h-9 "/>
               <CommandList className="max-h-60 overflow-y-auto overscroll-contain">
                 <CommandEmpty className="py-3 text-center text-sm">Ничего не найдено</CommandEmpty>
 

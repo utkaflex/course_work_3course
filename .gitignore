@@ -10,6 +10,7 @@ __pycache__/
 .vscode
 backups
 *.db
+docker-compose.override.yml
 
 # Distribution / packaging
 .Python
