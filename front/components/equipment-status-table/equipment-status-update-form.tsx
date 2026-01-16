@@ -65,7 +65,7 @@ const EquipmentStatusUpdateForm = ({
         const rooms = (await axios.get(API_URL + `/room/all`)).data
         const rooms_for_combobox = rooms.map((room: any) => ({
           id: room.id,
-          value: `${room.name} ${room.building?.building_address ?? ""}`,
+          value: `${room.name}, ${room.building?.building_address ?? ""}`,
         })) as DataArray[]
 
         comboboxFields[3].data = rooms_for_combobox
