@@ -155,7 +155,7 @@ wheels = [
 
 [[package]]
 name = "course-work-3course"
-version = "1.0.0"
+version = "2.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "aiofiles" },

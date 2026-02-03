@@ -38,21 +38,32 @@ async def generate_equipment_excel(payload: SEquipmentExcelReport, user: User = 
         elif payload.report_type_id == 2:
             categories = await crud.get_all_categories_with_types()
 
+            categorized_type_ids: set[int] = set()
+            for cat in categories:
+                types = list(getattr(cat, "types", []) or [])
+                for t in types:
+                    categorized_type_ids.add(t.id)
+
+            equipment_period = equipment_period
+            period_type_counts: dict[int | None, int] = {}
+            for e in equipment_period:
+                tid = getattr(e, "type_id", None)
+                period_type_counts[tid] = period_type_counts.get(tid, 0) + 1
+
+            def _tname(t) -> str:
+                return (getattr(t, "type_name", "") or getattr(t, "name", "") or "").strip()
+
             blocks = []
+
             for cat in categories:
                 cat_name = getattr(cat, "category_name", "") or getattr(cat, "name", "") or ""
-
                 types = list(getattr(cat, "types", []) or [])
                 if not types:
                     continue
 
                 type_ids = [t.id for t in types]
-
                 totals_all = await crud.count_equipment_by_type_ids(type_ids)
                 totals_period = await crud.count_equipment_by_type_ids_in_ids(type_ids, payload.ids)
-
-                def _tname(t):
-                    return (getattr(t, "type_name", "") or getattr(t, "name", "") or "").strip()
 
                 types_sorted = sorted(types, key=lambda t: _tname(t).lower())
 
@@ -64,13 +75,50 @@ async def generate_equipment_excel(payload: SEquipmentExcelReport, user: User = 
 
                     rows.append((_tname(t), totals_all.get(t.id, 0), period_cnt))
 
-                if not rows:
-                    continue
+                if rows:
+                    blocks.append((cat_name, rows))
 
-                blocks.append((cat_name, rows))
+            other_type_ids: list[int] = []
+            other_without_type = period_type_counts.get(None, 0)
+
+            for tid, cnt in period_type_counts.items():
+                if tid is None:
+                    continue
+                if tid not in categorized_type_ids:
+                    other_type_ids.append(tid)
+
+            if other_type_ids or other_without_type > 0:
+                totals_all_other = await crud.count_equipment_by_type_ids(other_type_ids) if other_type_ids else {}
+                totals_period_other = await crud.count_equipment_by_type_ids_in_ids(other_type_ids, payload.ids) if other_type_ids else {}
+
+                type_id_to_name: dict[int, str] = {}
+                for e in equipment_period:
+                    tid = getattr(e, "type_id", None)
+                    if tid is None or tid in type_id_to_name:
+                        continue
+                    t = getattr(e, "type", None)
+                    if t is not None:
+                        type_id_to_name[tid] = _tname(t)
+
+                other_rows = []
+
+                for tid in sorted(other_type_ids, key=lambda x: (type_id_to_name.get(x, ""), x)):
+                    period_cnt = totals_period_other.get(tid, 0)
+                    if period_cnt == 0:
+                        continue
+                    other_rows.append((
+                        type_id_to_name.get(tid, f"Тип #{tid}"),
+                        totals_all_other.get(tid, 0),
+                        period_cnt
+                    ))
+
+                if other_without_type > 0:
+                    other_rows.append(("Тип не указан", 0, other_without_type))
+
+                if other_rows:
+                    blocks.append(("Прочее", other_rows))
 
             content = build_complex_report_all_categories(blocks)
-
         else:
             raise HTTPException(status_code=400, detail="Unknown report_type_id")
 
