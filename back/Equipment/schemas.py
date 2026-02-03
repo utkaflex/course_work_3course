@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional
 
 from EquipmentSpecification.schemas import SEquipmentSpecification
@@ -36,3 +36,7 @@ class SEquipmentWithResponsible(SEquipment):
 
     class Config:
         from_attributes = True
+
+class SEquipmentExcelReport(BaseModel):
+    ids: List[int] = Field(min_length = 1)
+    report_type_id: int

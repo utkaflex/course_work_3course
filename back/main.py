@@ -19,6 +19,7 @@ from Job.router import router as router_jobs
 from License.router import router as router_license
 from Office.router import router as router_offices
 from ResponsibleUser.router import router as router_responsible_user
+from ReportTypes.router import router as router_report_types
 from SessionLog.router import router as router_session_log
 from Software.router import router as router_software
 from SystemRole.router import router as router_roles
@@ -70,6 +71,7 @@ app.include_router(router_categories)
 app.include_router(category_types_router)
 app.include_router(rooms_router)
 app.include_router(room_types_router)
+app.include_router(router_report_types)
 
 origins = (settings.APP_CORS_ORIGINS).split(",")
 

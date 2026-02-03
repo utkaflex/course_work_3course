@@ -1,10 +1,11 @@
-from typing import List
+from typing import List, Dict
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, func
 from EquipmentStatus.models import EquipmentStatus
 from ResponsibleUser.models import ResponsibleUser
 from database import async_session
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
+from Category.models import Category
 
 from Equipment.models import Equipment
 from Equipment.schemas import SEquipmentCreate, SEquipmentWithResponsible
@@ -333,3 +334,49 @@ async def delete_equipment(equipment_id: int):
         await session.delete(db_equipment)
         await session.commit()
         return {"detail": "Equipment deleted successfully"}
+
+async def get_equipment_for_ready_report(ids: List[int]) -> list[Equipment]:
+    async with async_session() as session:
+        query = (
+            select(Equipment)
+            .options(joinedload(Equipment.type))
+            .where(Equipment.id.in_(ids))
+        )
+        result = await session.execute(query)
+        return list(result.scalars().all())
+
+async def get_equipment_by_ids(ids: List[int]) -> list[Equipment]:
+    async with async_session() as session:
+        stmt = select(Equipment).where(Equipment.id.in_(ids))
+        res = await session.execute(stmt)
+        return list(res.scalars().all())
+
+
+async def get_all_categories_with_types():
+    async with async_session() as session:
+        stmt = select(Category).options(selectinload(Category.types))
+        res = await session.execute(stmt)
+        return list(res.scalars().all())
+
+
+async def count_equipment_by_type_ids(type_ids: List[int]) -> Dict[int, int]:
+    async with async_session() as session:
+        stmt = (
+            select(Equipment.type_id, func.count(Equipment.id))
+            .where(Equipment.type_id.in_(type_ids))
+            .group_by(Equipment.type_id)
+        )
+        res = await session.execute(stmt)
+        return {type_id: cnt for type_id, cnt in res.all()}
+
+
+async def count_equipment_by_type_ids_in_ids(type_ids: List[int], equipment_ids: List[int]) -> Dict[int, int]:
+    async with async_session() as session:
+        stmt = (
+            select(Equipment.type_id, func.count(Equipment.id))
+            .where(Equipment.type_id.in_(type_ids))
+            .where(Equipment.id.in_(equipment_ids))
+            .group_by(Equipment.type_id)
+        )
+        res = await session.execute(stmt)
+        return {type_id: cnt for type_id, cnt in res.all()}
