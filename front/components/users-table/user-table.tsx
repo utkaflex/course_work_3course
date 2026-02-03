@@ -1,12 +1,12 @@
 "use client"
 
-import { UserDataTable } from "./data-table";
-import { UserTableColumns } from "./columns"
-import { useEffect, useState } from "react"
-import { UserSchemaForTable } from "@/schemas"
+import {UserDataTable} from "./data-table";
+import {UserTableColumns} from "./columns"
+import {useEffect, useState} from "react"
+import {UserSchemaForTable} from "@/schemas"
 import axios from "axios"
-import { API_URL } from "@/constants"
-import { z } from "zod"
+import {API_URL} from "@/constants"
+import {z} from "zod"
 
 export default function UserTable() {
   const [data, setData] = useState<z.infer<typeof UserSchemaForTable>[]>([])
@@ -31,5 +31,5 @@ export default function UserTable() {
     return <div>Loading users data...</div>
   }
 
-  return <UserDataTable columns={UserTableColumns} data={data} />
+  return <UserDataTable columns={UserTableColumns} data={data}/>
 }

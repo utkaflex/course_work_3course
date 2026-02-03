@@ -1,13 +1,13 @@
 "use client"
 
-import { UserOfficeDataTable } from "./data-table"
-import { UserOfficeSchema } from "@/schemas"
-import { UserOfficeTableColumns } from "./columns"
+import {UserOfficeDataTable} from "./data-table"
+import {UserOfficeSchema} from "@/schemas"
+import {UserOfficeTableColumns} from "./columns"
 
-import { useEffect, useState } from "react"
+import {useEffect, useState} from "react"
 import axios from "axios"
-import { API_URL } from "@/constants"
-import { z } from "zod"
+import {API_URL} from "@/constants"
+import {z} from "zod"
 
 export default function UserOfficeTable() {
   const [data, setData] = useState<z.infer<typeof UserOfficeSchema>[]>([])
@@ -32,5 +32,5 @@ export default function UserOfficeTable() {
     return <div>Loading offices...</div>
   }
 
-  return <UserOfficeDataTable columns={UserOfficeTableColumns} data={data} />
+  return <UserOfficeDataTable columns={UserOfficeTableColumns} data={data}/>
 }

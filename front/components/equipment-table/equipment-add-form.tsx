@@ -1,19 +1,18 @@
 "use client"
 
-import React from 'react'
+import React, {useEffect, useState} from 'react'
 import * as z from "zod"
 import axios from "axios";
-import { API_URL } from "@/constants";
-import { zodResolver } from "@hookform/resolvers/zod"
+import {API_URL} from "@/constants";
+import {zodResolver} from "@hookform/resolvers/zod"
 
-import { useForm } from "react-hook-form"
-import { useEffect, useState } from "react";
-import { EquipmentFormSchema, TypeSchema } from "@/schemas";
+import {useForm} from "react-hook-form"
+import {EquipmentFormSchema} from "@/schemas";
 
-import { useToast } from "@/hooks/use-toast";
-import { textFields, comboboxFields } from './fields';
+import {useToast} from "@/hooks/use-toast";
+import {comboboxFields, textFields} from './fields';
 import CRUDFormForTables from '../crud-form-for-tables';
-import { DateToDbForm } from '../helper-functions';
+import {DateToDbForm} from '../helper-functions';
 
 const EquipmentAddForm = () => {
   const [error, setError] = useState<string | undefined>("");
@@ -23,7 +22,7 @@ const EquipmentAddForm = () => {
   const [invExists, setInvExists] = useState(false)
   const invCheckReqId = React.useRef(0)
 
-  const { toast } = useToast()
+  const {toast} = useToast()
 
   useEffect(() => {
     setLoading(true)
@@ -32,8 +31,7 @@ const EquipmentAddForm = () => {
         const response = (await axios.get(API_URL + `/equipment_types/all`)).data
         comboboxFields[0].data = response
         setLoading(false)
-      }
-      catch (e) {
+      } catch (e) {
         console.log("Ошибка при получении данных о типах оборудования")
         console.log(e)
       }
@@ -60,7 +58,7 @@ const EquipmentAddForm = () => {
     setIsProcessing(true)
 
     var toApi
-    if (data.accepted_date !== ""){
+    if (data.accepted_date !== "") {
       toApi = {
         ...data,
         accepted_date: DateToDbForm(data.accepted_date)

@@ -1,12 +1,12 @@
 "use client"
 
-import { LicenseDataTable } from "./data-table"
-import { useEffect, useState } from "react"
-import { LicenseSchema } from "@/schemas"
-import { LicensesTableColumns } from "./columns"
+import {LicenseDataTable} from "./data-table"
+import {useEffect, useState} from "react"
+import {LicenseSchema} from "@/schemas"
+import {LicensesTableColumns} from "./columns"
 import axios from "axios"
-import { API_URL } from "@/constants"
-import { z } from "zod"
+import {API_URL} from "@/constants"
+import {z} from "zod"
 
 export default function LicensesTable() {
   const [data, setData] = useState<z.infer<typeof LicenseSchema>[]>([])
@@ -31,5 +31,5 @@ export default function LicensesTable() {
     return <div>Loading licenses...</div>
   }
 
-  return <LicenseDataTable columns={LicensesTableColumns} data={data} />
+  return <LicenseDataTable columns={LicensesTableColumns} data={data}/>
 }

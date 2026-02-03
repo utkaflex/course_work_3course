@@ -2,32 +2,27 @@
 
 import * as z from "zod"
 import axios from "axios";
-import { API_URL } from "@/constants";
-import { zodResolver } from "@hookform/resolvers/zod"
+import {API_URL} from "@/constants";
+import {zodResolver} from "@hookform/resolvers/zod"
 
-import { useForm } from "react-hook-form"
-import { useEffect, useState } from "react";
-import {
-  StatusSchema,
-  ResponsibleUserSchema,
-  BuildingSchema,
-  EquipmentStatusFormSchema
-} from "@/schemas";
+import {useForm} from "react-hook-form"
+import {useEffect, useState} from "react";
+import {BuildingSchema, EquipmentStatusFormSchema, ResponsibleUserSchema, StatusSchema} from "@/schemas";
 
-import { useToast } from "@/hooks/use-toast";
-import { textFields, comboboxFields, DataArray } from './fields';
+import {useToast} from "@/hooks/use-toast";
+import {comboboxFields, DataArray, textFields} from './fields';
 import CRUDFormForTables from '../crud-form-for-tables';
 
 const EquipmentStatusAddForm = ({
-  equipmentId
-} : {
+                                  equipmentId
+                                }: {
   equipmentId: number
 }) => {
   const [error, setError] = useState<string | undefined>("");
   const [loading, setLoading] = useState<boolean>(true)
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
 
-  const { toast } = useToast()
+  const {toast} = useToast()
 
   useEffect(() => {
     setLoading(true)
@@ -50,28 +45,37 @@ const EquipmentStatusAddForm = ({
           const user_office = user.office_name
 
           return {
-            value:  user_fio +
-                    (user_job ? ", " + user_job : "") +
-                    (user_office ? ", " + user_office : ""),
+            value: user_fio +
+              (user_job ? ", " + user_job : "") +
+              (user_office ? ", " + user_office : ""),
             id: user.id
           } as DataArray
         })) as DataArray[]
         comboboxFields[1].data = responsible_users_for_combobox
 
-        const buildings = (await axios.get(API_URL + `/buildings/all`)).data as z.infer<typeof BuildingSchema>[]
-        const buildings_for_combobox = await Promise.all(buildings.map(async building => {
+        const building = (await axios.get(API_URL + `/building/all`)).data as z.infer<typeof BuildingSchema>[]
+        const building_for_combobox = await Promise.all(building.map(async building => {
           return {
             value: building.building_address,
             id: building.id
           } as DataArray
         })) as DataArray[]
-        comboboxFields[2].data = buildings_for_combobox
+        comboboxFields[2].data = building_for_combobox
+
+        const rooms = (await axios.get(API_URL + `/room/all`)).data
+        const rooms_for_combobox = rooms.map((room: any) => ({
+          id: room.id,
+          value: `${room.name}, ${room.building?.building_address ?? ""}`,
+        })) as DataArray[]
+
+        comboboxFields[3].data = rooms_for_combobox
         setLoading(false)
-      }
-      catch(e) {
+      } catch (e) {
         console.log("Ошибка при получении данных о статусе")
         console.log(e)
       }
+
+
     }
 
     fetchData()
@@ -86,6 +90,7 @@ const EquipmentStatusAddForm = ({
       status_type_id: 0,
       responsible_user_id: 0,
       building_id: 0,
+      room_id: 0,
       equipment_id: equipmentId
     }
   });
@@ -100,22 +105,23 @@ const EquipmentStatusAddForm = ({
       status_type_id: data.status_type_id,
       responsible_user_id: data.responsible_user_id,
       building_id: data.building_id,
+      room_id: data.room_id,
       equipment_id: data.equipment_id,
     })
-    .then(() => {
-      window.location.reload()
-      toast({
-        title: "Запись добавлена",
-        description: "Данные записаны в БД",
-        className: "bg-white"
+      .then(() => {
+        window.location.reload()
+        toast({
+          title: "Запись добавлена",
+          description: "Данные записаны в БД",
+          className: "bg-white"
+        })
       })
-    })
-    .catch((e) => {
-      setError("Во время добавления записи произошла непредвиденная ошибка!")
-      console.log("Unexpected error occured while adding row.")
-      console.log(e)
-      setIsProcessing(false)
-    })
+      .catch((e) => {
+        setError("Во время добавления записи произошла непредвиденная ошибка!")
+        console.log("Unexpected error occured while adding row.")
+        console.log(e)
+        setIsProcessing(false)
+      })
   }
 
   return (

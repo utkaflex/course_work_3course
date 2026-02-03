@@ -1,30 +1,29 @@
 "use client"
 
-import React from 'react'
+import React, {useEffect, useState} from 'react'
 import * as z from "zod"
 import axios from "axios";
-import { API_URL } from "@/constants";
-import { zodResolver } from "@hookform/resolvers/zod"
+import {API_URL} from "@/constants";
+import {zodResolver} from "@hookform/resolvers/zod"
 
-import { useForm } from "react-hook-form"
-import { useEffect, useState } from "react";
-import { EquipmentFormSchema, TypeSchema } from "@/schemas";
+import {useForm} from "react-hook-form"
+import {EquipmentFormSchema} from "@/schemas";
 
-import { useToast } from "@/hooks/use-toast";
-import { textFields, comboboxFields } from './fields';
+import {useToast} from "@/hooks/use-toast";
+import {comboboxFields, textFields} from './fields';
 import CRUDFormForTables from '../crud-form-for-tables';
-import { DateFromDbForm, DateToDbForm } from '../helper-functions';
+import {DateFromDbForm, DateToDbForm} from '../helper-functions';
 
 const EquipmentUpdateForm = ({
-    id
-} : {
-    id: number
+                               id
+                             }: {
+  id: number
 }) => {
   const [error, setError] = useState<string | undefined>("");
   const [loading, setLoading] = useState<boolean>(true)
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
 
-  const { toast } = useToast()
+  const {toast} = useToast()
 
   useEffect(() => {
     setLoading(true)
@@ -38,8 +37,7 @@ const EquipmentUpdateForm = ({
         })
         comboboxFields[0].data = response
         setLoading(false)
-      }
-      catch(e) {
+      } catch (e) {
         console.log("Ошибка при получении данных о типах оборудования")
         console.log(e)
         setIsProcessing(false)
@@ -67,7 +65,7 @@ const EquipmentUpdateForm = ({
     setIsProcessing(true)
 
     var toApi
-    if (data.accepted_date !== ""){
+    if (data.accepted_date !== "") {
       toApi = {
         ...data,
         accepted_date: DateToDbForm(data.accepted_date)
@@ -84,24 +82,24 @@ const EquipmentUpdateForm = ({
     }
     console.log(toApi)
     axios.put(API_URL + `/equipment/${id}`, toApi)
-    .then(() => {
-      localStorage.setItem("last_tab", "equipment")
-      window.location.reload()
-      toast({
-        title: "Запись обновлена",
-        description: "Данные записаны в БД",
-        className: "bg-white"
+      .then(() => {
+        localStorage.setItem("last_tab", "equipment")
+        window.location.reload()
+        toast({
+          title: "Запись обновлена",
+          description: "Данные записаны в БД",
+          className: "bg-white"
+        })
       })
-    })
-    .catch((e) => {
-      if (e.response.status === 400 && e.response.data.detail === "Equipment with this serial number already exists") {
-        setError("Оборудование с таким серийным номером уже существует")
-      } else {
-        setError("Во время добавления записи произошла непредвиденная ошибка!")
-      }
-      console.log("Error while updating row!")
-      console.log(e)
-    })
+      .catch((e) => {
+        if (e.response.status === 400 && e.response.data.detail === "Equipment with this serial number already exists") {
+          setError("Оборудование с таким серийным номером уже существует")
+        } else {
+          setError("Во время добавления записи произошла непредвиденная ошибка!")
+        }
+        console.log("Error while updating row!")
+        console.log(e)
+      })
   }
 
   return (

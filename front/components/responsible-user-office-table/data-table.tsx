@@ -6,27 +6,20 @@ import * as React from "react"
 import {
   ColumnDef,
   ColumnFiltersState,
-  VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
+  VisibilityState,
 } from "@tanstack/react-table"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import {Button} from "@/components/ui/button"
+import {Input} from "@/components/ui/input"
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { CorrectPagesCase } from "../helper-functions"
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table"
+import {CorrectPagesCase} from "../helper-functions"
 import Action from "../action"
 
 interface ResponsibleUserOfficeDataTableProps<TData, TValue> {
@@ -35,9 +28,9 @@ interface ResponsibleUserOfficeDataTableProps<TData, TValue> {
 }
 
 export function ResponsibleUserOfficeDataTable<TData, TValue>({
-  columns,
-  data,
-}: ResponsibleUserOfficeDataTableProps<TData, TValue>) {
+                                                                columns,
+                                                                data,
+                                                              }: ResponsibleUserOfficeDataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   )
@@ -74,7 +67,7 @@ export function ResponsibleUserOfficeDataTable<TData, TValue>({
       <Action
         title="Создать подразделение"
         description={<>Заполните все поля и нажмите кнопку <b>Создать</b></>}
-        form={<ResponsibleUserOfficeAddForm />}
+        form={<ResponsibleUserOfficeAddForm/>}
         isOpen={isFormOpen}
         setIsOpen={setIsFormOpen}
       />

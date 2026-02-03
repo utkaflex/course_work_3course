@@ -1,33 +1,26 @@
 "use client"
 
 import * as React from "react"
+import {useEffect} from "react"
 import {
   ColumnDef,
   ColumnFiltersState,
-  SortingState,
-  VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  SortingState,
   useReactTable,
+  VisibilityState,
 } from "@tanstack/react-table"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import {Button} from "@/components/ui/button"
+import {Input} from "@/components/ui/input"
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { CorrectPagesCase } from "../helper-functions"
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table"
+import {CorrectPagesCase} from "../helper-functions"
 import ContractAddForm from "./contract-add-form"
-import { useEffect } from "react"
 import Action from "../action"
 
 interface ContractsDataTableProps<TData, TValue> {
@@ -39,12 +32,12 @@ interface ContractsDataTableProps<TData, TValue> {
 }
 
 export function ContractsDataTable<TData, TValue>({
-  columns,
-  data,
-  checkboxes,
-  actions,
-  onSelectedRowsChange,
-}: ContractsDataTableProps<TData, TValue>) {
+                                                    columns,
+                                                    data,
+                                                    checkboxes,
+                                                    actions,
+                                                    onSelectedRowsChange,
+                                                  }: ContractsDataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -96,7 +89,7 @@ export function ContractsDataTable<TData, TValue>({
       <Action
         title="Добавить договор"
         description={<>Заполните все поля и нажмите кнопку <b>Создать</b></>}
-        form={<ContractAddForm />}
+        form={<ContractAddForm/>}
         isOpen={isFormOpen}
         setIsOpen={setIsFormOpen}
       />

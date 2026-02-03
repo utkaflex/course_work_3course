@@ -1,53 +1,46 @@
 "use client"
 
 import * as React from "react"
+import {useEffect} from "react"
 import {
   ColumnDef,
   ColumnFiltersState,
-  SortingState,
-  VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  SortingState,
   useReactTable,
+  VisibilityState,
 } from "@tanstack/react-table"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import {Button} from "@/components/ui/button"
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { CorrectPagesCase } from "../helper-functions"
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table"
+import {CorrectPagesCase} from "../helper-functions"
 import EquipmentAddForm from "./equipment-add-form"
-import DownloadButton from "../download-button"
-import { API_URL } from "@/constants"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion"
+import {API_URL} from "@/constants"
 import Action from "../action"
-import { DataTableComboboxFilter } from "../data-table-combobox-filter"
-import {useEffect} from "react";
 import axios from "axios";
+import ReportDownloadButton from "@/components/report-download-button";
+import EquipmentFiltersPanel from "@/components/equipment-table/EquipmentFiltersPanel";
 
 interface EquipmentDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
-  forStatus: boolean,
+  variant: 'main' | 'other'
+  showFilters: boolean
   userRole: number
 }
 
 export function EquipmentDataTable<TData, TValue>({
-  columns,
-  data,
-  forStatus,
-  userRole
-}: EquipmentDataTableProps<TData, TValue>) {
+                                                    columns,
+                                                    data,
+                                                    variant,
+                                                    showFilters,
+                                                    userRole
+                                                  }: EquipmentDataTableProps<TData, TValue>) {
   const actionsAllowed = userRole >= 3
 
   const [sorting, setSorting] = React.useState<SortingState>([])
@@ -57,13 +50,19 @@ export function EquipmentDataTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
     id: false,
     last_status_color: false,
-    remarks: !forStatus,
-    responsible_user_office: !forStatus && actionsAllowed,
-    responsible_user_full_name: !forStatus && actionsAllowed,
-    additional_info: !forStatus && actionsAllowed,
-    last_status_type: !forStatus && actionsAllowed,
-    actions: !forStatus && actionsAllowed,
-    building_adress: !forStatus && actionsAllowed,
+    remarks: variant === 'other',
+    network_name: variant === 'other',
+    responsible_user_office: variant === 'other' && actionsAllowed,
+    responsible_user_full_name: variant === 'main' && actionsAllowed,
+    additional_info: variant === 'main' && showFilters && actionsAllowed,
+    last_status_type: variant === 'main' && actionsAllowed,
+    building_adress: variant === 'main' && actionsAllowed,
+    room: variant === 'main' && actionsAllowed,
+    type_name: variant === 'main',
+    model: variant === 'main',
+    serial_number: variant === 'main',
+    inventory_number: variant === 'main',
+    accepted_date: variant === 'main',
   })
   const [pagination, setPagination] = React.useState({
     pageIndex: 0,
@@ -75,7 +74,9 @@ export function EquipmentDataTable<TData, TValue>({
     statuses: [] as { value: string; label: string; color?: string }[],
     buildings: [] as { value: string; label: string }[],
     responsible_users: [] as { value: string; label: string }[],
-    offices: [] as { value: string; label: string }[]
+    offices: [] as { value: string; label: string }[],
+    rooms: [] as { value: string; label: string }[],
+    categories: [] as { value: string; label: string, typeNames: string[] }[],
   })
 
   const table = useReactTable({
@@ -97,6 +98,7 @@ export function EquipmentDataTable<TData, TValue>({
   })
 
   const [isFormOpen, setIsFormOpen] = React.useState<boolean>(false)
+  const [selectedCategories, setSelectedCategories] = React.useState<string[]>([])
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -107,12 +109,16 @@ export function EquipmentDataTable<TData, TValue>({
           buildingsRes,
           responsible_usersRes,
           officesRes,
+          roomsRes,
+          categoriesRes,
         ] = await Promise.all([
           axios.get(API_URL + "/equipment_types/all"),
           axios.get(API_URL + "/equipment_status_type/all"),
-          axios.get(API_URL + "/buildings/all"),
+          axios.get(API_URL + "/building/all"),
           axios.get(API_URL + "/responsible_users/all"),
           axios.get(API_URL + "/responsible_users/office/all"),
+          axios.get(API_URL + "/room/all"),
+          axios.get(API_URL + "/category/all"),
         ])
 
         setFilterOptions({
@@ -136,7 +142,16 @@ export function EquipmentDataTable<TData, TValue>({
           offices: officesRes.data.map((o: any) => ({
             value: o.office_name,
             label: o.office_name,
-          }))
+          })),
+          rooms: roomsRes.data.map((r: any) => ({
+            value: `${r.name} (${r.room_type?.room_type ?? ""})`.trim(),
+            label: `${r.name} (${r.room_type?.room_type ?? ""})`.trim(),
+          })),
+          categories: categoriesRes.data.map((c: any) => ({
+            value: c.category_name,
+            label: c.category_name,
+            typeNames: (c.types ?? []).map((t: any) => t.type_name),
+          })),
         })
       } catch (e) {
         console.log("Ошибка при загрузке фильтров", e)
@@ -144,6 +159,26 @@ export function EquipmentDataTable<TData, TValue>({
     }
     fetchAll()
   }, [])
+
+  useEffect(() => {
+    const typeCol = table.getColumn("type_name")
+    if (!typeCol) return
+
+    if (!selectedCategories.length) {
+      typeCol.setFilterValue([])
+      return
+    }
+
+    const unionTypeNames = Array.from(
+      new Set(
+        filterOptions.categories
+          .filter(c => selectedCategories.includes(c.value))
+          .flatMap(c => c.typeNames)
+      )
+    )
+
+    typeCol.setFilterValue(unionTypeNames)
+  }, [selectedCategories, filterOptions.categories])
 
   const acceptedDateFilter = (table.getColumn("accepted_date")?.getFilterValue() as
     { from?: string; to?: string }) ?? {}
@@ -160,167 +195,24 @@ export function EquipmentDataTable<TData, TValue>({
       <Action
         title="Создать оборудование"
         description={<>Заполните все поля и нажмите кнопку <b>Создать</b></>}
-        form={<EquipmentAddForm />}
+        form={<EquipmentAddForm/>}
         isOpen={isFormOpen}
         setIsOpen={setIsFormOpen}
       />
       <div className="w-full h-full">
-        {!forStatus && <div className="flex items-end justify-between py-4">
-          <Accordion type="single" collapsible>
-            <AccordionItem value="item-1" className="border-0 px-1">
-            <AccordionTrigger className="flex h-[40px] min-w-[100px] max-w-[100px] py-0">Фильтры</AccordionTrigger>
-            <AccordionContent className="flex flex-wrap gap-2 p-1">
-              <div className="flex flex-col gap-1">
-                <label className="text-xs text-muted-foreground">Тип оборудования</label>
-                <DataTableComboboxFilter
-                  column={table.getColumn("type_name")}
-                  options={filterOptions.types}
-                  placeholder="Фильтр по типу оборудования..."
-                  searchPlaceholder="Поиск типа..."
-                  emptyText="Типы не найдены"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-xs text-muted-foreground">Модель</label>
-                <Input
-                  placeholder="Фильтр по модели оборудования..."
-                  value={(table.getColumn("model")?.getFilterValue() as string) ?? ""}
-                  onChange={(event) =>
-                    table.getColumn("model")?.setFilterValue(event.target.value)
-                  }
-                  className="w-[300px]"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-xs text-muted-foreground">Серийный номер</label>
-                <Input
-                  placeholder="Фильтр по серийному номеру..."
-                  value={(table.getColumn("serial_number")?.getFilterValue() as string) ?? ""}
-                  onChange={(event) =>
-                    table.getColumn("serial_number")?.setFilterValue(event.target.value)
-                  }
-                  className="w-[300px]"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-xs text-muted-foreground">Инвентарный номер</label>
-                <Input
-                  placeholder="Фильтр по инвентарному номеру..."
-                  value={(table.getColumn("inventory_number")?.getFilterValue() as string) ?? ""}
-                  onChange={(event) =>
-                    table.getColumn("inventory_number")?.setFilterValue(event.target.value)
-                  }
-                  className="w-[300px]"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-xs text-muted-foreground">Сетевое имя</label>
-                <Input
-                  placeholder="Фильтр по сетевому имени..."
-                  value={(table.getColumn("network_name")?.getFilterValue() as string) ?? ""}
-                  onChange={(event) =>
-                    table.getColumn("network_name")?.setFilterValue(event.target.value)
-                  }
-                  className="w-[300px]"
-                />
-              </div>
-
-              {actionsAllowed && (
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs text-muted-foreground">Ответственное лицо</label>
-                  <DataTableComboboxFilter
-                    column={table.getColumn("responsible_user_full_name")}
-                    options={filterOptions.responsible_users}
-                    placeholder="Фильтр по ответственному лицу..."
-                    searchPlaceholder="Поиск ответственного лица..."
-                    emptyText="Ответственное лицо не найдено"
-                  />
-                </div>
-              )}
-
-              {actionsAllowed && (
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs text-muted-foreground">Статус</label>
-                  <DataTableComboboxFilter
-                    column={table.getColumn("last_status_type")}
-                    options={filterOptions.statuses}
-                    placeholder="Фильтр по статусу..."
-                    searchPlaceholder="Поиск статуса..."
-                    emptyText="Статус не найден"
-                  />
-                </div>
-              )}
-
-              {actionsAllowed && (
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs text-muted-foreground">Адрес</label>
-                  <DataTableComboboxFilter
-                    column={table.getColumn("building_adress")}
-                    options={filterOptions.buildings}
-                    placeholder="Фильтр по адресу..."
-                    searchPlaceholder="Поиск адреса..."
-                    emptyText="Адрес не найден"
-                  />
-                </div>
-              )}
-
-              {actionsAllowed && (
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs text-muted-foreground">Подразделение</label>
-                  <DataTableComboboxFilter
-                    column={table.getColumn("responsible_user_office")}
-                    options={filterOptions.offices}
-                    placeholder="Фильтр по подразделению..."
-                    searchPlaceholder="Поиск подразделения..."
-                    emptyText="Подразделение не найдено"
-                  />
-                </div>
-              )}
-
-              <div className="flex flex-col gap-1">
-                <label className="text-xs text-muted-foreground">Дата принятия к учёту</label>
-                <div className="flex gap-2 items-center">
-                  <Input
-                    type="date"
-                    className="w-[145px]"
-                    value={acceptedDateFilter.from ?? ""}
-                    onChange={(e) =>
-                      setAcceptedDateFilter({ from: e.target.value || undefined })
-                    }
-                  />
-                  <span className="text-sm text-muted-foreground">—</span>
-                  <Input
-                    type="date"
-                    className="w-[145px]"
-                    value={acceptedDateFilter.to ?? ""}
-                    onChange={(e) =>
-                      setAcceptedDateFilter({ to: e.target.value || undefined })
-                    }
-                  />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      table.getColumn("accepted_date")?.setFilterValue(undefined)
-                    }
-                  >
-                    Сброс
-                  </Button>
-                </div>
-              </div>
-            </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+        {showFilters && <div className="flex items-end justify-between py-4">
+          <EquipmentFiltersPanel
+            table={table}
+            actionsAllowed={actionsAllowed}
+            filterOptions={filterOptions}
+            selectedCategories={selectedCategories}
+            setSelectedCategories={setSelectedCategories}
+          />
           <div className="flex gap-2">
-            <DownloadButton
+            <ReportDownloadButton
               className="bg-blue-2 hover:bg-blue-700"
-              apiEndpoint={API_URL + "/equipment/to_excel_file"}
-              buttonText="Выгрузить в Excel"
-              tableData={table.getFilteredRowModel().rows.map(row => row.original)}
+              apiEndpoint={API_URL + "/reports/create"}
+              tableData={table.getFilteredRowModel().rows.map(r => r.original)}
             />
             {actionsAllowed && <Button
               className="bg-blue-2 hover:bg-blue-700"
@@ -374,7 +266,7 @@ export function EquipmentDataTable<TData, TValue>({
             </TableBody>
           </Table>
         </div>
-        {!forStatus && <div className="flex items-center justify-end space-x-2 py-4">
+        {showFilters && <div className="flex items-center justify-end space-x-2 py-4">
           <div className="flex-1 text-sm text-muted-foreground">
             {pagination.pageIndex + 1} из {Math.max(table.getPageOptions().length, 1)} {" "} {CorrectPagesCase(table.getPageOptions().length)}
           </div>

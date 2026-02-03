@@ -1,22 +1,16 @@
 "use client"
 
-import React from 'react'
+import React, {useEffect, useState} from 'react'
 import * as z from "zod"
 import axios from "axios";
-import { API_URL } from "@/constants";
-import { zodResolver } from "@hookform/resolvers/zod"
+import {API_URL} from "@/constants";
+import {zodResolver} from "@hookform/resolvers/zod"
 
-import { useForm } from "react-hook-form"
-import { useEffect, useState } from "react";
-import {
-  UserJobSchema,
-  UserOfficeSchema,
-  UserRoleSchema,
-  CreateUserFormSchema
-} from "@/schemas";
+import {useForm} from "react-hook-form"
+import {CreateUserFormSchema, UserJobSchema, UserOfficeSchema, UserRoleSchema} from "@/schemas";
 
-import { useToast } from "@/hooks/use-toast";
-import { textFields, comboboxFields, DataArray } from './fields';
+import {useToast} from "@/hooks/use-toast";
+import {comboboxFields, DataArray, textFields} from './fields';
 import CRUDFormForTables from '../crud-form-for-tables';
 
 const UserAddForm = () => {
@@ -24,7 +18,7 @@ const UserAddForm = () => {
   const [loading, setLoading] = useState<boolean>(true)
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
 
-  const { toast } = useToast()
+  const {toast} = useToast()
 
   useEffect(() => {
     setLoading(true)
@@ -56,8 +50,7 @@ const UserAddForm = () => {
           } as DataArray
         })) as DataArray[]
         comboboxFields[2].data = roles_for_combobox
-      }
-      catch(e) {
+      } catch (e) {
         console.log("Ошибка при получении данных, необходимых для создания пользователя")
         console.log(e)
       } finally {
@@ -86,29 +79,29 @@ const UserAddForm = () => {
     setError("")
     setIsProcessing(true)
     axios.post(API_URL + '/auth/signup', data)
-    .then(() => {
-      localStorage.setItem("last_tab", "users")
-      window.location.reload()
-      toast({
-        title: "Пользователь добавлен",
-        description: "Данные записаны в БД",
-        className: "bg-white"
+      .then(() => {
+        localStorage.setItem("last_tab", "users")
+        window.location.reload()
+        toast({
+          title: "Пользователь добавлен",
+          description: "Данные записаны в БД",
+          className: "bg-white"
+        })
       })
-    })
-    .catch((e) => {
-      const expectedErr = "Username already in use";
-      if (e.response.status !== 400 || e.response.data.detail !== expectedErr) {
+      .catch((e) => {
+        const expectedErr = "Username already in use";
+        if (e.response.status !== 400 || e.response.data.detail !== expectedErr) {
           throw e;
-      }
-      setError("Пользователь с указанным логином уже существует в системе")
-      setIsProcessing(false)
-    })
-    .catch((e) => {
-      setError("Во время добавления пользователя произошла непредвиденная ошибка")
-      console.log("Unexpected error occured while adding row.")
-      console.log(e)
-      setIsProcessing(false)
-    })
+        }
+        setError("Пользователь с указанным логином уже существует в системе")
+        setIsProcessing(false)
+      })
+      .catch((e) => {
+        setError("Во время добавления пользователя произошла непредвиденная ошибка")
+        console.log("Unexpected error occured while adding row.")
+        console.log(e)
+        setIsProcessing(false)
+      })
   }
 
   return (

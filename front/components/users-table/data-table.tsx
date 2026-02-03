@@ -4,32 +4,25 @@ import * as React from "react"
 import {
   ColumnDef,
   ColumnFiltersState,
-  SortingState,
-  VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  SortingState,
   useReactTable,
+  VisibilityState,
 } from "@tanstack/react-table"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import {Button} from "@/components/ui/button"
+import {Input} from "@/components/ui/input"
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { CorrectPagesCase } from "../helper-functions"
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table"
+import {CorrectPagesCase} from "../helper-functions"
 import UserAddForm from "./user-add-form"
 import DownloadButton from "../download-button"
-import { API_URL } from "@/constants"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion"
+import {API_URL} from "@/constants"
+import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "../ui/accordion"
 import Action from "../action"
 
 interface UserDataTableProps<TData, TValue> {
@@ -38,9 +31,9 @@ interface UserDataTableProps<TData, TValue> {
 }
 
 export function UserDataTable<TData, TValue>({
-  columns,
-  data,
-}: UserDataTableProps<TData, TValue>) {
+                                               columns,
+                                               data,
+                                             }: UserDataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -79,7 +72,7 @@ export function UserDataTable<TData, TValue>({
       <Action
         title="Создать пользователя"
         description={<>Заполните все поля и нажмите кнопку <b>Создать</b></>}
-        form={<UserAddForm />}
+        form={<UserAddForm/>}
         isOpen={isFormOpen}
         setIsOpen={setIsFormOpen}
       />

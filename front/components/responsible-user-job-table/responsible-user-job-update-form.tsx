@@ -1,27 +1,27 @@
 "use client"
 
-import { ResponsibleUserJobFormSchema } from '@/schemas'
+import {ResponsibleUserJobFormSchema} from '@/schemas'
 
-import { useToast } from '@/hooks/use-toast'
-import React, { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { z } from 'zod'
-import { zodResolver } from "@hookform/resolvers/zod"
+import {useToast} from '@/hooks/use-toast'
+import React, {useEffect, useState} from 'react'
+import {useForm} from 'react-hook-form'
+import {z} from 'zod'
+import {zodResolver} from "@hookform/resolvers/zod"
 import axios from 'axios'
-import { API_URL } from '@/constants'
-import { textFields } from './fields';
+import {API_URL} from '@/constants'
+import {textFields} from './fields';
 import CRUDFormForTables from '../crud-form-for-tables';
 
 const ResponsibleUserJobUpdateForm = ({
-    id
-} : {
-    id: number
+                                        id
+                                      }: {
+  id: number
 }) => {
   const [error, setError] = useState<string | undefined>("")
   const [loading, setLoading] = useState<boolean>(true)
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
 
-  const { toast } = useToast()
+  const {toast} = useToast()
 
   const form = useForm<z.infer<typeof ResponsibleUserJobFormSchema>>({
     resolver: zodResolver(ResponsibleUserJobFormSchema),
@@ -50,26 +50,26 @@ const ResponsibleUserJobUpdateForm = ({
     setError("")
     setIsProcessing(true)
     axios.put(API_URL + `/responsible_users/job/${id}`,
-    data, {
-      params: {
-        job_id: id
-      }
-    })
-    .then(() => {
-      localStorage.setItem("last_tab", "responsible_users_jobs")
-      window.location.reload()
-      toast({
-        title: "Должность обновлена",
-        description: "Данные записаны в БД",
-        className: "bg-white"
+      data, {
+        params: {
+          job_id: id
+        }
       })
-    })
-    .catch((e) => {
-      setError("Произошла непредвиденная ошибка при обновлении записи!")
-      console.log("Error while updating row!")
-      console.log(e)
-      setIsProcessing(false)
-    })
+      .then(() => {
+        localStorage.setItem("last_tab", "responsible_users_jobs")
+        window.location.reload()
+        toast({
+          title: "Должность обновлена",
+          description: "Данные записаны в БД",
+          className: "bg-white"
+        })
+      })
+      .catch((e) => {
+        setError("Произошла непредвиденная ошибка при обновлении записи!")
+        console.log("Error while updating row!")
+        console.log(e)
+        setIsProcessing(false)
+      })
   }
 
   return (

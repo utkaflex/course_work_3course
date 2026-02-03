@@ -1,13 +1,13 @@
 "use client"
 
-import { UserJobDataTable } from "./data-table"
-import { UserJobSchema } from "@/schemas"
-import { UserJobTableColumns } from "./columns"
+import {UserJobDataTable} from "./data-table"
+import {UserJobSchema} from "@/schemas"
+import {UserJobTableColumns} from "./columns"
 
-import { useEffect, useState } from "react"
+import {useEffect, useState} from "react"
 import axios from "axios"
-import { API_URL } from "@/constants"
-import { z } from "zod"
+import {API_URL} from "@/constants"
+import {z} from "zod"
 
 export default function UserJobTable() {
   const [data, setData] = useState<z.infer<typeof UserJobSchema>[]>([])
@@ -32,5 +32,5 @@ export default function UserJobTable() {
     return <div>Loading jobs...</div>
   }
 
-  return <UserJobDataTable columns={UserJobTableColumns} data={data} />
+  return <UserJobDataTable columns={UserJobTableColumns} data={data}/>
 }
