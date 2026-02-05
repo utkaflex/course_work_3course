@@ -67,10 +67,6 @@ export const EquipmentStatusTableColumns: ColumnDef<z.infer<typeof EquipmentStat
     header: "Адрес учебного корпуса",
   },
   {
-    accessorKey: "audience_id",
-    header: "Номер аудитории",
-  },
-  {
     id: "actions",
     cell: ({row}) => {
       const actionsData = [

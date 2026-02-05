@@ -1,25 +1,29 @@
 "use client"
 
-import React, {useEffect, useMemo, useState} from "react"
+import React, {useEffect, useState} from "react"
 import axios from "axios"
 import {API_URL} from "@/constants"
 import {Button} from "@/components/ui/button"
 import {useToast} from "@/hooks/use-toast"
-import {Input} from "@/components/ui/input"
-import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover"
-import {Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,} from "@/components/ui/command"
-import {Check, ChevronsUpDown} from "lucide-react"
-import {cn} from "@/lib/utils"
+import BackupFields from "@/components/backup/auto-backuo-fields";
 
-// 1..7: Mon..Sun
 type WeekdayNum = 0 | 1 | 2 | 3 | 4 | 5 | 6
 
 type ApiAutoBackup = {
   cron: string
-  timezone: "Europe/Moscow" | "Asia/Yekaterinburg" | string
+  timezone: "Europe/Moscow" | "Asia/Yekaterinburg"
   enabled: boolean
+
+  netPath?: string | null
+  dir?: string | null
+
   last_backup_at?: string | null
   next_backup_at?: string | null
+}
+
+type SaveAutoBackupPayload = Pick<ApiAutoBackup, "cron" | "timezone" | "enabled" | "netPath" | "dir"> & {
+  username?: string
+  password?: string
 }
 
 type UiSettings = {
@@ -27,22 +31,12 @@ type UiSettings = {
   weekdays: WeekdayNum[]
   timezone: "Europe/Moscow" | "Asia/Yekaterinburg"
   enabled: boolean
+
+  netPath: string
+  dir: string
+  username: string
+  password: string
 }
-
-const weekdayOptions: { value: WeekdayNum; label: string }[] = [
-  {value: 0, label: "Пн"},
-  {value: 1, label: "Вт"},
-  {value: 2, label: "Ср"},
-  {value: 3, label: "Чт"},
-  {value: 4, label: "Пт"},
-  {value: 5, label: "Сб"},
-  {value: 6, label: "Вс"},
-]
-
-const timezoneOptions: { value: "Europe/Moscow" | "Asia/Yekaterinburg"; label: string }[] = [
-  {value: "Europe/Moscow", label: "МСК"},
-  {value: "Asia/Yekaterinburg", label: "ЕКБ"},
-]
 
 function parseCron(cron: string): { time: string; weekdays: WeekdayNum[] } {
   const fallback = {time: "09:00", weekdays: [] as WeekdayNum[]}
@@ -58,8 +52,11 @@ function parseCron(cron: string): { time: string; weekdays: WeekdayNum[] } {
 
   const hh = Number.isFinite(hour) ? String(hour).padStart(2, "0") : "09"
   const mm = Number.isFinite(min) ? String(min).padStart(2, "0") : "00"
-
   const time = `${hh}:${mm}`
+
+  if (dowRaw === "*") {
+    return {time, weekdays: [0, 1, 2, 3, 4, 5, 6]}
+  }
 
   const expandRange = (token: string): number[] => {
     const t = token.trim()
@@ -81,9 +78,8 @@ function parseCron(cron: string): { time: string; weekdays: WeekdayNum[] } {
   if (dowRaw && dowRaw !== "*") {
     const tokens = dowRaw.split(",")
     const nums = tokens.flatMap(expandRange)
-    const normalized = nums
-      .filter((x): x is WeekdayNum => x !== null)
 
+    const normalized = nums.filter((x): x is WeekdayNum => x >= 0 && x <= 6)
     weekdays = Array.from(new Set(normalized)).sort((a, b) => a - b)
   }
 
@@ -99,7 +95,6 @@ function buildCron(time: string, weekdays: WeekdayNum[]): string {
   const min = Number.isFinite(mm) ? mm : 0
 
   const days = Array.from(new Set(weekdays)).sort((a, b) => a - b)
-
   const dow = days.length === 7 ? "*" : days.join(",")
 
   return `${min} ${hour} * * ${dow}`
@@ -110,10 +105,14 @@ const AutoBackup = () => {
 
   const [serverSettings, setServerSettings] = useState<ApiAutoBackup | null>(null)
 
-  const [time, setTime] = useState<string>("09:00")
-  const [weekdays, setWeekdays] = useState<WeekdayNum[]>([])
+  const [time, setTime] = useState<UiSettings["time"]>("09:00")
+  const [weekdays, setWeekdays] = useState<UiSettings["weekdays"]>([])
   const [timezone, setTimezone] = useState<UiSettings["timezone"]>("Europe/Moscow")
-  const [enabled, setEnabled] = useState<boolean>(true)
+  const [enabled, setEnabled] = useState<UiSettings["enabled"]>(true)
+  const [netPath, setNetPath] = useState<UiSettings["netPath"]>("")
+  const [dir, setDir] = useState<UiSettings["dir"]>("")
+  const [username, setUsername] = useState<UiSettings["username"]>("")
+  const [password, setPassword] = useState<UiSettings["password"]>("")
 
   const [isLoading, setIsLoading] = useState(true)
   const [isProcessing, setIsProcessing] = useState(false)
@@ -131,10 +130,14 @@ const AutoBackup = () => {
         setTime(parsed.time)
         setWeekdays(parsed.weekdays)
 
-        const tz = res.data.timezone === "Asia/Yekaterinburg" ? "Asia/Yekaterinburg" : "Europe/Moscow"
+        const tz =
+          res.data.timezone === "Asia/Yekaterinburg" ? "Asia/Yekaterinburg" : "Europe/Moscow"
         setTimezone(tz)
 
         setEnabled(Boolean(res.data.enabled))
+
+        setNetPath(res.data.netPath ?? "")
+        setDir(res.data.dir ?? "")
       } catch (e) {
         console.log("Ошибка загрузки настроек автобэкапа", e)
         toast({
@@ -148,22 +151,7 @@ const AutoBackup = () => {
     }
 
     fetchSettings()
-  }, [])
-
-  const selectedWeekdayLabels = useMemo(() => {
-    return weekdayOptions
-      .filter((o) => weekdays.includes(o.value))
-      .map((o) => o.label)
-  }, [weekdays])
-
-  const weekdayButtonLabel =
-    selectedWeekdayLabels.length === 0
-      ? "Выберите дни недели..."
-      : selectedWeekdayLabels.join(", ")
-
-  const toggleWeekday = (d: WeekdayNum) => {
-    setWeekdays((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]))
-  }
+  }, [toast])
 
   const saveSettings = async () => {
     if (!time) return
@@ -176,25 +164,53 @@ const AutoBackup = () => {
       return
     }
 
+    const netPathTrim = netPath.trim()
+    const dirTrim = dir.trim()
+    const usernameTrim = username.trim()
+    const passwordTrim = password
+
+    if (!netPathTrim) {
+      toast({title: "Ошибка", description: "Укажите IP", className: "bg-white"})
+      return
+    }
+    if (!/^[^/]+\\[^/]+$/.test(usernameTrim)) {
+      toast({
+        title: "Ошибка",
+        description: "Username должен быть в формате domain\\username",
+        className: "bg-white",
+      })
+      return
+    }
+    if (!passwordTrim) {
+      toast({title: "Ошибка", description: "Укажите Password", className: "bg-white"})
+      return
+    }
+
     try {
       setIsProcessing(true)
       axios.defaults.withCredentials = true
 
       const cron = buildCron(time, weekdays)
 
-      const payload: Pick<ApiAutoBackup, "cron" | "timezone" | "enabled"> = {
+      const payload: SaveAutoBackupPayload = {
         cron,
         timezone,
         enabled,
+        netPath: netPathTrim,
+        dir: dirTrim,
+        username: usernameTrim,
+        password: passwordTrim,
       }
 
       await axios.post(API_URL + "/backup/auto", payload)
 
       setServerSettings((prev) => ({
-        ...(prev ?? {}),
+        ...(prev ?? ({} as ApiAutoBackup)),
         cron,
         timezone,
         enabled,
+        netPath: netPathTrim,
+        dir: dirTrim,
       }))
 
       toast({
@@ -202,7 +218,7 @@ const AutoBackup = () => {
         className: "bg-white",
       })
     } catch (e) {
-      console.log("Ошибка сохранения автобэкапа", e)
+      console.log("Ошибка сохранения автобэкакапа", e)
       toast({
         title: "Ошибка",
         description: "Не удалось сохранить настройки автобэкапа",
@@ -220,114 +236,54 @@ const AutoBackup = () => {
     setTime(parsed.time)
     setWeekdays(parsed.weekdays)
 
-    const tz = serverSettings.timezone === "Asia/Yekaterinburg" ? "Asia/Yekaterinburg" : "Europe/Moscow"
+    const tz =
+      serverSettings.timezone === "Asia/Yekaterinburg" ? "Asia/Yekaterinburg" : "Europe/Moscow"
     setTimezone(tz)
 
     setEnabled(Boolean(serverSettings.enabled))
+
+    setNetPath(serverSettings.netPath ?? "")
+    setDir(serverSettings.dir ?? "")
+
+    setUsername("")
+    setPassword("")
   }
 
   if (isLoading) return <div className="mt-4">Загрузка...</div>
 
   return (
-    <div className="mt-4 flex flex-col gap-4 max-w-md">
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">Автобэкап</div>
-        <Button
-          variant={enabled ? "default" : "outline"}
-          className={cn(enabled ? "bg-blue-2 hover:bg-blue-700" : "border-2")}
-          onClick={() => setEnabled((v) => !v)}
-          disabled={isProcessing}
-        >
-          {enabled ? "Включен" : "Выключен"}
-        </Button>
-      </div>
+    <div className="mt-4">
+      <BackupFields
+        time={time}
+        setTime={setTime}
+        timezone={timezone}
+        setTimezone={setTimezone}
+        weekdays={weekdays}
+        setWeekdays={setWeekdays}
+        netPath={netPath}
+        setNetPath={setNetPath}
+        dir={dir}
+        setDir={setDir}
+        username={username}
+        setUsername={setUsername}
+        password={password}
+        setPassword={setPassword}
+        isProcessing={isProcessing}
+      />
 
-      <div className="flex flex-col gap-1">
-        <div className="text-sm text-muted-foreground">Время бэкапа</div>
-        <Input
-          type="time"
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-          className="border-2 bg-white"
-          disabled={isProcessing}
-        />
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <div className="text-sm text-muted-foreground">Часовой пояс</div>
-        <select
-          value={timezone}
-          onChange={(e) => setTimezone(e.target.value as UiSettings["timezone"])}
-          className="h-10 w-full rounded-md border-2 bg-white px-3 cursor-pointer text-sm hover:bg-accent"
-          disabled={isProcessing}
-        >
-          {timezoneOptions.map((t) => (
-            <option key={t.value} value={t.value}>
-              {t.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <div className="text-sm text-muted-foreground">Дни недели</div>
-
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              className={cn(
-                "w-full justify-between border-2 bg-white",
-                weekdays.length === 0 && "text-muted-foreground"
-              )}
-              disabled={isProcessing}
-            >
-              {weekdayButtonLabel}
-              <ChevronsUpDown className="opacity-50"/>
-            </Button>
-          </PopoverTrigger>
-
-          <PopoverContent
-            className="p-0 w-full bg-light-3 border-2 border-black shadow rounded-md"
-            align="start"
-            onWheelCapture={(e) => e.stopPropagation()}
-          >
-            <Command className="bg-light-3">
-              <CommandInput placeholder="Поиск..." className="h-9 "/>
-              <CommandList className="max-h-60 overflow-y-auto overscroll-contain">
-                <CommandEmpty className="py-3 text-center text-sm">Ничего не найдено</CommandEmpty>
-
-                <CommandGroup className="p-1">
-                  <CommandItem value="__clear__" onSelect={() => setWeekdays([])}>
-                    Сбросить выбор
-                  </CommandItem>
-
-                  {weekdayOptions.map((opt, idx) => {
-                    const isSelected = weekdays.includes(opt.value)
-                    return (
-                      <CommandItem
-                        key={`${opt.value}-${idx}`}
-                        value={opt.label}
-                        onSelect={() => toggleWeekday(opt.value)}
-                      >
-                        {opt.label}
-                        <Check className={cn("ml-auto", isSelected ? "opacity-100" : "opacity-0")}/>
-                      </CommandItem>
-                    )
-                  })}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
-      </div>
-
-      <div className="flex gap-2">
+      <div className="flex gap-2 mt-4">
         <Button
           className="bg-blue-2 hover:bg-blue-700"
           onClick={saveSettings}
-          disabled={!time || !weekdays.length || isProcessing}
+          disabled={
+            !time ||
+            !weekdays.length ||
+            !netPath.trim() ||
+            !dir.trim() ||
+            !username.trim() ||
+            !password ||
+            isProcessing
+          }
         >
           {isProcessing ? "Сохранение..." : "Сохранить"}
         </Button>
