@@ -23,7 +23,6 @@ async def get_equipment(equipment_id: int) -> SEquipmentWithResponsible | None:
                 joinedload(Equipment.statuses)
                 .joinedload(EquipmentStatus.responsible_user)
                 .joinedload(ResponsibleUser.office),
-                joinedload(Equipment.statuses).joinedload(EquipmentStatus.building),
                 joinedload(Equipment.statuses)
                 .joinedload(EquipmentStatus.room)
                 .joinedload(Rooms.building),
@@ -54,10 +53,11 @@ async def get_equipment(equipment_id: int) -> SEquipmentWithResponsible | None:
             last_status_type = latest_status.status_type.status_type_name
             last_status_color = latest_status.status_type.status_type_color
             last_building_adress = (
-                latest_status.building.building_address
-                if latest_status.building
+                latest_status.room.building.building_address
+                if latest_status.room and latest_status.room.building
                 else None
             )
+
             if latest_status.responsible_user:
                 responsible_user_full_name = (
                     f"{latest_status.responsible_user.last_name} "
@@ -112,7 +112,6 @@ async def get_equipment_for_word(equipment_id: int) -> SEquipmentWithResponsible
                 joinedload(Equipment.statuses)
                 .joinedload(EquipmentStatus.responsible_user)
                 .joinedload(ResponsibleUser.office),
-                joinedload(Equipment.statuses).joinedload(EquipmentStatus.building),
                 joinedload(Equipment.statuses)
                 .joinedload(EquipmentStatus.room)
                 .joinedload(Rooms.building),
@@ -140,7 +139,11 @@ async def get_equipment_for_word(equipment_id: int) -> SEquipmentWithResponsible
             latest_status = sorted_statuses[0]
             last_status_type = latest_status.status_type.status_type_name
             last_status_color = latest_status.status_type.status_type_color
-            last_building_adress = latest_status.building.building_address
+            last_building_adress = (
+                latest_status.room.building.building_address
+                if latest_status.room and latest_status.room.building
+                else "Адрес не указан"
+            )
             if latest_status.responsible_user:
                 responsible_user_full_name = (
                     f"{latest_status.responsible_user.last_name} "
@@ -184,7 +187,6 @@ async def get_all_equipment(user_role_id: int) -> list[SEquipmentWithResponsible
                 joinedload(Equipment.statuses)
                 .joinedload(EquipmentStatus.responsible_user)
                 .joinedload(ResponsibleUser.office),
-                joinedload(Equipment.statuses).joinedload(EquipmentStatus.building),
                 joinedload(Equipment.statuses)
                 .joinedload(EquipmentStatus.room)
                 .joinedload(Rooms.building),
@@ -210,7 +212,11 @@ async def get_all_equipment(user_role_id: int) -> list[SEquipmentWithResponsible
                         latest_status = sorted_statuses[0]
                         last_status_type = latest_status.status_type.status_type_name
                         last_status_color = latest_status.status_type.status_type_color
-                        last_building_adress = latest_status.building.building_address
+                        last_building_adress = (
+                            latest_status.room.building.building_address
+                            if latest_status.room and latest_status.room.building
+                            else None
+                        )
                         if latest_status.responsible_user:
                             responsible_user_full_name = (
                                 f"{latest_status.responsible_user.last_name} "
@@ -283,7 +289,6 @@ async def get_equipment_for_excel(
                 joinedload(Equipment.statuses)
                 .joinedload(EquipmentStatus.responsible_user)
                 .joinedload(ResponsibleUser.office),
-                joinedload(Equipment.statuses).joinedload(EquipmentStatus.building),
                 joinedload(Equipment.statuses)
                 .joinedload(EquipmentStatus.room)
                 .joinedload(Rooms.building),
@@ -338,11 +343,15 @@ async def get_equipment_for_excel(
                                 else None
                             ),
                             "Здание": (
-                                latest_status.building.building_address
-                                if latest_status.building
+                                latest_status.room.building.building_address
+                                if latest_status.room and latest_status.room.building
                                 else None
                             ),
-                            "Аудитория": latest_status.audience_id,
+                            "Аудитория": (
+                                latest_status.room.name
+                                if latest_status.room
+                                else None
+                            ),
                         }
                     )
                 else:
