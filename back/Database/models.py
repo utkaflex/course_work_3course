@@ -14,5 +14,5 @@ class BackupAutoSettings(Base):
 
     smb_username = Column(String, nullable=True)
     smb_password = Column(String, nullable=True)
-    smb_ip = Column(String, nullable=True)
+    smb_net_path = Column(String, nullable=True)
     smb_dir = Column(String, nullable=True)

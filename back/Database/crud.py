@@ -33,7 +33,7 @@ async def upsert_auto_config(
 
             row.smb_username = encrypt_str(username)
             row.smb_password = encrypt_str(password)
-            row.smb_ip = encrypt_str(ip)
+            row.smb_net_path = encrypt_str(ip)
             row.smb_dir = encrypt_str(dir)
 
             session.add(row)
@@ -47,7 +47,7 @@ async def upsert_auto_config(
             if password is not None:
                 row.smb_password = encrypt_str(password)
             if ip is not None:
-                row.smb_ip = encrypt_str(ip)
+                row.smb_net_path = encrypt_str(ip)
             if dir is not None:
                 row.smb_dir = encrypt_str(dir)
 

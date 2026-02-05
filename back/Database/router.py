@@ -133,7 +133,7 @@ async def get_auto_backup(user: User = Depends(get_current_user)):
             next_backup_at=None,
             username=None,
             password=None,
-            ip=None,
+            net_path=None,
             dir=None,
         )
 
@@ -152,7 +152,7 @@ async def get_auto_backup(user: User = Depends(get_current_user)):
         next_backup_at=next_dt,
         username=decrypt_str(getattr(cfg, "smb_username", None)),
         password=None,
-        ip=decrypt_str(getattr(cfg, "smb_ip", None)),
+        net_path=decrypt_str(getattr(cfg, "smb_net_path", None)),
         dir=decrypt_str(getattr(cfg, "smb_dir", None)),
     )
 
@@ -180,10 +180,10 @@ async def set_auto_backup(body: SBackupAutoSet, user: User = Depends(get_current
         if body.password is not None
         else (decrypt_str(existing.smb_password) if existing else None)
     )
-    eff_ip = (
-        body.ip
-        if body.ip is not None
-        else (decrypt_str(existing.smb_ip) if existing else None)
+    eff_net_path = (
+        body.net_path
+        if body.net_path is not None
+        else (decrypt_str(existing.smb_net_path) if existing else None)
     )
     eff_dir = (
         body.dir
@@ -197,8 +197,7 @@ async def set_auto_backup(body: SBackupAutoSet, user: User = Depends(get_current
             for name, val in [
                 ("username", eff_username),
                 ("password", eff_password),
-                ("ip", eff_ip),
-                ("dir", eff_dir),
+                ("netPath", eff_net_path),
             ]
             if not val
         ]
@@ -208,13 +207,14 @@ async def set_auto_backup(body: SBackupAutoSet, user: User = Depends(get_current
                 detail=f"SMB connection settings required when enabled: {', '.join(missing)}",
             )
 
+
     cfg = await crud.upsert_auto_config(
         body.cron,
         body.timezone,
         body.enabled,
         username=body.username,
         password=body.password,
-        ip=body.ip,
+        net_path=body.net_path,
         dir=body.dir,
     )
 
@@ -229,7 +229,7 @@ async def set_auto_backup(body: SBackupAutoSet, user: User = Depends(get_current
         next_backup_at=next_dt,
         username=decrypt_str(cfg.smb_username),
         password=None,
-        ip=decrypt_str(cfg.smb_ip),
+        net_path=decrypt_str(cfg.smb_net_path),
         dir=decrypt_str(cfg.smb_dir),
     )
 
@@ -257,25 +257,41 @@ def _sqlite_backup_sync(src_path: Path, dst_path: Path):
             src.backup(dst)
 
 
-def _resolve_unc_dir(ip: str, remote_dir: str) -> tuple[str, str]:
-    d = (remote_dir or "").replace("/", "\\").strip()
-    if d.startswith("\\\\"):
-        rest = d[2:]
-        server = rest.split("\\", 1)[0]
-        return server, d.rstrip("\\")
+def _resolve_unc_dir(net_path: str, subdir: str | None) -> tuple[str, str]:
+    base = (net_path or "").replace("/", "\\").strip()
+    if not base:
+        raise ValueError("netPath is empty")
 
-    d = d.lstrip("\\")
-    unc = f"\\\\{ip}\\{d}".rstrip("\\")
-    return ip, unc
+    # разрешаем "192.168.10.53\\bckp$"
+    if not base.startswith("\\\\"):
+        base = "\\\\" + base.lstrip("\\")
+
+    base = base.rstrip("\\")
+    parts = [p for p in base[2:].split("\\") if p]
+    if len(parts) < 2:
+        raise ValueError("netPath must be like \\\\server\\share")
+
+    server = parts[0]
+    path_parts = parts[:2]
+
+    if subdir:
+        s = subdir.replace("/", "\\").strip().strip("\\")
+        if s:
+            path_parts.extend([p for p in s.split("\\") if p])
+
+    unc_dir = "\\\\" + "\\".join(path_parts)
+    return server, unc_dir
 
 
 def _upload_to_smb(
-    local_path: Path, username: str, password: str, ip: str, remote_dir: str
+    local_path: Path, username: str, password: str, net_path: str, remote_dir: str | None
 ):
-    server, unc_dir = _resolve_unc_dir(ip, remote_dir)
+    server, unc_dir = _resolve_unc_dir(net_path, remote_dir)
 
     smbclient.register_session(server, username=username, password=password)
-    smbclient.makedirs(unc_dir, exist_ok=True)
+    parts = [p for p in unc_dir[2:].split("\\") if p]
+    if len(parts) > 2:
+        smbclient.makedirs(unc_dir, exist_ok=True)
 
     remote_path = ntpath.join(unc_dir, local_path.name)
 
@@ -317,10 +333,10 @@ async def _do_backup():
 
     username = decrypt_str(cfg.smb_username)
     password = decrypt_str(cfg.smb_password)
-    ip = decrypt_str(cfg.smb_ip)
+    net_path = decrypt_str(cfg.smb_net_path)
     remote_dir = decrypt_str(cfg.smb_dir)
 
-    if not (username and password and ip and remote_dir):
+    if not (username and password and net_path):
         logging.error(
             "SMB settings are not configured; created local backup only: %s",
             backup_path,
@@ -329,7 +345,7 @@ async def _do_backup():
 
     try:
         await anyio.to_thread.run_sync(
-            _upload_to_smb, backup_path, username, password, ip, remote_dir
+            _upload_to_smb, backup_path, username, password, net_path, remote_dir
         )
     except Exception:
         logging.exception("Failed to upload backup to SMB share")
