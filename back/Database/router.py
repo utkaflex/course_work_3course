@@ -83,18 +83,27 @@ async def restore_backup_upload_endpoint(
                 await out.write(chunk)
         size = temp_path.stat().st_size
         if size < 100:
-            raise HTTPException(status_code=400, detail="Backup file is empty or too small")
+            raise HTTPException(
+                status_code=400, detail="Backup file is empty or too small"
+            )
 
         if not _is_sqlite_file(temp_path):
-            raise HTTPException(status_code=400, detail="Uploaded file is not a SQLite database")
+            raise HTTPException(
+                status_code=400, detail="Uploaded file is not a SQLite database"
+            )
 
         if not await anyio.to_thread.run_sync(_sqlite_integrity_ok, temp_path):
-            raise HTTPException(status_code=400, detail="Uploaded database is corrupted (integrity_check failed)")
+            raise HTTPException(
+                status_code=400,
+                detail="Uploaded database is corrupted (integrity_check failed)",
+            )
         try:
             await anyio.to_thread.run_sync(_alembic_upgrade_to_head, temp_path)
         except Exception:
             logging.exception("Restore rejected: migrations failed on uploaded DB")
-            raise HTTPException(status_code=400, detail="Invalid backup: migrations failed")
+            raise HTTPException(
+                status_code=400, detail="Invalid backup: migrations failed"
+            )
         is_empty = await anyio.to_thread.run_sync(_db_looks_empty, temp_path)
         try:
             await async_engine.dispose()
@@ -118,7 +127,9 @@ async def restore_backup_upload_endpoint(
 
                 for attempt in range(5):
                     try:
-                        await anyio.to_thread.run_sync(_sqlite_backup_sync, temp_path, DB_FILE)
+                        await anyio.to_thread.run_sync(
+                            _sqlite_backup_sync, temp_path, DB_FILE
+                        )
                         swapped = True
                         break
                     except sqlite3.OperationalError as ex:
@@ -136,7 +147,9 @@ async def restore_backup_upload_endpoint(
 
         resp = {"message": "Database restored successfully"}
         if is_empty:
-            resp["warning"] = "Restored database looks empty (no rows). Check that you uploaded the correct backup."
+            resp["warning"] = (
+                "Restored database looks empty (no rows). Check that you uploaded the correct backup."
+            )
         return resp
 
     finally:
@@ -238,7 +251,6 @@ async def set_auto_backup(body: SBackupAutoSet, user: User = Depends(get_current
                 detail=f"SMB connection settings required when enabled: {', '.join(missing)}",
             )
 
-
     cfg = await crud.upsert_auto_config(
         body.cron,
         body.timezone,
@@ -315,7 +327,11 @@ def _resolve_unc_dir(net_path: str, subdir: str | None) -> tuple[str, str]:
 
 
 def _upload_to_smb(
-    local_path: Path, username: str, password: str, net_path: str, remote_dir: str | None
+    local_path: Path,
+    username: str,
+    password: str,
+    net_path: str,
+    remote_dir: str | None,
 ):
     server, unc_dir = _resolve_unc_dir(net_path, remote_dir)
 

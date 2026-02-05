@@ -348,9 +348,7 @@ async def get_equipment_for_excel(
                                 else None
                             ),
                             "Аудитория": (
-                                latest_status.room.name
-                                if latest_status.room
-                                else None
+                                latest_status.room.name if latest_status.room else None
                             ),
                         }
                     )
