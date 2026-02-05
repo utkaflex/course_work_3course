@@ -38,7 +38,9 @@ config = context.config
 
 from config import settings
 
-config.set_main_option("sqlalchemy.url", f"sqlite:///{settings.DB_NAME}")
+url = config.get_main_option("sqlalchemy.url")
+if not url or url.startswith("sqlite+aiosqlite"):
+    config.set_main_option("sqlalchemy.url", f"sqlite:///{settings.DB_NAME}")
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
