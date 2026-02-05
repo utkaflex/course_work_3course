@@ -21,7 +21,7 @@ async def upsert_auto_config(
     enabled: bool,
     username: str | None = None,
     password: str | None = None,
-    ip: str | None = None,
+    net_path: str | None = None,
     dir: str | None = None,
 ) -> BackupAutoSettings:
     async with async_session() as session:
@@ -33,7 +33,7 @@ async def upsert_auto_config(
 
             row.smb_username = encrypt_str(username)
             row.smb_password = encrypt_str(password)
-            row.smb_net_path = encrypt_str(ip)
+            row.smb_net_path = encrypt_str(net_path)
             row.smb_dir = encrypt_str(dir)
 
             session.add(row)
@@ -46,8 +46,8 @@ async def upsert_auto_config(
                 row.smb_username = encrypt_str(username)
             if password is not None:
                 row.smb_password = encrypt_str(password)
-            if ip is not None:
-                row.smb_net_path = encrypt_str(ip)
+            if net_path is not None:
+                row.smb_net_path = encrypt_str(net_path)
             if dir is not None:
                 row.smb_dir = encrypt_str(dir)
 

@@ -6,6 +6,8 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
+import os
+import gc
 
 import aiofiles
 import anyio
@@ -30,13 +32,16 @@ router = APIRouter(
     tags=["Backup"],
 )
 
-BACKUP_DIR = Path("backups")
-DB_FILE = Path(settings.DB_NAME)
-BACKUP_DIR.mkdir(exist_ok=True)
-
 BACK_ROOT = Path(__file__).resolve().parents[1]
 ALEMBIC_INI = BACK_ROOT / "alembic.ini"
 MIGRATIONS_DIR = BACK_ROOT / "migrations"
+BACKUP_DIR = BACK_ROOT / "backups"
+BACKUP_DIR.mkdir(exist_ok=True)
+DB_FILE = (BACK_ROOT / settings.DB_NAME).resolve()
+
+BACKUP_DIR.mkdir(exist_ok=True)
+
+logging.info("Backup paths: DB_FILE=%s BACKUP_DIR=%s", DB_FILE, BACKUP_DIR)
 
 _scheduler: AsyncIOScheduler | None = None
 JOB_ID = "auto_backup_job"
@@ -66,7 +71,9 @@ async def restore_backup_upload_endpoint(
 ):
     if user.system_role_id < 4:
         raise HTTPException(status_code=403, detail="Forbidden")
+
     temp_path = BACKUP_DIR / f"restore_{uuid.uuid4().hex}.db"
+    swapped = False
 
     try:
         async with aiofiles.open(temp_path, "wb") as out:
@@ -75,47 +82,49 @@ async def restore_backup_upload_endpoint(
                 if not chunk:
                     break
                 await out.write(chunk)
-        try:
-            size = temp_path.stat().st_size
-        except Exception:
-            raise HTTPException(status_code=400, detail="Backup file is unreadable")
-
+        size = temp_path.stat().st_size
         if size < 100:
-            raise HTTPException(
-                status_code=400, detail="Backup file is empty or too small"
-            )
+            raise HTTPException(status_code=400, detail="Backup file is empty or too small")
 
         if not _is_sqlite_file(temp_path):
-            raise HTTPException(
-                status_code=400, detail="Uploaded file is not a SQLite database"
-            )
+            raise HTTPException(status_code=400, detail="Uploaded file is not a SQLite database")
+
+        if not await anyio.to_thread.run_sync(_sqlite_integrity_ok, temp_path):
+            raise HTTPException(status_code=400, detail="Uploaded database is corrupted (integrity_check failed)")
         try:
             await anyio.to_thread.run_sync(_alembic_upgrade_to_head, temp_path)
         except Exception:
             logging.exception("Restore rejected: migrations failed on uploaded DB")
-            raise HTTPException(
-                status_code=400, detail="Invalid backup: migrations failed"
-            )
-        is_empty = await anyio.to_thread.run_sync(_db_looks_empty, temp_path)
-        await async_engine.dispose()
-        _cleanup_sqlite_sidecars(DB_FILE)
-        if DB_FILE.exists():
-            ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-            shutil.copy(DB_FILE, BACKUP_DIR / f"before_restore_{ts}.db")
+            raise HTTPException(status_code=400, detail="Invalid backup: migrations failed")
 
-        DB_FILE.unlink(missing_ok=True)
-        shutil.move(temp_path, DB_FILE)
+        is_empty = await anyio.to_thread.run_sync(_db_looks_empty, temp_path)
+        try:
+            await async_engine.dispose()
+            gc.collect()
+            _cleanup_sqlite_sidecars(DB_FILE)
+            if DB_FILE.exists():
+                ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+                shutil.copy2(DB_FILE, BACKUP_DIR / f"before_restore_{ts}.db")
+            os.replace(str(temp_path), str(DB_FILE))
+            swapped = True
+
+        except Exception:
+            logging.exception("Restore failed during DB swap (dispose/copy/replace)")
+            raise HTTPException(status_code=500, detail="Failed to swap database file")
 
         resp = {"message": "Database restored successfully"}
         if is_empty:
-            resp["warning"] = (
-                "Restored database looks empty (no rows). Check that you uploaded the correct backup."
-            )
+            resp["warning"] = "Restored database looks empty (no rows). Check that you uploaded the correct backup."
         return resp
 
     finally:
-        if temp_path.exists():
-            temp_path.unlink(missing_ok=True)
+        if temp_path.exists() and not swapped:
+            failed = BACKUP_DIR / f"restore_failed_{uuid.uuid4().hex}.db"
+            try:
+                temp_path.rename(failed)
+                logging.error("Kept failed restore file at %s", failed)
+            except Exception:
+                temp_path.unlink(missing_ok=True)
 
 
 @router.get("/auto", response_model=SBackupAutoGet, summary="Get auto-backup schedule")
@@ -442,3 +451,12 @@ def _cleanup_sqlite_sidecars(db_file: Path) -> None:
     for suffix in ("-wal", "-shm"):
         side = Path(str(db_file) + suffix)
         side.unlink(missing_ok=True)
+
+
+def _sqlite_integrity_ok(db_path: Path) -> bool:
+    conn = sqlite3.connect(db_path)
+    try:
+        res = conn.execute("PRAGMA integrity_check;").fetchone()[0]
+        return str(res).lower() == "ok"
+    finally:
+        conn.close()
