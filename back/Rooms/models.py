@@ -1,10 +1,14 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from database import Base
 
 class Rooms(Base):
     __tablename__ = "rooms"
+
+    __table_args__ = (
+        UniqueConstraint("building_id", "name", name="uq_rooms_building_id_name"),
+    )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50), nullable=False)

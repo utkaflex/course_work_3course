@@ -1,27 +1,25 @@
-import asyncio
 import logging
+import ntpath
 import shutil
 from pathlib import Path
-from config import settings
 from datetime import datetime, timedelta, timezone
-from contextlib import contextmanager
-from sqlite3 import connect as sqlite_connect
-import aiosqlite
+from zoneinfo import ZoneInfo
+import smbclient
+import anyio
+import aiofiles
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
 from fastapi.responses import StreamingResponse
-import aiofiles
-from aiofiles import os as async_os
-from zoneinfo import ZoneInfo
-import anyio
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
+from config import settings
 from Database import crud
 from Database.schemas import SBackupAutoSet, SBackupAutoGet
-
+from Database.crypto import decrypt_str
 
 from User.depends import get_current_user
 from User.models import User
+
 
 router = APIRouter(
     prefix="/backup",
@@ -31,50 +29,42 @@ router = APIRouter(
 BACKUP_DIR = Path("backups")
 DB_FILE = Path(settings.DB_NAME)
 BACKUP_DIR.mkdir(exist_ok=True)
+
 _scheduler: AsyncIOScheduler | None = None
 JOB_ID = "auto_backup_job"
-
 
 @router.get("/download", summary="Download backup file")
 async def download_backup_endpoint(user: User = Depends(get_current_user)):
     if user.system_role_id < 4:
         raise HTTPException(status_code=403, detail="Forbidden")
-    
     if not DB_FILE.exists():
         raise HTTPException(status_code=404, detail="Database file not found")
-    
-    timestamp = datetime.now(tz=timezone(timedelta(hours=5))).strftime('%Y%m%d_%H%M%S')
+    timestamp = datetime.now(tz=timezone(timedelta(hours=5))).strftime("%Y%m%d_%H%M%S")
     backup_filename = f"sats_{timestamp}.db"
     backup_path = BACKUP_DIR / backup_filename
-
     shutil.copy(DB_FILE, backup_path)
-    
     return StreamingResponse(
         open(backup_path, "rb"),
         media_type="application/octet-stream",
-        headers={"Content-Disposition": f"attachment; filename={backup_filename}"}
+        headers={"Content-Disposition": f"attachment; filename={backup_filename}"},
     )
 
 @router.post("/restore/upload", summary="Restore database from uploaded file")
 async def restore_backup_upload_endpoint(
     file: UploadFile = File(...),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
 ):
     if user.system_role_id < 4:
         raise HTTPException(status_code=403, detail="Forbidden")
-    
     temp_path = BACKUP_DIR / file.filename
-
     try:
         async with aiofiles.open(temp_path, "wb") as buffer:
             await buffer.write(await file.read())
 
         shutil.move(temp_path, DB_FILE)
         return {"message": "Database restored successfully"}
-    
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Failed to restore database")
-
     finally:
         if temp_path.exists():
             temp_path.unlink(missing_ok=True)
@@ -86,11 +76,17 @@ async def get_auto_backup(user: User = Depends(get_current_user)):
 
     cfg = await crud.get_auto_settings()
     if cfg is None:
-        return SBackupAutoGet(cron="",
-                             timezone="Asia/Yekaterinburg",
-                             enabled=False,
-                             last_backup_at=None,
-                             next_backup_at=None)
+        return SBackupAutoGet(
+            cron="",
+            timezone="Asia/Yekaterinburg",
+            enabled=False,
+            last_backup_at=None,
+            next_backup_at=None,
+            username=None,
+            password=None,
+            ip=None,
+            dir=None,
+        )
 
     next_dt = None
     if cfg.enabled:
@@ -105,27 +101,70 @@ async def get_auto_backup(user: User = Depends(get_current_user)):
         enabled=cfg.enabled,
         last_backup_at=cfg.last_backup_at,
         next_backup_at=next_dt,
+        username=decrypt_str(getattr(cfg, "smb_username", None)),
+        password=None,
+        ip=decrypt_str(getattr(cfg, "smb_ip", None)),
+        dir=decrypt_str(getattr(cfg, "smb_dir", None)),
     )
 
 @router.post("/auto", response_model=SBackupAutoGet, summary="Set auto-backup schedule")
 async def set_auto_backup(body: SBackupAutoSet, user: User = Depends(get_current_user)):
     if user.system_role_id < 4:
         raise HTTPException(status_code=403, detail="Forbidden")
+
     try:
         ZoneInfo(body.timezone)
         _compute_next(body.cron, body.timezone)
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid cron or timezone")
 
-    cfg = await crud.upsert_auto_config(body.cron, body.timezone, body.enabled)
+    existing = await crud.get_auto_settings()
+
+    eff_username = body.username if body.username is not None else (decrypt_str(existing.smb_username) if existing else None)
+    eff_password = body.password if body.password is not None else (decrypt_str(existing.smb_password) if existing else None)
+    eff_ip = body.ip if body.ip is not None else (decrypt_str(existing.smb_ip) if existing else None)
+    eff_dir = body.dir if body.dir is not None else (decrypt_str(existing.smb_dir) if existing else None)
+
+    if body.enabled:
+        missing = [
+            name
+            for name, val in [
+                ("username", eff_username),
+                ("password", eff_password),
+                ("ip", eff_ip),
+                ("dir", eff_dir),
+            ]
+            if not val
+        ]
+        if missing:
+            raise HTTPException(
+                status_code=400,
+                detail=f"SMB connection settings required when enabled: {', '.join(missing)}",
+            )
+
+    cfg = await crud.upsert_auto_config(
+        body.cron,
+        body.timezone,
+        body.enabled,
+        username=body.username,
+        password=body.password,
+        ip=body.ip,
+        dir=body.dir,
+    )
+
     await _ensure_scheduler_started()
     next_dt = _compute_next(cfg.cron, cfg.timezone) if cfg.enabled else None
+
     return SBackupAutoGet(
         cron=cfg.cron,
         timezone=cfg.timezone,
         enabled=cfg.enabled,
         last_backup_at=cfg.last_backup_at,
         next_backup_at=next_dt,
+        username=decrypt_str(cfg.smb_username),
+        password=None,
+        ip=decrypt_str(cfg.smb_ip),
+        dir=decrypt_str(cfg.smb_dir),
     )
 
 def _now_utc():
@@ -134,8 +173,7 @@ def _now_utc():
 def _compute_next(cron: str, tz: str):
     trigger = CronTrigger.from_crontab(cron, timezone=ZoneInfo(tz))
     now = datetime.now(ZoneInfo(tz))
-    nxt = trigger.get_next_fire_time(None, now)
-    return nxt
+    return trigger.get_next_fire_time(None, now)
 
 def _backup_filename(tz: str):
     ts = datetime.now(ZoneInfo(tz)).strftime("%Y%m%d_%H%M%S")
@@ -143,9 +181,33 @@ def _backup_filename(tz: str):
 
 def _sqlite_backup_sync(src_path: Path, dst_path: Path):
     from sqlite3 import connect as sqlite_connect
+
     with sqlite_connect(src_path) as src:
         with sqlite_connect(dst_path) as dst:
             src.backup(dst)
+
+def _resolve_unc_dir(ip: str, remote_dir: str) -> tuple[str, str]:
+    d = (remote_dir or "").replace("/", "\\").strip()
+    if d.startswith("\\\\"):
+        rest = d[2:]
+        server = rest.split("\\", 1)[0]
+        return server, d.rstrip("\\")
+
+    d = d.lstrip("\\")
+    unc = f"\\\\{ip}\\{d}".rstrip("\\")
+    return ip, unc
+
+def _upload_to_smb(local_path: Path, username: str, password: str, ip: str, remote_dir: str):
+    server, unc_dir = _resolve_unc_dir(ip, remote_dir)
+
+    smbclient.register_session(server, username=username, password=password)
+    smbclient.makedirs(unc_dir, exist_ok=True)
+
+    remote_path = ntpath.join(unc_dir, local_path.name)
+
+    with open(local_path, "rb") as src_fd:
+        with smbclient.open_file(remote_path, mode="wb") as dst_fd:
+            shutil.copyfileobj(src_fd, dst_fd, length=1024 * 1024)
 
 async def _do_backup():
     if not DB_FILE.exists():
@@ -153,8 +215,12 @@ async def _do_backup():
         return
 
     cfg = await crud.get_auto_settings()
+    if cfg is None or not cfg.enabled:
+        logging.warning("Auto-backup config missing/disabled, skip backup")
+        return
+
     tz = "UTC"
-    if cfg and cfg.timezone:
+    if cfg.timezone:
         try:
             ZoneInfo(cfg.timezone)
             tz = cfg.timezone
@@ -162,7 +228,33 @@ async def _do_backup():
             tz = "UTC"
 
     backup_path = BACKUP_DIR / _backup_filename(tz)
+
     await anyio.to_thread.run_sync(_sqlite_backup_sync, DB_FILE, backup_path)
+
+    try:
+        if backup_path.stat().st_size <= 0:
+            logging.error("Backup file is empty: %s", backup_path)
+            backup_path.unlink(missing_ok=True)
+            return
+    except Exception:
+        logging.exception("Failed to stat backup file: %s", backup_path)
+        return
+
+    username = decrypt_str(cfg.smb_username)
+    password = decrypt_str(cfg.smb_password)
+    ip = decrypt_str(cfg.smb_ip)
+    remote_dir = decrypt_str(cfg.smb_dir)
+
+    if not (username and password and ip and remote_dir):
+        logging.error("SMB settings are not configured; created local backup only: %s", backup_path)
+        return
+
+    try:
+        await anyio.to_thread.run_sync(_upload_to_smb, backup_path, username, password, ip, remote_dir)
+    except Exception:
+        logging.exception("Failed to upload backup to SMB share")
+        return
+
     await crud.set_last_backup(_now_utc())
 
 async def _ensure_scheduler_started():
