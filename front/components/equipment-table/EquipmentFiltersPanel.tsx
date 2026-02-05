@@ -92,13 +92,13 @@ export default function EquipmentFiltersPanel<TData>({
             Фильтры
           </AccordionTrigger>
 
-          <Button className="bg-blue-2 hover:bg-blue-700" onClick={() => table.resetColumnFilters()}>
+          <Button className="bg-blue-2 hover:bg-blue-700" onClick={() =>
+          {table.resetColumnFilters(); setSelectedCategories([])}}>
             Очистить фильтры
           </Button>
         </div>
 
         <AccordionContent className={cn("flex flex-wrap gap-2 p-1", maxWidthClassName)}>
-          {/* Тип оборудования */}
           <div className="flex flex-col gap-1">
             <label className="text-xs text-muted-foreground">Тип оборудования</label>
             <DataTableComboboxFilter
@@ -226,6 +226,7 @@ export default function EquipmentFiltersPanel<TData>({
                 placeholder="Фильтр по ответственному лицу..."
                 searchPlaceholder="Поиск ответственного лица..."
                 emptyText="Ответственное лицо не найдено"
+                multiple
               />
             </div>
           )}

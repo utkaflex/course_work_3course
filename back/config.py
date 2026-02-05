@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     DB_NAME: str
     DATABASE_URL: str
-    
+
     @model_validator(mode="before")
     def get_database_url(cls, v):
         v["DATABASE_URL"] = f"sqlite+aiosqlite:///./{v['DB_NAME']}"
@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int
     REFRESH_TOKEN_EXPIRE_DAYS: int
     APP_CORS_ORIGINS: str
-    
+
     SERVER_IP: str
     API_URL: str
     APP_ENV: str

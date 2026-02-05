@@ -38,16 +38,12 @@ export default function EquipmentStatusTable({
             responsible_user.paternity
           ].filter(Boolean).join(" ")
 
-          const [user_job, user_office, building_address] = await Promise.all([
+          const [user_job, user_office, ] = await Promise.all([
             axios.get(`${API_URL}/responsible_users/job/${responsible_user.job_id}`),
-            axios.get(`${API_URL}/responsible_users/office/${responsible_user.office_id}`),
-            axios.get(`${API_URL}/building/${status.building_id}`)
+            axios.get(`${API_URL}/responsible_users/office/${responsible_user.office_id}`)
           ])
 
-          const audienceLabel = status.room ? status.room.name
-            : status.audience_id ?  status.audience_id : ''
-          const buildingLabel = status.room ? status.room.building.building_address
-             : building_address.data.building_address ?  building_address.data.building_address : ''
+          const buildingLabel = status.room?.building.building_address
 
           const roomLabel = status.room
             ? `${status.room.name} (${status.room.room_type?.room_type ?? ""})`.trim()
@@ -62,7 +58,6 @@ export default function EquipmentStatusTable({
             responsible_user_job_name: user_job.data.job_name,
             responsible_user_office_name: user_office.data.office_name,
             building_address: buildingLabel,
-            audience_id: audienceLabel,
             room_label: roomLabel,
             id: status.id,
             equipment_id: status.equipment_id

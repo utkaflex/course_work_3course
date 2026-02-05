@@ -1,16 +1,23 @@
-from sqlalchemy import Column, Integer, ForeignKey, DateTime, String
+from datetime import datetime, timedelta, timezone
+
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
-from datetime import datetime, timezone, timedelta
+
 from database import Base
+
 
 class SessionLog(Base):
     __tablename__ = "session_logs"
-    
+
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
     user_role = Column(String, nullable=False)
     event_type = Column(String, nullable=False)
-    time = Column(DateTime, default=datetime.now(tz= timezone(timedelta(hours=5))), nullable=False)
+    time = Column(
+        DateTime, default=datetime.now(tz=timezone(timedelta(hours=5))), nullable=False
+    )
     user_agent = Column(String(200), nullable=True)
 
     users = relationship("User", back_populates="session_logs")

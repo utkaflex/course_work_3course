@@ -211,7 +211,7 @@ export function EquipmentDataTable<TData, TValue>({
           <div className="flex gap-2">
             <ReportDownloadButton
               className="bg-blue-2 hover:bg-blue-700"
-              apiEndpoint={API_URL + "/reports/create"}
+              apiEndpoint={API_URL + "/equipment/to_excel_file"}
               tableData={table.getFilteredRowModel().rows.map(r => r.original)}
             />
             {actionsAllowed && <Button

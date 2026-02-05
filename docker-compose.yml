@@ -2,10 +2,6 @@ services:
   backend:
     build:
       context: ./back
-    expose:
-      - "8000"
-#    ports:
-#      - "8000:8000"
     environment:
       - APP_ENV=${APP_ENV}
       - APP_CORS_ORIGINS=${APP_CORS_ORIGINS}
@@ -13,7 +9,6 @@ services:
       - .env
     volumes:
       - ./back/sats.db:/app/back/sats.db
-      - /mnt/backups:/app/back/backups
 
   frontend:
     build:
@@ -21,10 +16,6 @@ services:
       args:
         - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
         - NEXT_PUBLIC_WEBSITE_URL=${NEXT_PUBLIC_WEBSITE_URL}
-    expose:
-      - "3000"
-#    ports:
-#      - "3000:3000"
     environment:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
       - NEXT_PUBLIC_WEBSITE_URL=${NEXT_PUBLIC_WEBSITE_URL}
@@ -35,7 +26,7 @@ services:
     build:
       context: ./nginx
     ports:
-      - "8080:80"
+      - "80:80"
     depends_on:
       - frontend
       - backend

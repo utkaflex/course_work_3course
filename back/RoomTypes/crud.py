@@ -1,17 +1,19 @@
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
+
 from database import async_session
 from Rooms.models import Rooms
-
 from RoomTypes.models import RoomTypes
 from RoomTypes.schemas import SRoomTypeCreate
 
-async def get_room_type_by_name(name:str) -> RoomTypes|None:
+
+async def get_room_type_by_name(name: str) -> RoomTypes | None:
     async with async_session() as session:
         query = select(RoomTypes).where(RoomTypes.room_type == name)
         result = await session.execute(query)
         return result.scalar_one_or_none()
+
 
 async def create_room_type(rtype: SRoomTypeCreate) -> RoomTypes:
     async with async_session() as session:
@@ -21,19 +23,19 @@ async def create_room_type(rtype: SRoomTypeCreate) -> RoomTypes:
         await session.refresh(db_room_type)
         return db_room_type
 
+
 async def get_all_room_types() -> list[RoomTypes]:
     async with async_session() as session:
         result = await session.execute(select(RoomTypes))
         return list(result.scalars().all())
 
+
 async def get_room_type(room_type_id: int) -> RoomTypes | None:
     async with async_session() as session:
-        query = (
-            select(RoomTypes)
-            .where(RoomTypes.id == room_type_id)
-        )
+        query = select(RoomTypes).where(RoomTypes.id == room_type_id)
         result = await session.execute(query)
         return result.scalar_one_or_none()
+
 
 async def rename_room_type(room_type_id: int, new_name: str) -> RoomTypes | None:
     async with async_session() as session:
@@ -50,6 +52,7 @@ async def rename_room_type(room_type_id: int, new_name: str) -> RoomTypes | None
         await session.refresh(room_type)
         return room_type
 
+
 async def delete_room_type(room_type_id: int) -> bool:
     async with async_session() as session:
         room_type = await session.get(RoomTypes, room_type_id)
@@ -57,7 +60,9 @@ async def delete_room_type(room_type_id: int) -> bool:
             return False
 
         rooms_count = await session.scalar(
-            select(func.count()).select_from(Rooms).where(Rooms.room_type_id == room_type_id)
+            select(func.count())
+            .select_from(Rooms)
+            .where(Rooms.room_type_id == room_type_id)
         )
         if (rooms_count or 0) > 0:
             return False

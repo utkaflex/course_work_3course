@@ -86,7 +86,6 @@ const EquipmentStatusAddForm = ({
     defaultValues: {
       doc_number: "",
       status_change_date: "",
-      audience_id: "",
       status_type_id: 0,
       responsible_user_id: 0,
       building_id: 0,
@@ -101,7 +100,6 @@ const EquipmentStatusAddForm = ({
     axios.post(API_URL + '/equipment_status/create', {
       doc_number: data.doc_number,
       status_change_date: new Date(),
-      audience_id: data.audience_id,
       status_type_id: data.status_type_id,
       responsible_user_id: data.responsible_user_id,
       building_id: data.building_id,

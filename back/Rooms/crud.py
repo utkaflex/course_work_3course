@@ -1,35 +1,44 @@
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
-from database import async_session
 
-from Rooms.models import Rooms
 from Building.models import Building
-from RoomTypes.models import RoomTypes
+from database import async_session
+from Rooms.models import Rooms
 from Rooms.schemas import SRoomCreate, SRoomUpdate
+from RoomTypes.models import RoomTypes
+
 
 async def get_room_by_id(room_id: int) -> Rooms | None:
     async with async_session() as session:
-        res = await session.execute(select(Rooms).where(Rooms.id == room_id).options(
+        res = await session.execute(
+            select(Rooms)
+            .where(Rooms.id == room_id)
+            .options(
                 selectinload(Rooms.building),
                 selectinload(Rooms.room_type),
-            ))
+            )
+        )
         return res.scalar_one_or_none()
+
 
 async def get_all_rooms() -> list[Rooms]:
     async with async_session() as session:
         res = await session.execute(
-            select(Rooms)
-            .options(
+            select(Rooms).options(
                 selectinload(Rooms.building),
                 selectinload(Rooms.room_type),
             )
         )
         return list(res.scalars().all())
 
+
 async def get_rooms_by_building(building_id: int) -> list[Rooms]:
     async with async_session() as session:
-        res = await session.execute(select(Rooms).where(Rooms.building_id == building_id))
+        res = await session.execute(
+            select(Rooms).where(Rooms.building_id == building_id)
+        )
         return list(res.scalars().all())
+
 
 async def create_room(body: SRoomCreate) -> Rooms:
     async with async_session() as session:
@@ -48,6 +57,7 @@ async def create_room(body: SRoomCreate) -> Rooms:
         new_id = room.id
         await session.commit()
         return await get_room_by_id(new_id)
+
 
 async def update_room(room_id: int, body: SRoomUpdate) -> Rooms | None:
     async with async_session() as session:
@@ -71,6 +81,7 @@ async def update_room(room_id: int, body: SRoomUpdate) -> Rooms | None:
         await session.commit()
         updated_id = room.id
         return await get_room_by_id(updated_id)
+
 
 async def delete_room(room_id: int) -> bool:
     async with async_session() as session:

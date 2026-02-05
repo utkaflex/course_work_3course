@@ -1,21 +1,28 @@
 from fastapi import HTTPException
 from sqlalchemy import select
-from database import async_session
 
+from database import async_session
 from EquipmentStatusType.models import EquipmentStatusType
 from EquipmentStatusType.schemas import SEquipmentStatusType, SEquipmentStatusTypeCreate
 
+
 async def get_equipment_status_type(status_type_id: int):
     async with async_session() as session:
-        query = select(EquipmentStatusType).filter(EquipmentStatusType.id == status_type_id)
+        query = select(EquipmentStatusType).filter(
+            EquipmentStatusType.id == status_type_id
+        )
         result = await session.execute(query)
         return result.scalar_one_or_none()
 
+
 async def get_equipment_status_type_by_name(status_type_name: str):
     async with async_session() as session:
-        query = select(EquipmentStatusType).filter(EquipmentStatusType.status_type_name == status_type_name)
+        query = select(EquipmentStatusType).filter(
+            EquipmentStatusType.status_type_name == status_type_name
+        )
         result = await session.execute(query)
         return result.scalar_one_or_none()
+
 
 async def get_all_equipment_status_types() -> list[SEquipmentStatusType]:
     async with async_session() as session:
@@ -23,38 +30,47 @@ async def get_all_equipment_status_types() -> list[SEquipmentStatusType]:
         result = await session.execute(query)
         return result.scalars().all()
 
+
 async def create_equipment_status_type(status_type: SEquipmentStatusTypeCreate):
     async with async_session() as session:
-        db_status_type = EquipmentStatusType(status_type_name=status_type.status_type_name,
-                                             status_type_color=status_type.status_type_color)
+        db_status_type = EquipmentStatusType(
+            status_type_name=status_type.status_type_name,
+            status_type_color=status_type.status_type_color,
+        )
         session.add(db_status_type)
         await session.commit()
         await session.refresh(db_status_type)
         return db_status_type
 
-async def update_equipment_status_type(status_type_id: int, updated_status_type: SEquipmentStatusTypeCreate):
+
+async def update_equipment_status_type(
+    status_type_id: int, updated_status_type: SEquipmentStatusTypeCreate
+):
     status_type = await get_equipment_status_type(status_type_id)
-    
+
     if status_type is None:
         raise HTTPException(status_code=404, detail="Equipment status type not found")
-    
+
     status_type.status_type_name = updated_status_type.status_type_name
     status_type.status_type_color = updated_status_type.status_type_color
-        
+
     async with async_session() as session:
         session.add(status_type)
         await session.commit()
         await session.refresh(status_type)
-    
+
     return status_type
+
 
 async def delete_equipment_status_type(status_type_id: int):
     async with async_session() as session:
         status_type = await get_equipment_status_type(status_type_id)
-        
+
         if not status_type:
-            raise HTTPException(status_code=404, detail="Equipment status type not found")
-        
+            raise HTTPException(
+                status_code=404, detail="Equipment status type not found"
+            )
+
         await session.delete(status_type)
         await session.commit()
         return {"detail": "Equipment status type deleted successfully"}

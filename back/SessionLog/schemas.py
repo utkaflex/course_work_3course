@@ -1,14 +1,18 @@
-from pydantic import BaseModel
-from datetime import datetime, timedelta, timezone
 import zoneinfo as zi
+from datetime import datetime, timedelta, timezone
+
+from pydantic import BaseModel
+
 
 class SSessionLogBase(BaseModel):
     event_type: str
     user_agent: str
-    time: datetime = datetime.now(tz= timezone(timedelta(hours=5)))
+    time: datetime = datetime.now(tz=timezone(timedelta(hours=5)))
+
 
 class SSessionLogCreate(SSessionLogBase):
     pass
+
 
 class SSessionLog(SSessionLogBase):
     id: int
@@ -17,7 +21,8 @@ class SSessionLog(SSessionLogBase):
 
     class Config:
         from_attributes = True
-        
+
+
 class SSessionLogAll(SSessionLog):
     username: str
     role_name: str

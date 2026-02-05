@@ -1,10 +1,14 @@
 import os
+import tomllib
+from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from Building.router import router as router_building
+from Category.router import router as router_categories
+from CategoryType.router import router as category_types_router
 from config import settings
 from Contract.router import router as router_contract
 from Database.router import router as router_database
@@ -12,42 +16,43 @@ from Database.router import start_auto_backup_scheduler, stop_auto_backup_schedu
 from Equipment.router import router as router_equipment
 from EquipmentSpecification.router import router as router_equipment_specs
 from EquipmentStatus.router import router as router_equipment_status
-from EquipmentStatusType.router import \
-    router as router_equipment_status_type
+from EquipmentStatusType.router import router as router_equipment_status_type
 from EquipmentType.router import router as router_equipment_type
 from Job.router import router as router_jobs
 from License.router import router as router_license
 from Office.router import router as router_offices
+from ReportTypes.router import router as router_report_types
 from ResponsibleUser.router import router as router_responsible_user
+from Rooms.router import router as rooms_router
+from RoomTypes.router import router as room_types_router
 from SessionLog.router import router as router_session_log
 from Software.router import router as router_software
 from SystemRole.router import router as router_roles
 from User.router import router as router_auth
 from User.user_router import router as router_users
-from Category.router import router as router_categories
-from CategoryType.router import router as category_types_router
-from Rooms.router import router as rooms_router
-from RoomTypes.router import router as room_types_router
-from pathlib import Path
-import tomllib
+
 
 def load_version() -> str:
     pyproject_path = Path(__file__).resolve().parent / "pyproject.toml"
     data = tomllib.loads(pyproject_path.read_text(encoding="utf-8"))
     return data["project"]["version"]
 
+
 app = FastAPI(
     title="SATS",
     version=load_version(),
 )
 
+
 @app.on_event("startup")
 async def _startup():
     await start_auto_backup_scheduler()
 
+
 @app.on_event("shutdown")
 async def _shutdown():
     await stop_auto_backup_scheduler()
+
 
 app.include_router(router_roles)
 app.include_router(router_auth)
@@ -70,6 +75,7 @@ app.include_router(router_categories)
 app.include_router(category_types_router)
 app.include_router(rooms_router)
 app.include_router(room_types_router)
+app.include_router(router_report_types)
 
 origins = (settings.APP_CORS_ORIGINS).split(",")
 
@@ -79,7 +85,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["Content-Disposition"]
+    expose_headers=["Content-Disposition"],
 )
 
 if __name__ == "__main__":

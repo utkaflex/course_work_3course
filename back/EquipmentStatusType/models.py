@@ -1,6 +1,8 @@
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
+
 from database import Base
+
 
 class EquipmentStatusType(Base):
     __tablename__ = "equipment_status_types"
@@ -9,4 +11,6 @@ class EquipmentStatusType(Base):
     status_type_name = Column(String, nullable=False, unique=True)
     status_type_color = Column(String, nullable=True)
 
-    statuses = relationship("EquipmentStatus", back_populates="status_type", cascade="all, delete")
+    statuses = relationship(
+        "EquipmentStatus", back_populates="status_type", cascade="all, delete"
+    )

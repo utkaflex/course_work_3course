@@ -1,12 +1,15 @@
-from fastapi import APIRouter, HTTPException
-from RoomTypes.schemas import SRoomTypeCreate, SRoomTypeUpdate, SRoomType
-from RoomTypes import crud
 from typing import List
 
+from fastapi import APIRouter, HTTPException
+
+from RoomTypes import crud
+from RoomTypes.schemas import SRoomType, SRoomTypeCreate, SRoomTypeUpdate
+
 router = APIRouter(
-    prefix = "/room_type",
-    tags = ["Типы аудиторий"],
+    prefix="/room_type",
+    tags=["Типы аудиторий"],
 )
+
 
 @router.post("/create", response_model=SRoomType)
 async def create_room_type(body: SRoomTypeCreate):
@@ -15,16 +18,19 @@ async def create_room_type(body: SRoomTypeCreate):
         raise HTTPException(status_code=409, detail="Room type already exists")
     return await crud.create_room_type(body)
 
-@router.get("/all", response_model= List[SRoomType])
+
+@router.get("/all", response_model=List[SRoomType])
 async def get_all_room_types():
     return await crud.get_all_room_types()
 
-@router.get("/{room_type_id}", response_model = SRoomType)
+
+@router.get("/{room_type_id}", response_model=SRoomType)
 async def get_room_type(room_type_id: int):
     room_type = await crud.get_room_type(room_type_id)
     if not room_type:
         raise HTTPException(status_code=404, detail="Room type not found")
     return room_type
+
 
 @router.put("/{room_type_id}", response_model=SRoomType)
 async def edit_room_type_name(room_type_id: int, body: SRoomTypeUpdate):
@@ -36,6 +42,7 @@ async def edit_room_type_name(room_type_id: int, body: SRoomTypeUpdate):
     if not updated:
         raise HTTPException(status_code=404, detail="Room type not found")
     return updated
+
 
 @router.delete("/{room_type_id}")
 async def delete_room_type(room_type_id: int):

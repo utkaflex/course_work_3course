@@ -73,7 +73,6 @@ const EquipmentStatusUpdateForm = ({
           const status = (await axios.get(API_URL + `/equipment_status/${id}`)).data
           form.reset({
             ...status,
-            audience_id: status.audience_id.toString(),
             room_id: status.room_id ?? 0
           })
           setLoading(false)
@@ -96,7 +95,6 @@ const EquipmentStatusUpdateForm = ({
     defaultValues: {
       doc_number: "",
       status_change_date: "",
-      audience_id: "",
       status_type_id: 0,
       responsible_user_id: 0,
       building_id: 0,
@@ -111,7 +109,6 @@ const EquipmentStatusUpdateForm = ({
     axios.put(API_URL + `/equipment_status/${id}`, {
       doc_number: data.doc_number,
       status_change_date: new Date(),
-      audience_id: data.audience_id,
       status_type_id: data.status_type_id,
       responsible_user_id: data.responsible_user_id,
       building_id: data.building_id,

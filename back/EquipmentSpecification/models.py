@@ -1,6 +1,8 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
+
 from database import Base
+
 
 class EquipmentSpecification(Base):
     __tablename__ = "equipment_specifications"

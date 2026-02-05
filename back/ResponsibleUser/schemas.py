@@ -1,5 +1,7 @@
-from pydantic import BaseModel
 from typing import Optional
+
+from pydantic import BaseModel
+
 
 class SResponsibleUserBase(BaseModel):
     first_name: str
@@ -8,15 +10,18 @@ class SResponsibleUserBase(BaseModel):
     job_id: int
     office_id: int
 
+
 class SResponsibleUserCreate(SResponsibleUserBase):
     pass
+
 
 class SResponsibleUser(SResponsibleUserBase):
     id: int
 
     class Config:
         from_attributes = True
-        
+
+
 class SAllResponsibleUser(BaseModel):
     id: int
     full_name: str
