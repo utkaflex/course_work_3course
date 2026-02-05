@@ -11,14 +11,11 @@ class EquipmentStatus(Base):
     doc_number = Column(String)
     status_change_date = Column(DateTime, nullable=False)
     responsible_user_id = Column(Integer, ForeignKey("responsible_users.id"))
-    building_id = Column(Integer, ForeignKey("buildings.id"))
-    audience_id = Column(Integer)
 
     room_id = Column(Integer, ForeignKey("rooms.id", ondelete="SET NULL"), nullable=True)
 
     equipment = relationship("Equipment", back_populates="statuses")
     status_type = relationship("EquipmentStatusType", back_populates="statuses")
     responsible_user = relationship("ResponsibleUser", back_populates="statuses")
-    building = relationship("Building", back_populates="statuses")
 
     room = relationship("Rooms", back_populates="statuses")

@@ -9,8 +9,6 @@ class SEquipmentStatusBase(BaseModel):
     doc_number: str
     status_change_date: datetime
     responsible_user_id: int
-    building_id: int
-    audience_id: Optional[int] = None
 
     room_id: Optional[int] = None
 

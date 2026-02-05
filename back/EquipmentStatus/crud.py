@@ -2,10 +2,8 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from database import async_session
-
 from EquipmentStatus.models import EquipmentStatus
 from EquipmentStatus.schemas import SEquipmentStatusCreate
-from Building import crud as crud_building
 from EquipmentStatusType import crud as crud_status_type
 from ResponsibleUser import crud as crud_responsible_user
 from Equipment import crud as crud_equipment
@@ -34,8 +32,6 @@ async def get_equipment_statuses_by_equipment(equipment_id: int) -> list[Equipme
 
 async def create_equipment_status(status: SEquipmentStatusCreate) -> EquipmentStatus:
     async with async_session() as session:
-        if not await crud_building.get_building(status.building_id):
-            raise HTTPException(status_code=404, detail="Building not found")
         if not await crud_status_type.get_equipment_status_type(status.status_type_id):
             raise HTTPException(status_code=404, detail="Status type not found")
         if not await crud_responsible_user.get_responsible_user(status.responsible_user_id):
@@ -47,8 +43,6 @@ async def create_equipment_status(status: SEquipmentStatusCreate) -> EquipmentSt
             room = await session.get(Rooms, status.room_id)
             if not room:
                 raise HTTPException(status_code=404, detail="Room not found")
-            if room.building_id != status.building_id:
-                raise HTTPException(status_code=400, detail="Room does not belong to building")
 
         db_status = EquipmentStatus(
             equipment_id=status.equipment_id,
@@ -56,23 +50,21 @@ async def create_equipment_status(status: SEquipmentStatusCreate) -> EquipmentSt
             doc_number=status.doc_number,
             status_change_date=status.status_change_date,
             responsible_user_id=status.responsible_user_id,
-            building_id=status.building_id,
-            audience_id=status.audience_id,
             room_id=status.room_id,
         )
         session.add(db_status)
         await session.flush()
         new_id = db_status.id
         await session.commit()
+
     return await get_equipment_status(new_id)
 
 async def update_equipment_status(status_id: int, updated_status: SEquipmentStatusCreate) -> EquipmentStatus:
     async with async_session() as session:
-        status = await session.get(EquipmentStatus, status_id)
-        if not status:
+        db_status = await session.get(EquipmentStatus, status_id)
+        if not db_status:
             raise HTTPException(status_code=404, detail="Equipment status not found")
-        if not await crud_building.get_building(updated_status.building_id):
-            raise HTTPException(status_code=404, detail="Building not found")
+
         if not await crud_status_type.get_equipment_status_type(updated_status.status_type_id):
             raise HTTPException(status_code=404, detail="Status type not found")
         if not await crud_responsible_user.get_responsible_user(updated_status.responsible_user_id):
@@ -84,18 +76,13 @@ async def update_equipment_status(status_id: int, updated_status: SEquipmentStat
             room = await session.get(Rooms, updated_status.room_id)
             if not room:
                 raise HTTPException(status_code=404, detail="Room not found")
-            if room.building_id != updated_status.building_id:
-                raise HTTPException(status_code=400, detail="Room does not belong to building")
 
-        status.equipment_id = updated_status.equipment_id
-        status.status_type_id = updated_status.status_type_id
-        status.doc_number = updated_status.doc_number
-        status.status_change_date = updated_status.status_change_date
-        status.responsible_user_id = updated_status.responsible_user_id
-        status.building_id = updated_status.building_id
-        status.audience_id = updated_status.audience_id
-        status.room_id = updated_status.room_id
-
+        db_status.equipment_id = updated_status.equipment_id
+        db_status.status_type_id = updated_status.status_type_id
+        db_status.doc_number = updated_status.doc_number
+        db_status.status_change_date = updated_status.status_change_date
+        db_status.responsible_user_id = updated_status.responsible_user_id
+        db_status.room_id = updated_status.room_id
         await session.commit()
 
     return await get_equipment_status(status_id)

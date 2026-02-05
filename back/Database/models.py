@@ -9,6 +9,7 @@ class BackupAutoSettings(Base):
     cron = Column(String, nullable=True)
     timezone = Column(String, nullable=False, default="Asia/Yekaterinburg")
     last_backup_at = Column(DateTime, nullable=True)
+
     smb_username = Column(String, nullable = True)
     smb_password = Column(String, nullable = True)
     smb_ip = Column(String, nullable = True)
