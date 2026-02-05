@@ -134,7 +134,7 @@ const AutoBackup = () => {
           res.data.timezone === "Asia/Yekaterinburg" ? "Asia/Yekaterinburg" : "Europe/Moscow"
         setTimezone(tz)
 
-        setEnabled(Boolean(res.data.enabled))
+        setEnabled(true)
 
         setNetPath(res.data.netPath ?? "")
         setDir(res.data.dir ?? "")
@@ -240,7 +240,7 @@ const AutoBackup = () => {
       serverSettings.timezone === "Asia/Yekaterinburg" ? "Asia/Yekaterinburg" : "Europe/Moscow"
     setTimezone(tz)
 
-    setEnabled(Boolean(serverSettings.enabled))
+    setEnabled(true)
 
     setNetPath(serverSettings.netPath ?? "")
     setDir(serverSettings.dir ?? "")
