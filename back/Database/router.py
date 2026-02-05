@@ -19,6 +19,11 @@ from Database.crypto import decrypt_str
 
 from User.depends import get_current_user
 from User.models import User
+import uuid
+import sqlite3
+from alembic.config import Config as AlembicConfig
+from alembic import command as alembic_command
+from database import engine as async_engine
 
 
 router = APIRouter(
@@ -29,6 +34,10 @@ router = APIRouter(
 BACKUP_DIR = Path("backups")
 DB_FILE = Path(settings.DB_NAME)
 BACKUP_DIR.mkdir(exist_ok=True)
+
+BACK_ROOT = Path(__file__).resolve().parents[1]
+ALEMBIC_INI = BACK_ROOT / "alembic.ini"
+MIGRATIONS_DIR = BACK_ROOT / "migrations"
 
 _scheduler: AsyncIOScheduler | None = None
 JOB_ID = "auto_backup_job"
@@ -49,22 +58,52 @@ async def download_backup_endpoint(user: User = Depends(get_current_user)):
         headers={"Content-Disposition": f"attachment; filename={backup_filename}"},
     )
 
-@router.post("/restore/upload", summary="Restore database from uploaded file")
+@router.post("/restore/upload", summary = "Restore database from uploaded file")
 async def restore_backup_upload_endpoint(
     file: UploadFile = File(...),
     user: User = Depends(get_current_user),
 ):
     if user.system_role_id < 4:
         raise HTTPException(status_code=403, detail="Forbidden")
-    temp_path = BACKUP_DIR / file.filename
-    try:
-        async with aiofiles.open(temp_path, "wb") as buffer:
-            await buffer.write(await file.read())
+    temp_path = BACKUP_DIR / f"restore_{uuid.uuid4().hex}.db"
 
+    try:
+        async with aiofiles.open(temp_path, "wb") as out:
+            while True:
+                chunk = await file.read(1024 * 1024)
+                if not chunk:
+                    break
+                await out.write(chunk)
+        try:
+            size = temp_path.stat().st_size
+        except Exception:
+            raise HTTPException(status_code=400, detail="Backup file is unreadable")
+
+        if size < 100:
+            raise HTTPException(status_code=400, detail="Backup file is empty or too small")
+
+        if not _is_sqlite_file(temp_path):
+            raise HTTPException(status_code=400, detail="Uploaded file is not a SQLite database")
+        try:
+            await anyio.to_thread.run_sync(_alembic_upgrade_to_head, temp_path)
+        except Exception:
+            logging.exception("Restore rejected: migrations failed on uploaded DB")
+            raise HTTPException(status_code=400, detail="Invalid backup: migrations failed")
+        is_empty = await anyio.to_thread.run_sync(_db_looks_empty, temp_path)
+        await async_engine.dispose()
+        _cleanup_sqlite_sidecars(DB_FILE)
+        if DB_FILE.exists():
+            ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+            shutil.copy(DB_FILE, BACKUP_DIR / f"before_restore_{ts}.db")
+
+        DB_FILE.unlink(missing_ok=True)
         shutil.move(temp_path, DB_FILE)
-        return {"message": "Database restored successfully"}
-    except Exception:
-        raise HTTPException(status_code=500, detail="Failed to restore database")
+
+        resp = {"message": "Database restored successfully"}
+        if is_empty:
+            resp["warning"] = "Restored database looks empty (no rows). Check that you uploaded the correct backup."
+        return resp
+
     finally:
         if temp_path.exists():
             temp_path.unlink(missing_ok=True)
@@ -289,3 +328,51 @@ async def stop_auto_backup_scheduler():
     if _scheduler is not None:
         _scheduler.shutdown(wait=False)
         _scheduler = None
+
+def _is_sqlite_file(path: Path) -> bool:
+    try:
+        with open(path, "rb") as f:
+            return f.read(16) == b"SQLite format 3\x00"
+    except Exception:
+        return False
+
+def _sqlite_sync_url(path: Path) -> str:
+    p = path.resolve()
+    if p.drive:
+        return f"sqlite:///{p.as_posix()}"
+    return f"sqlite:////{p.as_posix().lstrip('/')}"
+
+
+def _alembic_upgrade_to_head(db_path: Path) -> None:
+    cfg = AlembicConfig(str(ALEMBIC_INI))
+    cfg.set_main_option("script_location", str(MIGRATIONS_DIR))
+    cfg.set_main_option("sqlalchemy.url", _sqlite_sync_url(db_path))
+    alembic_command.upgrade(cfg, "head")
+
+
+def _db_looks_empty(db_path: Path) -> bool:
+    conn = sqlite3.connect(db_path)
+    try:
+        cur = conn.cursor()
+        tables = [
+            r[0]
+            for r in cur.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+            ).fetchall()
+        ]
+        tables = [t for t in tables if t != "alembic_version"]
+        if not tables:
+            return True
+
+        for t in tables:
+            cnt = cur.execute(f"SELECT COUNT(1) FROM {t}").fetchone()[0]
+            if int(cnt) > 0:
+                return False
+        return True
+    finally:
+        conn.close()
+
+def _cleanup_sqlite_sidecars(db_file: Path) -> None:
+    for suffix in ("-wal", "-shm"):
+        side = Path(str(db_file) + suffix)
+        side.unlink(missing_ok=True)
