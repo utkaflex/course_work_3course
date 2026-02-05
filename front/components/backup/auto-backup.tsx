@@ -280,8 +280,6 @@ const AutoBackup = () => {
             !weekdays.length ||
             !netPath.trim() ||
             !dir.trim() ||
-            !username.trim() ||
-            !password ||
             isProcessing
           }
         >
