@@ -8,6 +8,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 import os
 import gc
+import errno
 
 import aiofiles
 import anyio
@@ -38,8 +39,6 @@ MIGRATIONS_DIR = BACK_ROOT / "migrations"
 BACKUP_DIR = BACK_ROOT / "backups"
 BACKUP_DIR.mkdir(exist_ok=True)
 DB_FILE = (BACK_ROOT / settings.DB_NAME).resolve()
-
-BACKUP_DIR.mkdir(exist_ok=True)
 
 logging.info("Backup paths: DB_FILE=%s BACKUP_DIR=%s", DB_FILE, BACKUP_DIR)
 
@@ -96,17 +95,40 @@ async def restore_backup_upload_endpoint(
         except Exception:
             logging.exception("Restore rejected: migrations failed on uploaded DB")
             raise HTTPException(status_code=400, detail="Invalid backup: migrations failed")
-
         is_empty = await anyio.to_thread.run_sync(_db_looks_empty, temp_path)
         try:
             await async_engine.dispose()
             gc.collect()
             _cleanup_sqlite_sidecars(DB_FILE)
+
             if DB_FILE.exists():
                 ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
                 shutil.copy2(DB_FILE, BACKUP_DIR / f"before_restore_{ts}.db")
-            os.replace(str(temp_path), str(DB_FILE))
-            swapped = True
+
+            try:
+                os.replace(str(temp_path), str(DB_FILE))
+                swapped = True
+            except OSError as e:
+                if e.errno != errno.EBUSY:
+                    raise
+
+                logging.warning(
+                    "DB file is busy/mounted; falling back to sqlite backup copy into existing DB file"
+                )
+
+                for attempt in range(5):
+                    try:
+                        await anyio.to_thread.run_sync(_sqlite_backup_sync, temp_path, DB_FILE)
+                        swapped = True
+                        break
+                    except sqlite3.OperationalError as ex:
+                        if "locked" in str(ex).lower():
+                            await anyio.sleep(0.2 * (attempt + 1))
+                            continue
+                        raise
+
+            if swapped and temp_path.exists():
+                temp_path.unlink(missing_ok=True)
 
         except Exception:
             logging.exception("Restore failed during DB swap (dispose/copy/replace)")
