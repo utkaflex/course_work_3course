@@ -53,29 +53,18 @@ const EquipmentStatusAddForm = ({
         })) as DataArray[]
         comboboxFields[1].data = responsible_users_for_combobox
 
-        const building = (await axios.get(API_URL + `/building/all`)).data as z.infer<typeof BuildingSchema>[]
-        const building_for_combobox = await Promise.all(building.map(async building => {
-          return {
-            value: building.building_address,
-            id: building.id
-          } as DataArray
-        })) as DataArray[]
-        comboboxFields[2].data = building_for_combobox
-
         const rooms = (await axios.get(API_URL + `/room/all`)).data
         const rooms_for_combobox = rooms.map((room: any) => ({
           id: room.id,
           value: `${room.name}, ${room.building?.building_address ?? ""}`,
         })) as DataArray[]
 
-        comboboxFields[3].data = rooms_for_combobox
+        comboboxFields[2].data = rooms_for_combobox
         setLoading(false)
       } catch (e) {
         console.log("Ошибка при получении данных о статусе")
         console.log(e)
       }
-
-
     }
 
     fetchData()
