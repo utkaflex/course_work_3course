@@ -1,46 +1,43 @@
 import sys
-
 from logging.config import fileConfig
-
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-
-from alembic import context
 from os.path import abspath, dirname
-
 from pathlib import Path
 
-from database import Base
-from SystemRole.models import SystemRole
-from Job.models import Job
-from Office.models import Office
-from User.models import User
-from License.models import License
-from Contract.models import Contract
-from Software.models import Software
-from SoftwareContract.models import SoftwareContract
-from SessionLog.models import SessionLog
+from alembic import context
+from sqlalchemy import engine_from_config, pool
+
 from Building.models import Building
-from EquipmentType.models import EquipmentType
-from EquipmentStatusType.models import EquipmentStatusType
-from ResponsibleUserJob.models import ResponsibleUserJob
-from ResponsibleUserOffice.models import ResponsibleUserOffice
-from ResponsibleUser.models import ResponsibleUser
-from Equipment.models import Equipment
-from EquipmentStatus.models import EquipmentStatus
-from EquipmentSpecification.models import EquipmentSpecification
 from Category.models import Category
 from CategoryType.models import CategoryType
+from config import settings
+from Contract.models import Contract
+from database import Base
 from Database.models import BackupAutoSettings
+from Equipment.models import Equipment
+from EquipmentSpecification.models import EquipmentSpecification
+from EquipmentStatus.models import EquipmentStatus
+from EquipmentStatusType.models import EquipmentStatusType
+from EquipmentType.models import EquipmentType
+from Job.models import Job
+from License.models import License
+from Office.models import Office
+from ResponsibleUser.models import ResponsibleUser
+from ResponsibleUserJob.models import ResponsibleUserJob
+from ResponsibleUserOffice.models import ResponsibleUserOffice
 from Rooms.models import Rooms
 from RoomTypes.models import RoomTypes
-from config import settings
+from SessionLog.models import SessionLog
+from Software.models import Software
+from SoftwareContract.models import SoftwareContract
+from SystemRole.models import SystemRole
+from User.models import User
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
 from config import settings
+
 config.set_main_option("sqlalchemy.url", f"sqlite:///{settings.DB_NAME}")
 
 # Interpret the config file for Python logging.
@@ -98,9 +95,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

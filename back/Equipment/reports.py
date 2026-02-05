@@ -1,8 +1,10 @@
 import io
 from collections import defaultdict
 from datetime import date, datetime
+
 from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+
 
 def _dt(v):
     if v is None:
@@ -107,7 +109,10 @@ def build_grouped_report(equipment_items) -> bytes:
     wb.save(buf)
     return buf.getvalue()
 
-def build_complex_report_all_categories(blocks: list[tuple[str, list[tuple[str, int, int]]]]) -> bytes:
+
+def build_complex_report_all_categories(
+    blocks: list[tuple[str, list[tuple[str, int, int]]]],
+) -> bytes:
     """
     blocks: [(category_name, [(type_name, total_all, total_period), ...]),...]
     """

@@ -3,8 +3,8 @@ from __future__ import annotations
 from sqlalchemy import select
 
 from database import async_session
-from Database.models import BackupAutoSettings
 from Database.crypto import encrypt_str
+from Database.models import BackupAutoSettings
 
 
 async def get_auto_settings() -> BackupAutoSettings | None:
@@ -13,6 +13,7 @@ async def get_auto_settings() -> BackupAutoSettings | None:
             select(BackupAutoSettings).order_by(BackupAutoSettings.id.desc())
         )
         return res.scalar_one_or_none()
+
 
 async def upsert_auto_config(
     cron: str,
@@ -26,7 +27,9 @@ async def upsert_auto_config(
     async with async_session() as session:
         row = await session.get(BackupAutoSettings, 1)
         if row is None:
-            row = BackupAutoSettings(id=1, cron=cron, timezone=timezone, enabled=enabled)
+            row = BackupAutoSettings(
+                id=1, cron=cron, timezone=timezone, enabled=enabled
+            )
 
             row.smb_username = encrypt_str(username)
             row.smb_password = encrypt_str(password)
@@ -51,6 +54,7 @@ async def upsert_auto_config(
         await session.commit()
         await session.refresh(row)
         return row
+
 
 async def set_last_backup(dt) -> None:
     async with async_session() as session:

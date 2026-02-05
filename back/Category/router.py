@@ -1,25 +1,37 @@
-from fastapi import APIRouter, HTTPException
-from Category.schemas import SCategory, SCategoryCreate, SCategoryUpdate, SCategoryWithTypes, SCategoryCreateWithTypes, SCategoryUpdateWithTypes
 from typing import List
+
+from fastapi import APIRouter, HTTPException
 from sqlalchemy.exc import IntegrityError
+
+from Category.schemas import (
+    SCategory,
+    SCategoryCreate,
+    SCategoryCreateWithTypes,
+    SCategoryUpdate,
+    SCategoryUpdateWithTypes,
+    SCategoryWithTypes,
+)
 
 from . import crud
 
 router = APIRouter(
-    prefix = "/category",
-    tags = ["Категории типов оборудования"],
+    prefix="/category",
+    tags=["Категории типов оборудования"],
 )
+
 
 @router.get("/all", response_model=List[SCategoryWithTypes])
 async def get_all_with_types():
     return await crud.get_all_categories_with_types()
 
-@router.get("/{category_id}", response_model = SCategoryWithTypes)
+
+@router.get("/{category_id}", response_model=SCategoryWithTypes)
 async def get_category(category_id: int):
     category = await crud.get_category_with_types(category_id)
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
     return category
+
 
 @router.post("/create", response_model=SCategoryWithTypes)
 async def create_with_types(body: SCategoryCreateWithTypes):
@@ -36,6 +48,7 @@ async def create_with_types(body: SCategoryCreateWithTypes):
             raise HTTPException(status_code=404, detail=f"Type not found: {tid}")
         raise
     return await crud.get_category_with_types(cat.id)
+
 
 @router.put("/{category_id}", response_model=SCategoryWithTypes)
 async def update_with_types(category_id: int, body: SCategoryUpdateWithTypes):
@@ -59,12 +72,14 @@ async def update_with_types(category_id: int, body: SCategoryUpdateWithTypes):
 
     return await crud.get_category_with_types(category_id)
 
+
 @router.delete("/{category_id}")
 async def delete_category(category_id: int):
     ok = await crud.delete_category(category_id)
     if not ok:
         raise HTTPException(status_code=404, detail="Category not found")
     return {"ok": True}
+
 
 # @router.get("/get_all_without_types", response_model=List[SCategory])
 # async def all_categories():

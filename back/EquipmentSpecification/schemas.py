@@ -1,5 +1,7 @@
-from pydantic import BaseModel
 from typing import Optional
+
+from pydantic import BaseModel
+
 
 class SEquipmentSpecificationBase(BaseModel):
     equipment_id: int
@@ -9,8 +11,10 @@ class SEquipmentSpecificationBase(BaseModel):
     storage: Optional[str] = None
     gpu_info: Optional[str] = None
 
+
 class SEquipmentSpecificationCreate(SEquipmentSpecificationBase):
     pass
+
 
 class SEquipmentSpecification(SEquipmentSpecificationBase):
     id: int

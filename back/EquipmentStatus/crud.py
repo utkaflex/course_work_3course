@@ -1,22 +1,22 @@
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
+
 from database import async_session
+from Equipment import crud as crud_equipment
 from EquipmentStatus.models import EquipmentStatus
 from EquipmentStatus.schemas import SEquipmentStatusCreate
 from EquipmentStatusType import crud as crud_status_type
 from ResponsibleUser import crud as crud_responsible_user
-from Equipment import crud as crud_equipment
 from Rooms.models import Rooms
 
+
 def _status_with_room_stmt():
-    return (
-        select(EquipmentStatus)
-        .options(
-            selectinload(EquipmentStatus.room).selectinload(Rooms.building),
-            selectinload(EquipmentStatus.room).selectinload(Rooms.room_type),
-        )
+    return select(EquipmentStatus).options(
+        selectinload(EquipmentStatus.room).selectinload(Rooms.building),
+        selectinload(EquipmentStatus.room).selectinload(Rooms.room_type),
     )
+
 
 async def get_equipment_status(status_id: int) -> EquipmentStatus | None:
     async with async_session() as session:
@@ -24,17 +24,25 @@ async def get_equipment_status(status_id: int) -> EquipmentStatus | None:
         res = await session.execute(stmt)
         return res.scalar_one_or_none()
 
-async def get_equipment_statuses_by_equipment(equipment_id: int) -> list[EquipmentStatus]:
+
+async def get_equipment_statuses_by_equipment(
+    equipment_id: int,
+) -> list[EquipmentStatus]:
     async with async_session() as session:
-        stmt = _status_with_room_stmt().where(EquipmentStatus.equipment_id == equipment_id)
+        stmt = _status_with_room_stmt().where(
+            EquipmentStatus.equipment_id == equipment_id
+        )
         res = await session.execute(stmt)
         return list(res.scalars().all())
+
 
 async def create_equipment_status(status: SEquipmentStatusCreate) -> EquipmentStatus:
     async with async_session() as session:
         if not await crud_status_type.get_equipment_status_type(status.status_type_id):
             raise HTTPException(status_code=404, detail="Status type not found")
-        if not await crud_responsible_user.get_responsible_user(status.responsible_user_id):
+        if not await crud_responsible_user.get_responsible_user(
+            status.responsible_user_id
+        ):
             raise HTTPException(status_code=404, detail="Responsible user not found")
         if not await crud_equipment.get_equipment(status.equipment_id):
             raise HTTPException(status_code=404, detail="Equipment not found")
@@ -59,15 +67,22 @@ async def create_equipment_status(status: SEquipmentStatusCreate) -> EquipmentSt
 
     return await get_equipment_status(new_id)
 
-async def update_equipment_status(status_id: int, updated_status: SEquipmentStatusCreate) -> EquipmentStatus:
+
+async def update_equipment_status(
+    status_id: int, updated_status: SEquipmentStatusCreate
+) -> EquipmentStatus:
     async with async_session() as session:
         db_status = await session.get(EquipmentStatus, status_id)
         if not db_status:
             raise HTTPException(status_code=404, detail="Equipment status not found")
 
-        if not await crud_status_type.get_equipment_status_type(updated_status.status_type_id):
+        if not await crud_status_type.get_equipment_status_type(
+            updated_status.status_type_id
+        ):
             raise HTTPException(status_code=404, detail="Status type not found")
-        if not await crud_responsible_user.get_responsible_user(updated_status.responsible_user_id):
+        if not await crud_responsible_user.get_responsible_user(
+            updated_status.responsible_user_id
+        ):
             raise HTTPException(status_code=404, detail="Responsible user not found")
         if not await crud_equipment.get_equipment(updated_status.equipment_id):
             raise HTTPException(status_code=404, detail="Equipment not found")
@@ -86,6 +101,7 @@ async def update_equipment_status(status_id: int, updated_status: SEquipmentStat
         await session.commit()
 
     return await get_equipment_status(status_id)
+
 
 async def delete_equipment_status(status_id: int) -> dict:
     async with async_session() as session:

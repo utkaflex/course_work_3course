@@ -1,6 +1,8 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Date
+from sqlalchemy import Column, Date, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
+
 from database import Base
+
 
 class Software(Base):
     __tablename__ = "software"
@@ -11,7 +13,9 @@ class Software(Base):
     program_link = Column(String(200), nullable=True)
     version = Column(String(50), nullable=True)
     version_date = Column(Date, nullable=True)
-    license_id = Column(Integer, ForeignKey("licenses.id", ondelete='CASCADE'))
+    license_id = Column(Integer, ForeignKey("licenses.id", ondelete="CASCADE"))
 
     license = relationship("License", back_populates="software")
-    contracts = relationship("SoftwareContract", back_populates="software", cascade="all, delete-orphan")
+    contracts = relationship(
+        "SoftwareContract", back_populates="software", cascade="all, delete-orphan"
+    )

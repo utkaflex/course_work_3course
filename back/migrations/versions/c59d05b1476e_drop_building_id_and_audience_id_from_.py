@@ -5,15 +5,15 @@ Revises: c064f93dac5f
 Create Date: 2026-02-05 14:38:39.339118
 
 """
+
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = 'c59d05b1476e'
-down_revision: Union[str, None] = 'c064f93dac5f'
+revision: str = "c59d05b1476e"
+down_revision: Union[str, None] = "c064f93dac5f"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -36,9 +36,7 @@ def downgrade() -> None:
         )
 
     conn = op.get_bind()
-    conn.execute(
-        sa.text(
-            """
+    conn.execute(sa.text("""
             UPDATE equipment_statuses
             SET building_id = (
                 SELECT building_id FROM rooms WHERE rooms.id = equipment_statuses.room_id
@@ -47,6 +45,4 @@ def downgrade() -> None:
                 SELECT name FROM rooms WHERE rooms.id = equipment_statuses.room_id
             ) AS INTEGER)
             WHERE room_id IS NOT NULL
-            """
-        )
-    )
+            """))

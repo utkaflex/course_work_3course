@@ -1,10 +1,12 @@
 from datetime import datetime
-from pydantic import BaseModel, Field
 from typing import List, Optional
+
+from pydantic import BaseModel, Field
 
 from EquipmentSpecification.schemas import SEquipmentSpecification
 from EquipmentStatus.schemas import SEquipmentStatus
 from Rooms.schemas import SRoom
+
 
 class SEquipmentBase(BaseModel):
     model: str
@@ -15,15 +17,18 @@ class SEquipmentBase(BaseModel):
     type_id: int
     accepted_date: Optional[datetime] = None
 
+
 class SEquipmentCreate(SEquipmentBase):
     pass
+
 
 class SEquipment(SEquipmentBase):
     id: int
 
     class Config:
         from_attributes = True
-        
+
+
 class SEquipmentWithResponsible(SEquipment):
     responsible_user_full_name: Optional[str] = None
     building_adress: Optional[str] = None
@@ -37,6 +42,7 @@ class SEquipmentWithResponsible(SEquipment):
     class Config:
         from_attributes = True
 
+
 class SEquipmentExcelReport(BaseModel):
-    ids: List[int] = Field(min_length = 1)
+    ids: List[int] = Field(min_length=1)
     report_type_id: int

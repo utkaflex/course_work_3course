@@ -1,7 +1,10 @@
 from datetime import datetime, timedelta, timezone
-from sqlalchemy import Column, Integer, String, ForeignKey, UniqueConstraint, DateTime
+
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import relationship
+
 from database import Base
+
 
 class Equipment(Base):
     __tablename__ = "equipment"
@@ -16,5 +19,11 @@ class Equipment(Base):
     accepted_date = Column(DateTime, nullable=True)
 
     type = relationship("EquipmentType", back_populates="equipment")
-    equipment_specification = relationship("EquipmentSpecification", back_populates="equipment", cascade="all, delete-orphan")
-    statuses = relationship("EquipmentStatus", back_populates="equipment", cascade="all, delete-orphan")
+    equipment_specification = relationship(
+        "EquipmentSpecification",
+        back_populates="equipment",
+        cascade="all, delete-orphan",
+    )
+    statuses = relationship(
+        "EquipmentStatus", back_populates="equipment", cascade="all, delete-orphan"
+    )

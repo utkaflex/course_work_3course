@@ -1,10 +1,11 @@
-from sqlalchemy import select, delete
+from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 
-from database import async_session
 from Category.models import Category
-from EquipmentType.models import EquipmentType
 from CategoryType.models import CategoryType
+from database import async_session
+from EquipmentType.models import EquipmentType
+
 
 async def add_type_to_category(category_id: int, type_id: int) -> CategoryType:
     async with async_session() as session:
@@ -22,6 +23,7 @@ async def add_type_to_category(category_id: int, type_id: int) -> CategoryType:
             raise
         await session.refresh(link)
         return link
+
 
 async def remove_type_from_category(category_id: int, type_id: int) -> bool:
     async with async_session() as session:

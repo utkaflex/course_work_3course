@@ -1,14 +1,10 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from SystemRole.schemas import SSystemRole, SSystemRoleCreate
 from SystemRole import crud
+from SystemRole.schemas import SSystemRole, SSystemRoleCreate
 
-
-router = APIRouter(
-    prefix="/role",
-    tags=["Работа с системными ролями"]
-)
+router = APIRouter(prefix="/role", tags=["Работа с системными ролями"])
 
 
 @router.post("/create", response_model=SSystemRole)
@@ -38,14 +34,19 @@ async def update_role(role_id: int, updated_role: SSystemRoleCreate):
     if not existing_role:
         raise HTTPException(status_code=404, detail="Role not found")
 
-    db_role = await crud.get_system_role_by_name(system_role_name=updated_role.role_name)
+    db_role = await crud.get_system_role_by_name(
+        system_role_name=updated_role.role_name
+    )
     if db_role and db_role.id != role_id:
         raise HTTPException(
-            status_code=400, detail="Role name already in use by another role")
+            status_code=400, detail="Role name already in use by another role"
+        )
 
     existing_role.role_name = updated_role.role_name
 
-    await crud.update_system_role_name(system_role_id=role_id, new_role_name=updated_role.role_name)
+    await crud.update_system_role_name(
+        system_role_id=role_id, new_role_name=updated_role.role_name
+    )
 
     return existing_role
 

@@ -1,15 +1,21 @@
 from __future__ import annotations
+
 import base64
 import hashlib
 from typing import Optional
+
 from cryptography.fernet import Fernet, InvalidToken
+
 from config import settings
+
 
 def _derive_fernet_key(secret: str) -> bytes:
     digest = hashlib.sha256(secret.encode("utf-8")).digest()
     return base64.urlsafe_b64encode(digest)
 
+
 _FERNET = Fernet(_derive_fernet_key(settings.SECRET_KEY))
+
 
 def encrypt_str(value: Optional[str]) -> Optional[str]:
     if value is None:

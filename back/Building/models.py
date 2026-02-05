@@ -10,4 +10,6 @@ class Building(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     building_address = Column(String, nullable=False, unique=True)
 
-    rooms = relationship("Rooms", back_populates="building", cascade="all, delete-orphan")
+    rooms = relationship(
+        "Rooms", back_populates="building", cascade="all, delete-orphan"
+    )

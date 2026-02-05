@@ -1,9 +1,11 @@
-from typing import List, Optional
-from pydantic import BaseModel
 from datetime import datetime
+from typing import List, Optional
+
+from pydantic import BaseModel
 
 from Contract.schemas import SContract
 from License.schemas import SLicense
+
 
 class SSoftwareBase(BaseModel):
     name: str
@@ -13,9 +15,11 @@ class SSoftwareBase(BaseModel):
     version_date: Optional[datetime] = None
     license_id: int
 
+
 class SSoftwareCreate(SSoftwareBase):
     contract_ids: List[int]
     pass
+
 
 class SSoftware(SSoftwareBase):
     id: int
@@ -23,6 +27,7 @@ class SSoftware(SSoftwareBase):
 
     class Config:
         from_attributes = True
-        
+
+
 class SSoftwareAll(SSoftware):
     license_type: Optional[str] = None
