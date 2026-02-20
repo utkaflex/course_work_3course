@@ -14,7 +14,7 @@ import {textFields} from "./fields"
 type Building = { id: number; building_address: string }
 type RoomType = { id: number; room_type: string }
 
-const RoomAddForm = () => {
+const RoomAddForm = ({onSuccess}: {onSuccess: () => Promise<void> | void}) => {
   const [error, setError] = useState<string | undefined>("")
   const [isProcessing, setIsProcessing] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -60,12 +60,12 @@ const RoomAddForm = () => {
       .post(API_URL + "/room/create", data)
       .then(() => {
         localStorage.setItem("last_tab", "room")
-        window.location.reload()
         toast({
           title: "Помещение добавлено",
           description: "Данные записаны в БД",
           className: "bg-white",
         })
+        onSuccess?.()
       })
       .catch((e) => {
         setError("Во время добавления записи произошла непредвиденная ошибка!")

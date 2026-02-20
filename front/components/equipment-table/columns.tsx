@@ -11,11 +11,14 @@ import DeleteRowForm from "../delete-row-form";
 import ActionsButton from "../actions-button";
 import {ArrowUpDown} from "lucide-react";
 import {DateFromDbForm} from "../helper-functions";
+import {sortableHeader} from "@/components/sortable-header";
+
+
 
 export const EquipmentTableColumns: ColumnDef<z.infer<typeof EquipmentSchema>>[] = [
   {
     accessorKey: "type_name",
-    header: "Тип оборудования",
+    header: sortableHeader("Тип оборудования"),
     filterFn: (row, columnId, filterValue: string[]) => {
       if (!filterValue?.length) return true
       const cellValue = row.getValue<string>(columnId)
@@ -24,17 +27,21 @@ export const EquipmentTableColumns: ColumnDef<z.infer<typeof EquipmentSchema>>[]
   },
   {
     accessorKey: "model",
-    header: "Модель оборудования",
+    header: sortableHeader("Модель оборудования"),
   },
   {
     id: "additional_info",
     header: "Подробная информация",
-    cell: ({row}) => {
+    cell: ({row, table}) => {
+      const reload = table.options.meta?.reload
+
       const actionsData = [
         {
           title: "Изменить оборудование",
           description: <>Заполните все поля и нажмите кнопку <b>Изменить</b></>,
-          form: <EquipmentUpdateForm id={row.getValue("id")}/>,
+          form: <EquipmentUpdateForm id={row.getValue("id")} onSuccess={async () => {
+            await reload?.()
+          }}/>,
           dropdownButtonText: "Изменить"
         },
         {
@@ -45,6 +52,9 @@ export const EquipmentTableColumns: ColumnDef<z.infer<typeof EquipmentSchema>>[]
             apiEndpoint={API_URL + `/equipment/${row.getValue("id")}`}
             toastText="Оборудование успешно удалено"
             calledFrom="equipment"
+            onSuccess={async () => {
+              await reload?.()
+            }}
           />,
           dropdownButtonText: "Удалить"
         }
@@ -65,15 +75,15 @@ export const EquipmentTableColumns: ColumnDef<z.infer<typeof EquipmentSchema>>[]
   },
   {
     accessorKey: "serial_number",
-    header: "Серийный номер",
+    header: sortableHeader("Серийный номер"),
   },
   {
     accessorKey: "inventory_number",
-    header: "Инвентарный номер",
+    header: sortableHeader("Инвентарный номер"),
   },
   {
     accessorKey: "responsible_user_office",
-    header: "Подразделение ответственного",
+    header: sortableHeader("Подразделение ответственного"),
     filterFn: (row, columnId, filterValue: string[]) => {
       if (!filterValue?.length) return true
       const cellValue = row.getValue<string>(columnId)
@@ -82,11 +92,11 @@ export const EquipmentTableColumns: ColumnDef<z.infer<typeof EquipmentSchema>>[]
   },
   {
     accessorKey: "responsible_user_full_name",
-    header: "ФИО ответственного",
+    header: sortableHeader("ФИО ответственного"),
   },
   {
     accessorKey: "last_status_type",
-    header: "Статус оборудования",
+    header: sortableHeader("Статус оборудования"),
     cell: ({row}) => {
       const color: string = row.getValue("last_status_color");
       return (
@@ -103,7 +113,7 @@ export const EquipmentTableColumns: ColumnDef<z.infer<typeof EquipmentSchema>>[]
   },
   {
     accessorKey: "building_adress",
-    header: "Адрес корпуса",
+    header: sortableHeader("Адрес корпуса"),
     filterFn: (row, columnId, filterValue: string[]) => {
       if (!filterValue?.length) return true
       const cellValue = row.getValue<string>(columnId)
@@ -112,7 +122,7 @@ export const EquipmentTableColumns: ColumnDef<z.infer<typeof EquipmentSchema>>[]
   },
   {
     id: "room",
-    header: "Помещение",
+    header: sortableHeader("Помещение"),
     accessorFn: (row: any) => {
       const statuses = Array.isArray(row.statuses) ? row.statuses : []
       if (!statuses.length) return ""
@@ -131,8 +141,9 @@ export const EquipmentTableColumns: ColumnDef<z.infer<typeof EquipmentSchema>>[]
     },
     filterFn: (row, columnId, filterValue: string[]) => {
       if (!filterValue?.length) return true
-      const v = (row.getValue(columnId) as string) ?? ""
-      return filterValue.includes(v)
+      const v = (row.getValue('room') as string) ?? ""
+      const b = row.getValue('building_adress')
+      return filterValue.includes(`${v} - ${b}`)
     },
   },
   {
@@ -141,7 +152,7 @@ export const EquipmentTableColumns: ColumnDef<z.infer<typeof EquipmentSchema>>[]
   },
   {
     accessorKey: "network_name",
-    header: "Сетевое имя",
+    header: sortableHeader("Сетевое имя"),
     cell: ({row}) => {
       return row.getValue("network_name") ? row.getValue("network_name") : "Отсутствует"
     }

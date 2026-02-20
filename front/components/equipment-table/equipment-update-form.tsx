@@ -15,9 +15,13 @@ import CRUDFormForTables from '../crud-form-for-tables';
 import {DateFromDbForm, DateToDbForm} from '../helper-functions';
 
 const EquipmentUpdateForm = ({
-                               id
+                               id,
+                               onClose,
+                               onSuccess
                              }: {
   id: number
+  onClose?: () => void;
+  onSuccess: () => Promise<void> | void;
 }) => {
   const [error, setError] = useState<string | undefined>("");
   const [loading, setLoading] = useState<boolean>(true)
@@ -80,16 +84,16 @@ const EquipmentUpdateForm = ({
         remarks: data.remarks,
       }
     }
-    console.log(toApi)
     axios.put(API_URL + `/equipment/${id}`, toApi)
-      .then(() => {
+      .then(async () => {
         localStorage.setItem("last_tab", "equipment")
-        window.location.reload()
         toast({
           title: "Запись обновлена",
           description: "Данные записаны в БД",
           className: "bg-white"
         })
+        await onSuccess?.()
+        onClose?.()
       })
       .catch((e) => {
         if (e.response.status === 400 && e.response.data.detail === "Equipment with this serial number already exists") {

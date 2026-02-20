@@ -14,7 +14,7 @@ import {textFields} from "./fields"
 type Building = { id: number; building_address: string }
 type RoomType = { id: number; room_type: string }
 
-const RoomUpdateForm = ({id}: { id: number }) => {
+const RoomUpdateForm = ({id, onClose, onSuccess}: { id: number, onClose?: () => void, onSuccess: () => Promise<void> | void}) => {
   const [error, setError] = useState<string | undefined>("")
   const [isProcessing, setIsProcessing] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -68,14 +68,15 @@ const RoomUpdateForm = ({id}: { id: number }) => {
 
     axios
       .put(API_URL + `/room/${id}`, data)
-      .then(() => {
+      .then(async () => {
         localStorage.setItem("last_tab", "room")
-        window.location.reload()
         toast({
           title: "Помещение обновлено",
           description: "Данные записаны в БД",
           className: "bg-white",
         })
+        await onSuccess?.()
+        onClose?.()
       })
       .catch((e) => {
         setError("Ошибка при обновлении записи!")

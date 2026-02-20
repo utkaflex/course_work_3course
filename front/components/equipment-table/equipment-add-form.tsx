@@ -14,7 +14,7 @@ import {comboboxFields, textFields} from './fields';
 import CRUDFormForTables from '../crud-form-for-tables';
 import {DateToDbForm} from '../helper-functions';
 
-const EquipmentAddForm = () => {
+const EquipmentAddForm = ({onSuccess}:{onSuccess?: () => void | Promise<void>}) => {
   const [error, setError] = useState<string | undefined>("");
   const [loading, setLoading] = useState<boolean>(true)
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
@@ -74,14 +74,14 @@ const EquipmentAddForm = () => {
       }
     }
     axios.post(API_URL + '/equipment/create', toApi)
-      .then(() => {
+      .then(async () => {
         localStorage.setItem("last_tab", "equipment")
-        window.location.reload()
         toast({
           title: "Запись добавлена",
           description: "Данные записаны в БД",
           className: "bg-white"
         })
+        await onSuccess?.()
       })
       .catch((e) => {
         if (e.response.status === 400 && e.response.data.detail === "Equipment with this serial number already exists") {

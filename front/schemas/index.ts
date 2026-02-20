@@ -205,9 +205,6 @@ export const EquipmentStatusFormSchema = z.object({
   room_id: z.number().min(1, {
     message: "Пожалуйста, выберите помещение"
   }),
-  building_id: z.number().min(1, {
-    message: "Пожалуйста, выберите адрес"
-  }),
 })
 
 export const EquipmentStatusSchema = z.object({
