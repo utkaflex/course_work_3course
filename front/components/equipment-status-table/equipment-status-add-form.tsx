@@ -14,9 +14,10 @@ import {comboboxFields, DataArray, textFields} from './fields';
 import CRUDFormForTables from '../crud-form-for-tables';
 
 const EquipmentStatusAddForm = ({
-                                  equipmentId
+                                  equipmentId, onSuccess
                                 }: {
   equipmentId: number
+  onSuccess?: () => void | Promise<void>
 }) => {
   const [error, setError] = useState<string | undefined>("");
   const [loading, setLoading] = useState<boolean>(true)
@@ -77,7 +78,6 @@ const EquipmentStatusAddForm = ({
       status_change_date: "",
       status_type_id: 0,
       responsible_user_id: 0,
-      building_id: 0,
       room_id: 0,
       equipment_id: equipmentId
     }
@@ -91,17 +91,16 @@ const EquipmentStatusAddForm = ({
       status_change_date: new Date(),
       status_type_id: data.status_type_id,
       responsible_user_id: data.responsible_user_id,
-      building_id: data.building_id,
       room_id: data.room_id,
       equipment_id: data.equipment_id,
     })
       .then(() => {
-        window.location.reload()
         toast({
           title: "Запись добавлена",
           description: "Данные записаны в БД",
           className: "bg-white"
         })
+        onSuccess?.()
       })
       .catch((e) => {
         setError("Во время добавления записи произошла непредвиденная ошибка!")

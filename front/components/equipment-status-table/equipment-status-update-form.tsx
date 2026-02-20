@@ -14,9 +14,11 @@ import {comboboxFields, DataArray, textFields} from './fields';
 import CRUDFormForTables from '../crud-form-for-tables';
 
 const EquipmentStatusUpdateForm = ({
-                                     id
+                                     id,
+                                     onSuccess
                                    }: {
   id: number
+  onSuccess: () => Promise<void> | void
 }) => {
   const [error, setError] = useState<string | undefined>("");
   const [loading, setLoading] = useState<boolean>(true)
@@ -36,7 +38,6 @@ const EquipmentStatusUpdateForm = ({
           } as DataArray
         })) as DataArray[]
         comboboxFields[0].data = statuses_for_combobox
-
 
         const responsible_users = (await axios.get(API_URL + `/responsible_users/all`)).data as z.infer<typeof ResponsibleUserSchema>[]
         const responsible_users_for_combobox = await Promise.all(responsible_users.map(async user => {
@@ -88,7 +89,6 @@ const EquipmentStatusUpdateForm = ({
       status_change_date: "",
       status_type_id: 0,
       responsible_user_id: 0,
-      building_id: 0,
       room_id: 0,
       equipment_id: 0
     }
@@ -102,17 +102,16 @@ const EquipmentStatusUpdateForm = ({
       status_change_date: new Date(),
       status_type_id: data.status_type_id,
       responsible_user_id: data.responsible_user_id,
-      building_id: data.building_id,
       room_id: data.room_id,
       equipment_id: data.equipment_id,
     })
       .then(() => {
-        window.location.reload()
         toast({
           title: "Статус обновлен",
           description: "Данные записаны в БД",
           className: "bg-white"
         })
+        onSuccess?.()
       })
       .catch((e) => {
         if (e.response.data.detail === 'Room does not belong to building')

@@ -73,9 +73,9 @@ function CRUDFormForTables<TData extends FieldValues, TComboboxData extends Fiel
     <Form {...form}>
       <form id={id}
             onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-6"
+            className="space-y-6 overflow-hidden"
       >
-        <div className="space-y-4">
+        <div className="space-y-4 mx-1">
           {textFields && textFields.map((formItem, index) => {
             const isInventory = formItem.name === "inventory_number"
             return <div key={index}>

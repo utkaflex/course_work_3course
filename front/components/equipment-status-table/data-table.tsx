@@ -25,12 +25,14 @@ interface EquipmentStatusDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   equipmentId: number
+  reload: () => Promise<void> | void
 }
 
 export function EquipmentStatusDataTable<TData, TValue>({
                                                           columns,
                                                           data,
-                                                          equipmentId
+                                                          equipmentId,
+                                                          reload
                                                         }: EquipmentStatusDataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -62,6 +64,9 @@ export function EquipmentStatusDataTable<TData, TValue>({
       columnFilters,
       columnVisibility,
       pagination
+    },
+    meta: {
+      reload
     }
   })
 
@@ -72,7 +77,10 @@ export function EquipmentStatusDataTable<TData, TValue>({
       <Action
         title="Добавить статус"
         description={<>Заполните все поля и нажмите кнопку <b>Создать</b></>}
-        form={<EquipmentStatusAddForm equipmentId={equipmentId}/>}
+        form={<EquipmentStatusAddForm equipmentId={equipmentId} onSuccess={async () => {
+          setIsFormOpen(false)
+          await reload()
+        }}/>}
         isOpen={isFormOpen}
         setIsOpen={setIsFormOpen}
       />

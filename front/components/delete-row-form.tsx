@@ -7,11 +7,13 @@ import CRUDFormForTables from './crud-form-for-tables';
 const DeleteRowForm = ({
                          apiEndpoint,
                          toastText,
-                         calledFrom
+                         calledFrom,
+                         onSuccess
                        }: {
   apiEndpoint: string
   toastText: string
   calledFrom?: string
+  onSuccess?: () => Promise<void> | void
 }) => {
   const [error, setError] = useState<string | undefined>("");
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
@@ -24,16 +26,17 @@ const DeleteRowForm = ({
     setError("")
     setIsProcessing(true)
     axios.delete(apiEndpoint)
-      .then(() => {
+      .then(async () => {
         if (calledFrom) {
           localStorage.setItem("last_tab", calledFrom)
         }
-        window.location.reload()
+
         toast({
           title: toastText,
           description: "Данные удалены из БД",
           className: "bg-white"
         })
+        await onSuccess?.()
       })
       .catch((e) => {
         setError("Произошла непредвиденная ошибка при удалении записи")
