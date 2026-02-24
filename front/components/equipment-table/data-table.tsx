@@ -231,7 +231,7 @@ export function EquipmentDataTable<TData, TValue>({
           </div>
         </div>}
         <div className="rounded-md border overflow-y-auto">
-          <Table className={"text-sm text-center"}>
+          <Table className={"text-center"}>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
