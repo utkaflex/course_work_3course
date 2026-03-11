@@ -88,9 +88,16 @@ function ReportDownloadButton<TData>({
       })
 
       const disposition = response.headers["content-disposition"]
-      const filename = disposition
+      let filename = disposition
         ? disposition.split("filename=")[1]
         : "report.xlsx"
+
+
+      filename = filename
+        .split(";")[0]
+        .trim()
+        .replace(/^["']|["']$/g, "")
+        .replace(/[\r\n]/g, "")
 
       const url = window.URL.createObjectURL(new Blob([response.data]))
       const a = document.createElement("a")

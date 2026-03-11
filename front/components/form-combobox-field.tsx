@@ -45,14 +45,14 @@ function FormComboboxField<TFormSchema extends FieldValues, TTextFieldName exten
                   variant="outline"
                   role="combobox"
                   className={cn(
-                    "w-full justify-between",
+                    "w-full justify-between gap-2",
                     !field.value && "text-muted-foreground"
                   )}
                 >
                   {field.value
                     ? data.map((elem, index) => {
                       if (elem[id_field] === field.value)
-                        return <span key={index} style={{color: elem["color"]}}>
+                        return <span key={index} style={{color: elem["color"]}} className='truncate'>
                           {elem[value_field]}
                         </span>
                     })
@@ -81,7 +81,7 @@ function FormComboboxField<TFormSchema extends FieldValues, TTextFieldName exten
                       >
                         {!elem["color"] && elem[value_field]}
                         {elem["color"] &&
-                          <span style={{color: elem["color"]}}>
+                          <span style={{color: elem["color"]}} className='overflow-hidden'>
                             {elem[value_field]}
                           </span>
                         }

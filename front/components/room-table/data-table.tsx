@@ -23,9 +23,10 @@ import Action from "../action"
 interface RoomDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+  reload: () => Promise<void> | void
 }
 
-export function RoomDataTable<TData, TValue>({columns, data}: RoomDataTableProps<TData, TValue>) {
+export function RoomDataTable<TData, TValue>({columns, data, reload}: RoomDataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
     id: false,
@@ -45,6 +46,9 @@ export function RoomDataTable<TData, TValue>({columns, data}: RoomDataTableProps
       columnFilters,
       columnVisibility,
     },
+    meta: {
+      reload
+    }
   })
 
   const [isFormOpen, setIsFormOpen] = React.useState<boolean>(false)
@@ -54,7 +58,10 @@ export function RoomDataTable<TData, TValue>({columns, data}: RoomDataTableProps
       <Action
         title="Создать помещение"
         description={<>Заполните все поля и нажмите кнопку <b>Создать</b></>}
-        form={<RoomAddForm/>}
+        form={<RoomAddForm onSuccess={async () => {
+          setIsFormOpen(false)
+          await reload()
+        }}/>}
         isOpen={isFormOpen}
         setIsOpen={setIsFormOpen}
       />

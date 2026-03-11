@@ -10,11 +10,12 @@ import DeleteRowForm from "../delete-row-form";
 import ActionsButton from "../actions-button";
 import {ArrowUpDown} from "lucide-react";
 import {Button} from "../ui/button";
+import {sortableHeader} from "@/components/sortable-header";
 
 export const EquipmentStatusTableColumns: ColumnDef<z.infer<typeof EquipmentStatusTableSchema>>[] = [
   {
     accessorKey: "status_type_name",
-    header: "Статус",
+    header: sortableHeader("Статус"),
     cell: ({row}) => {
       const color: string = row.getValue("status_type_color");
       return (
@@ -26,7 +27,7 @@ export const EquipmentStatusTableColumns: ColumnDef<z.infer<typeof EquipmentStat
   },
   {
     accessorKey: "doc_number",
-    header: "Номер договора",
+    header: sortableHeader("Номер договора"),
   },
   {
     accessorKey: "status_change_date",
@@ -47,37 +48,37 @@ export const EquipmentStatusTableColumns: ColumnDef<z.infer<typeof EquipmentStat
   },
   {
     accessorKey: "responsible_user_fio",
-    header: "ФИО ответственного",
+    header: sortableHeader("ФИО ответственного"),
   },
   {
     accessorKey: "responsible_user_job_name",
-    header: "Должность ответственного",
+    header: sortableHeader("Должность ответственного"),
   },
 
   {
     accessorKey: "responsible_user_office_name",
-    header: "Подразделение ответственного",
+    header: sortableHeader("Подразделение ответственного"),
   },
   {
     accessorKey: "room_label",
-    header: "Помещение",
+    header: sortableHeader("Помещение"),
   },
   {
     accessorKey: "building_address",
-    header: "Адрес учебного корпуса",
-  },
-  {
-    accessorKey: "audience_id",
-    header: "Номер аудитории",
+    header: sortableHeader("Адрес учебного корпуса"),
   },
   {
     id: "actions",
-    cell: ({row}) => {
+    cell: ({row, table}) => {
+      const reload = table.options.meta?.reload
+
       const actionsData = [
         {
           title: "Изменить статус ПО",
           description: <>Заполните все поля и нажмите кнопку <b>Изменить</b></>,
-          form: <EquipmentStatusUpdateForm id={row.getValue("id")}/>,
+          form: <EquipmentStatusUpdateForm id={row.getValue("id")} onSuccess={async () => {
+            await reload?.()
+          }}/>,
           dropdownButtonText: "Изменить"
         },
         {
@@ -86,6 +87,9 @@ export const EquipmentStatusTableColumns: ColumnDef<z.infer<typeof EquipmentStat
           form: <DeleteRowForm
             apiEndpoint={API_URL + `/equipment_status/${row.getValue("id")}`}
             toastText="Статус успешно удален"
+            onSuccess={async () => {
+              await reload?.()
+            }}
           />,
           dropdownButtonText: "Удалить"
         }

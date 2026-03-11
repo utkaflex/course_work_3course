@@ -14,9 +14,10 @@ import {comboboxFields, DataArray, textFields} from './fields';
 import CRUDFormForTables from '../crud-form-for-tables';
 
 const EquipmentStatusAddForm = ({
-                                  equipmentId
+                                  equipmentId, onSuccess
                                 }: {
   equipmentId: number
+  onSuccess?: () => void | Promise<void>
 }) => {
   const [error, setError] = useState<string | undefined>("");
   const [loading, setLoading] = useState<boolean>(true)
@@ -53,29 +54,18 @@ const EquipmentStatusAddForm = ({
         })) as DataArray[]
         comboboxFields[1].data = responsible_users_for_combobox
 
-        const building = (await axios.get(API_URL + `/building/all`)).data as z.infer<typeof BuildingSchema>[]
-        const building_for_combobox = await Promise.all(building.map(async building => {
-          return {
-            value: building.building_address,
-            id: building.id
-          } as DataArray
-        })) as DataArray[]
-        comboboxFields[2].data = building_for_combobox
-
         const rooms = (await axios.get(API_URL + `/room/all`)).data
         const rooms_for_combobox = rooms.map((room: any) => ({
           id: room.id,
           value: `${room.name}, ${room.building?.building_address ?? ""}`,
         })) as DataArray[]
 
-        comboboxFields[3].data = rooms_for_combobox
+        comboboxFields[2].data = rooms_for_combobox
         setLoading(false)
       } catch (e) {
         console.log("Ошибка при получении данных о статусе")
         console.log(e)
       }
-
-
     }
 
     fetchData()
@@ -86,10 +76,8 @@ const EquipmentStatusAddForm = ({
     defaultValues: {
       doc_number: "",
       status_change_date: "",
-      audience_id: "",
       status_type_id: 0,
       responsible_user_id: 0,
-      building_id: 0,
       room_id: 0,
       equipment_id: equipmentId
     }
@@ -101,20 +89,18 @@ const EquipmentStatusAddForm = ({
     axios.post(API_URL + '/equipment_status/create', {
       doc_number: data.doc_number,
       status_change_date: new Date(),
-      audience_id: data.audience_id,
       status_type_id: data.status_type_id,
       responsible_user_id: data.responsible_user_id,
-      building_id: data.building_id,
       room_id: data.room_id,
       equipment_id: data.equipment_id,
     })
       .then(() => {
-        window.location.reload()
         toast({
           title: "Запись добавлена",
           description: "Данные записаны в БД",
           className: "bg-white"
         })
+        onSuccess?.()
       })
       .catch((e) => {
         setError("Во время добавления записи произошла непредвиденная ошибка!")

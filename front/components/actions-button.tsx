@@ -47,12 +47,19 @@ const ActionsButton = ({
 
   useEffect(() => {
     const generatedActions = actionsData.map((action, index) => {
+      const onClose = () => handleToggleAction(index, false)
+
+      const formWithClose =
+        React.isValidElement(action.form)
+          ? React.cloneElement(action.form as any, { onClose })
+          : action.form
+
       return (
         <Action
           key={index}
           title={action.title}
           description={action.description}
-          form={action.form}
+          form={formWithClose}
           isOpen={actionsStateManager ? actionsStateManager.get(index) || false : false}
           setIsOpen={(isOpen: boolean) => handleToggleAction(index, isOpen)}
         />

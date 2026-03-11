@@ -32,6 +32,7 @@ interface EquipmentDataTableProps<TData, TValue> {
   variant: 'main' | 'other'
   showFilters: boolean
   userRole: number
+  reload: () => Promise<void> | void
 }
 
 export function EquipmentDataTable<TData, TValue>({
@@ -39,7 +40,8 @@ export function EquipmentDataTable<TData, TValue>({
                                                     data,
                                                     variant,
                                                     showFilters,
-                                                    userRole
+                                                    userRole,
+                                                    reload
                                                   }: EquipmentDataTableProps<TData, TValue>) {
   const actionsAllowed = userRole >= 3
 
@@ -89,11 +91,15 @@ export function EquipmentDataTable<TData, TValue>({
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
+    autoResetPageIndex: false,
     state: {
       sorting,
       columnFilters,
       columnVisibility,
       pagination
+    },
+    meta: {
+      reload
     }
   })
 
@@ -144,8 +150,8 @@ export function EquipmentDataTable<TData, TValue>({
             label: o.office_name,
           })),
           rooms: roomsRes.data.map((r: any) => ({
-            value: `${r.name} (${r.room_type?.room_type ?? ""})`.trim(),
-            label: `${r.name} (${r.room_type?.room_type ?? ""})`.trim(),
+            value: `${r.name} (${r.room_type?.room_type ?? ""}) - ${r.building.building_address}`.trim(),
+            label: `${r.name} (${r.room_type?.room_type ?? ""}) - ${r.building.building_address}`.trim(),
           })),
           categories: categoriesRes.data.map((c: any) => ({
             value: c.category_name,
@@ -180,22 +186,24 @@ export function EquipmentDataTable<TData, TValue>({
     typeCol.setFilterValue(unionTypeNames)
   }, [selectedCategories, filterOptions.categories])
 
-  const acceptedDateFilter = (table.getColumn("accepted_date")?.getFilterValue() as
-    { from?: string; to?: string }) ?? {}
+  useEffect(() => {
+    const pageCount = table.getPageCount()
+    const maxIndex = Math.max(pageCount - 1, 0)
 
-  const setAcceptedDateFilter = (patch: Partial<{ from?: string; to?: string }>) => {
-    table.getColumn("accepted_date")?.setFilterValue({
-      ...acceptedDateFilter,
-      ...patch,
-    })
-  }
+    if (pagination.pageIndex > maxIndex) {
+      table.setPageIndex(maxIndex)
+    }
+  }, [table, pagination.pageIndex, pagination.pageSize, table.getPageCount()])
 
   return (
     <>
       <Action
         title="Создать оборудование"
         description={<>Заполните все поля и нажмите кнопку <b>Создать</b></>}
-        form={<EquipmentAddForm/>}
+        form={<EquipmentAddForm onSuccess={async () => {
+          setIsFormOpen(false)
+          await reload()
+        }}/>}
         isOpen={isFormOpen}
         setIsOpen={setIsFormOpen}
       />
@@ -211,7 +219,7 @@ export function EquipmentDataTable<TData, TValue>({
           <div className="flex gap-2">
             <ReportDownloadButton
               className="bg-blue-2 hover:bg-blue-700"
-              apiEndpoint={API_URL + "/reports/create"}
+              apiEndpoint={API_URL + "/equipment/to_excel_file"}
               tableData={table.getFilteredRowModel().rows.map(r => r.original)}
             />
             {actionsAllowed && <Button
@@ -223,7 +231,7 @@ export function EquipmentDataTable<TData, TValue>({
           </div>
         </div>}
         <div className="rounded-md border overflow-y-auto">
-          <Table className={"text-sm text-center"}>
+          <Table className={"text-center"}>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>

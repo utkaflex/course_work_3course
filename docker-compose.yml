@@ -9,7 +9,6 @@ services:
       - .env
     volumes:
       - ./back/sats.db:/app/back/sats.db
-      - /mnt/backups:/app/back/backups
 
   frontend:
     build:

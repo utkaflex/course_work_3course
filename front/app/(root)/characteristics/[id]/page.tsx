@@ -18,22 +18,18 @@ const EquipmentStatusPage = (props: { params: Promise<{ id: string }> }) => {
   const id = Number(React.use(props.params).id)
 
   const [equipment, setEquipment] = useState<z.infer<typeof EquipmentExtendedSchema> | null>(null)
-  const [loadingEquipment, setLoadingEquipment] = useState(true)
+
+  const fetchEquipment = async () => {
+    try {
+      axios.defaults.withCredentials = true
+      const res = await axios.get(`${API_URL}/equipment/${id}`)
+      setEquipment(res.data)
+    } catch (e) {
+      console.error("Ошибка загрузки оборудования:", e)
+    }
+  }
 
   useEffect(() => {
-    const fetchEquipment = async () => {
-      try {
-        setLoadingEquipment(true)
-        axios.defaults.withCredentials = true
-        const res = await axios.get(`${API_URL}/equipment/${id}`)
-        setEquipment(res.data)
-      } catch (e) {
-        console.error("Ошибка загрузки оборудования:", e)
-      } finally {
-        setLoadingEquipment(false)
-      }
-    }
-
     fetchEquipment()
   }, [id])
 
@@ -79,14 +75,11 @@ const EquipmentStatusPage = (props: { params: Promise<{ id: string }> }) => {
         </CardHeader>
         <Separator className="bg-gray-300"/>
         <CardContent className="space-y-2">
-          {loadingEquipment ? (
-            <div>Loading...</div>
-          ) : (
-            <EquipmentStatusTable
-              equipmentId={id}
-              statuses={equipment?.statuses ?? []}
-            />
-          )}
+          <EquipmentStatusTable
+            equipmentId={id}
+            statuses={equipment?.statuses ?? []}
+            reload = {fetchEquipment}
+          />
         </CardContent>
       </Card>
     </section>
