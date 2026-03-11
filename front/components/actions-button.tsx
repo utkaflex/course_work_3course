@@ -51,7 +51,7 @@ const ActionsButton = ({
 
       const formWithClose =
         React.isValidElement(action.form)
-          ? React.cloneElement(action.form as any, { onClose })
+          ? React.cloneElement(action.form as any, { onClose, onSubmit: onClose })
           : action.form
 
       return (
