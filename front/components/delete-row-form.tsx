@@ -8,12 +8,16 @@ const DeleteRowForm = ({
                          apiEndpoint,
                          toastText,
                          calledFrom,
-                         onSuccess
+                         onSuccess,
+                         onClose,
+                         onSubmit
                        }: {
   apiEndpoint: string
   toastText: string
   calledFrom?: string
   onSuccess?: () => Promise<void> | void
+  onClose?: () => void
+  onSubmit?: () => void
 }) => {
   const [error, setError] = useState<string | undefined>("");
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
@@ -37,6 +41,12 @@ const DeleteRowForm = ({
           className: "bg-white"
         })
         await onSuccess?.()
+        onSubmit?.()
+        onClose?.()
+
+        if (!onSuccess) {
+          window.location.reload()
+        }
       })
       .catch((e) => {
         setError("Произошла непредвиденная ошибка при удалении записи")
