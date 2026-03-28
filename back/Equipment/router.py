@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 
 from Equipment import crud
-from Equipment.reports import build_complex_report_all_categories, build_grouped_report
+from Equipment.reports import build_complex_report_all_categories, build_grouped_report, build_simple_table_report
 from Equipment.schemas import (
     SEquipment,
     SEquipmentCreate,
@@ -54,32 +54,25 @@ async def generate_equipment_excel(
                 for t in types:
                     categorized_type_ids.add(t.id)
 
-            equipment_period = equipment_period
             period_type_counts: dict[int | None, int] = {}
             for e in equipment_period:
                 tid = getattr(e, "type_id", None)
                 period_type_counts[tid] = period_type_counts.get(tid, 0) + 1
 
             def _tname(t) -> str:
-                return (
-                    getattr(t, "type_name", "") or getattr(t, "name", "") or ""
-                ).strip()
+                return (getattr(t, "type_name", "") or getattr(t, "name", "") or "").strip()
 
             blocks = []
 
             for cat in categories:
-                cat_name = (
-                    getattr(cat, "category_name", "") or getattr(cat, "name", "") or ""
-                )
+                cat_name = (getattr(cat, "category_name", "") or getattr(cat, "name", "") or "")
                 types = list(getattr(cat, "types", []) or [])
                 if not types:
                     continue
 
                 type_ids = [t.id for t in types]
                 totals_all = await crud.count_equipment_by_type_ids(type_ids)
-                totals_period = await crud.count_equipment_by_type_ids_in_ids(
-                    type_ids, payload.ids
-                )
+                totals_period = await crud.count_equipment_by_type_ids_in_ids(type_ids, payload.ids)
 
                 types_sorted = sorted(types, key=lambda t: _tname(t).lower())
 
@@ -88,7 +81,6 @@ async def generate_equipment_excel(
                     period_cnt = totals_period.get(t.id, 0)
                     if period_cnt == 0:
                         continue
-
                     rows.append((_tname(t), totals_all.get(t.id, 0), period_cnt))
 
                 if rows:
@@ -105,14 +97,10 @@ async def generate_equipment_excel(
 
             if other_type_ids or other_without_type > 0:
                 totals_all_other = (
-                    await crud.count_equipment_by_type_ids(other_type_ids)
-                    if other_type_ids
-                    else {}
+                    await crud.count_equipment_by_type_ids(other_type_ids) if other_type_ids else {}
                 )
                 totals_period_other = (
-                    await crud.count_equipment_by_type_ids_in_ids(
-                        other_type_ids, payload.ids
-                    )
+                    await crud.count_equipment_by_type_ids_in_ids(other_type_ids, payload.ids)
                     if other_type_ids
                     else {}
                 )
@@ -127,10 +115,7 @@ async def generate_equipment_excel(
                         type_id_to_name[tid] = _tname(t)
 
                 other_rows = []
-
-                for tid in sorted(
-                    other_type_ids, key=lambda x: (type_id_to_name.get(x, ""), x)
-                ):
+                for tid in sorted(other_type_ids, key=lambda x: (type_id_to_name.get(x, ""), x)):
                     period_cnt = totals_period_other.get(tid, 0)
                     if period_cnt == 0:
                         continue
@@ -149,13 +134,22 @@ async def generate_equipment_excel(
                     blocks.append(("Прочее", other_rows))
 
             content = build_complex_report_all_categories(blocks)
+
+        # 3: простая таблица + последняя аудитория
+        elif payload.report_type_id == 3:
+            equipment_full = await crud.get_equipment_for_simple_table(payload.ids)
+            content = build_simple_table_report(equipment_full)
+
         else:
             raise HTTPException(status_code=400, detail="Unknown report_type_id")
 
         excel_file = io.BytesIO(content)
         excel_file.seek(0)
 
-        file_name = f"report_{payload.report_type_id}_{datetime.now(tz=timezone(timedelta(hours=5))).strftime('%Y%m%d_%H%M%S')}.xlsx"
+        file_name = (
+            f"report_{payload.report_type_id}_"
+            f"{datetime.now(tz=timezone(timedelta(hours=5))).strftime('%Y%m%d_%H%M%S')}.xlsx"
+        )
 
         return StreamingResponse(
             excel_file,

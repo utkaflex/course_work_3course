@@ -19,6 +19,7 @@ class EquipmentStatus(Base):
     room_id = Column(
         Integer, ForeignKey("rooms.id", ondelete="SET NULL"), nullable=True
     )
+    remarks = Column(String, nullable=False, default="", server_default="")
 
     equipment = relationship("Equipment", back_populates="statuses")
     status_type = relationship("EquipmentStatusType", back_populates="statuses")

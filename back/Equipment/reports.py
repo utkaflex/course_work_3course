@@ -5,8 +5,21 @@ from datetime import date, datetime
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 
+DATE_FMT = "DD-MM-YYYY"
+
+
+def _as_date(v):
+    if v is None:
+        return None
+    if isinstance(v, datetime):
+        return v.date()
+    if isinstance(v, date):
+        return v
+    return None
+
 
 def _dt(v):
+    """Для сортировок: date/datetime -> datetime; None -> datetime.min"""
     if v is None:
         return datetime.min
     if isinstance(v, datetime):
@@ -69,7 +82,8 @@ def build_grouped_report(equipment_items) -> bytes:
         type_name = getattr(t, "type_name", "") or getattr(t, "name", "") or ""
         model = getattr(e, "model", "") or getattr(e, "name", "") or ""
         inv = getattr(e, "inventory_number", "") or ""
-        accepted = getattr(e, "accepted_date", None) or getattr(e, "accepted_at", None)
+        accepted_raw = getattr(e, "accepted_date", None) or getattr(e, "accepted_at", None)
+        accepted = _as_date(accepted_raw)
 
         rows.append((type_name, model, inv, accepted))
 
@@ -90,15 +104,22 @@ def build_grouped_report(equipment_items) -> bytes:
             cell.border = border
         ws.row_dimensions[current_row].height = 18
         current_row += 1
+
         items.sort(key=lambda x: (_dt(x[2]), x[1]))
 
         for model, inv, accepted, tname in items:
             ws.append([model, inv, accepted, tname, ""])
+
+            # формат даты в колонке C
+            date_cell = ws.cell(row=current_row, column=3)
+            date_cell.number_format = DATE_FMT
+
             for col in range(1, 6):
                 cell = ws.cell(row=current_row, column=col)
                 cell.font = base_font
                 cell.alignment = left if col in (1, 4) else center
                 cell.border = border
+
             ws.row_dimensions[current_row].height = 18
             current_row += 1
 
@@ -116,7 +137,6 @@ def build_complex_report_all_categories(
     """
     blocks: [(category_name, [(type_name, total_all, total_period), ...]),...]
     """
-
     wb = Workbook()
     ws = wb.active
     ws.title = "Сложносоставной"
@@ -170,8 +190,96 @@ def build_complex_report_all_categories(
                 c.alignment = left if col == 1 else center
                 c.border = border
             r += 1
+
         ws.append(["", "", ""])
         r += 1
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    return buf.getvalue()
+
+
+def build_simple_table_report(equipment_items) -> bytes:
+    """
+    Простая таблица:
+    Тип оборудования, Модель, Серийный, Инвентарный, Дата принятия, Последняя аудитория
+    """
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Таблица"
+
+    header_font = Font(bold=True)
+    center = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    left = Alignment(horizontal="left", vertical="center", wrap_text=True)
+
+    thin = Side(style="thin")
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+    header_fill = PatternFill("solid", fgColor="D9E1F2")
+
+    headers = [
+        "Тип оборудования",
+        "Модель",
+        "Серийный номер",
+        "Инвентарный номер",
+        "Дата принятия к учету",
+        "Аудитория (последняя)",
+    ]
+    ws.append(headers)
+
+    for col in range(1, len(headers) + 1):
+        c = ws.cell(1, col)
+        c.font = header_font
+        c.alignment = center
+        c.fill = header_fill
+        c.border = border
+    ws.row_dimensions[1].height = 22
+
+    ws.column_dimensions["A"].width = 28
+    ws.column_dimensions["B"].width = 24
+    ws.column_dimensions["C"].width = 18
+    ws.column_dimensions["D"].width = 20
+    ws.column_dimensions["E"].width = 18
+    ws.column_dimensions["F"].width = 18
+
+    def _latest_room_name(e) -> str | None:
+        statuses = list(getattr(e, "statuses", None) or [])
+        if not statuses:
+            return None
+        latest = sorted(statuses, key=lambda s: s.status_change_date, reverse=True)[0]
+        room = getattr(latest, "room", None)
+        return getattr(room, "name", None) if room else None
+
+    row_idx = 2
+    for e in equipment_items:
+        t = getattr(e, "type", None)
+        type_name = getattr(t, "type_name", "") or getattr(t, "name", "") or ""
+        accepted = _as_date(getattr(e, "accepted_date", None))
+
+        ws.append(
+            [
+                type_name,
+                getattr(e, "model", None),
+                getattr(e, "serial_number", None),
+                getattr(e, "inventory_number", None),
+                accepted,
+                _latest_room_name(e),
+            ]
+        )
+
+        # формат даты в колонке E
+        date_cell = ws.cell(row=row_idx, column=5)
+        date_cell.number_format = DATE_FMT
+
+        for col in range(1, len(headers) + 1):
+            c = ws.cell(row_idx, col)
+            c.border = border
+            c.alignment = left if col in (1, 2, 6) else center
+
+        ws.row_dimensions[row_idx].height = 18
+        row_idx += 1
+
+    ws.freeze_panes = "A2"
+    ws.auto_filter.ref = f"A1:F{max(1, ws.max_row)}"
 
     buf = io.BytesIO()
     wb.save(buf)
