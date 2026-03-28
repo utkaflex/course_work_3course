@@ -17,13 +17,11 @@ def _status_with_room_stmt():
         selectinload(EquipmentStatus.room).selectinload(Rooms.room_type),
     )
 
-
 async def get_equipment_status(status_id: int) -> EquipmentStatus | None:
     async with async_session() as session:
         stmt = _status_with_room_stmt().where(EquipmentStatus.id == status_id)
         res = await session.execute(stmt)
         return res.scalar_one_or_none()
-
 
 async def get_equipment_statuses_by_equipment(
     equipment_id: int,
@@ -34,7 +32,6 @@ async def get_equipment_statuses_by_equipment(
         )
         res = await session.execute(stmt)
         return list(res.scalars().all())
-
 
 async def create_equipment_status(status: SEquipmentStatusCreate) -> EquipmentStatus:
     async with async_session() as session:
@@ -59,14 +56,13 @@ async def create_equipment_status(status: SEquipmentStatusCreate) -> EquipmentSt
             status_change_date=status.status_change_date,
             responsible_user_id=status.responsible_user_id,
             room_id=status.room_id,
+            remarks=status.remarks,
         )
         session.add(db_status)
         await session.flush()
         new_id = db_status.id
         await session.commit()
-
     return await get_equipment_status(new_id)
-
 
 async def update_equipment_status(
     status_id: int, updated_status: SEquipmentStatusCreate
@@ -98,10 +94,9 @@ async def update_equipment_status(
         db_status.status_change_date = updated_status.status_change_date
         db_status.responsible_user_id = updated_status.responsible_user_id
         db_status.room_id = updated_status.room_id
+        db_status.remarks = updated_status.remarks
         await session.commit()
-
     return await get_equipment_status(status_id)
-
 
 async def delete_equipment_status(status_id: int) -> dict:
     async with async_session() as session:
