@@ -484,3 +484,16 @@ async def count_equipment_by_type_ids_in_ids(
         )
         res = await session.execute(stmt)
         return {type_id: cnt for type_id, cnt in res.all()}
+
+async def get_equipment_for_simple_table(ids: List[int]) -> list[Equipment]:
+    async with async_session() as session:
+        stmt = (
+            select(Equipment)
+            .options(
+                joinedload(Equipment.type),
+                joinedload(Equipment.statuses).joinedload(EquipmentStatus.room),
+            )
+            .where(Equipment.id.in_(ids))
+        )
+        res = await session.execute(stmt)
+        return list(res.unique().scalars().all())
