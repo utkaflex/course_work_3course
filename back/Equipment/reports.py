@@ -198,11 +198,11 @@ def build_complex_report_all_categories(
     wb.save(buf)
     return buf.getvalue()
 
-
 def build_simple_table_report(equipment_items) -> bytes:
     """
-    Простая таблица:
-    Тип оборудования, Модель, Серийный, Инвентарный, Дата принятия, Последняя аудитория
+    Таблица (тип 3):
+    Тип, Модель, Серийный, Инвентарный, Дата принятия,
+    Аудитория (последняя), Адрес (последний), Статус (текущий)
     """
     wb = Workbook()
     ws = wb.active
@@ -223,6 +223,8 @@ def build_simple_table_report(equipment_items) -> bytes:
         "Инвентарный номер",
         "Дата принятия к учету",
         "Аудитория (последняя)",
+        "Адрес (последний)",
+        "Текущий статус",
     ]
     ws.append(headers)
 
@@ -240,20 +242,38 @@ def build_simple_table_report(equipment_items) -> bytes:
     ws.column_dimensions["D"].width = 20
     ws.column_dimensions["E"].width = 18
     ws.column_dimensions["F"].width = 18
+    ws.column_dimensions["G"].width = 34
+    ws.column_dimensions["H"].width = 22
 
-    def _latest_room_name(e) -> str | None:
+    def _latest_status(e):
         statuses = list(getattr(e, "statuses", None) or [])
         if not statuses:
             return None
-        latest = sorted(statuses, key=lambda s: s.status_change_date, reverse=True)[0]
-        room = getattr(latest, "room", None)
-        return getattr(room, "name", None) if room else None
+        return sorted(statuses, key=lambda s: s.status_change_date, reverse=True)[0]
 
     row_idx = 2
     for e in equipment_items:
         t = getattr(e, "type", None)
         type_name = getattr(t, "type_name", "") or getattr(t, "name", "") or ""
         accepted = _as_date(getattr(e, "accepted_date", None))
+
+        latest = _latest_status(e)
+
+        room_name = None
+        building_addr = None
+        status_name = None
+
+        if latest is not None:
+            room = getattr(latest, "room", None)
+            if room is not None:
+                room_name = getattr(room, "name", None)
+                b = getattr(room, "building", None)
+                if b is not None:
+                    building_addr = getattr(b, "building_address", None)
+
+            st = getattr(latest, "status_type", None)
+            if st is not None:
+                status_name = getattr(st, "status_type_name", None)
 
         ws.append(
             [
@@ -262,7 +282,9 @@ def build_simple_table_report(equipment_items) -> bytes:
                 getattr(e, "serial_number", None),
                 getattr(e, "inventory_number", None),
                 accepted,
-                _latest_room_name(e),
+                room_name,
+                building_addr,
+                status_name,
             ]
         )
 
@@ -273,13 +295,13 @@ def build_simple_table_report(equipment_items) -> bytes:
         for col in range(1, len(headers) + 1):
             c = ws.cell(row_idx, col)
             c.border = border
-            c.alignment = left if col in (1, 2, 6) else center
+            c.alignment = left if col in (1, 2, 6, 7, 8) else center
 
         ws.row_dimensions[row_idx].height = 18
         row_idx += 1
 
     ws.freeze_panes = "A2"
-    ws.auto_filter.ref = f"A1:F{max(1, ws.max_row)}"
+    ws.auto_filter.ref = f"A1:H{max(1, ws.max_row)}"
 
     buf = io.BytesIO()
     wb.save(buf)
