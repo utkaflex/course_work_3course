@@ -1,4 +1,4 @@
-export type TextFieldName = "doc_number"
+export type TextFieldName = "doc_number" | "remarks"
 export type ComboboxFieldName = "status_type_id" | "responsible_user_id" | "building_id"
 
 export type DataArray = {
@@ -12,6 +12,11 @@ export const textFields = [
     name: "doc_number",
     label: "Номер документа",
     placeholder: "Номер документа для статуса",
+  },
+  {
+    name: "remarks",
+    label: "Примечание",
+    placeholder: "Введите примечание",
   }
 ]
 

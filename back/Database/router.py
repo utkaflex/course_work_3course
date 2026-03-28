@@ -172,89 +172,47 @@ async def get_auto_backup(user: User = Depends(get_current_user)):
         return SBackupAutoGet(
             cron="",
             timezone="Asia/Yekaterinburg",
-            enabled=False,
-            last_backup_at=None,
-            next_backup_at=None,
-            username=None,
-            password=None,
             net_path=None,
             dir=None,
         )
 
-    next_dt = None
-    if cfg.enabled:
-        try:
-            next_dt = _compute_next(cfg.cron, cfg.timezone)
-        except Exception:
-            next_dt = None
-
     return SBackupAutoGet(
-        cron=cfg.cron,
+        cron=cfg.cron or "",
         timezone=cfg.timezone,
-        enabled=cfg.enabled,
-        last_backup_at=cfg.last_backup_at,
-        next_backup_at=next_dt,
-        username=decrypt_str(getattr(cfg, "smb_username", None)),
-        password=None,
         net_path=decrypt_str(getattr(cfg, "smb_net_path", None)),
         dir=decrypt_str(getattr(cfg, "smb_dir", None)),
     )
-
 
 @router.post("/auto", response_model=SBackupAutoGet, summary="Set auto-backup schedule")
 async def set_auto_backup(body: SBackupAutoSet, user: User = Depends(get_current_user)):
     if user.system_role_id < 4:
         raise HTTPException(status_code=403, detail="Forbidden")
 
-    try:
-        ZoneInfo(body.timezone)
-        _compute_next(body.cron, body.timezone)
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid cron or timezone")
+    if body.cron.strip():
+        try:
+            ZoneInfo(body.timezone)
+            _compute_next(body.cron, body.timezone)
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid cron or timezone")
 
-    existing = await crud.get_auto_settings()
-
-    eff_username = (
-        body.username
-        if body.username is not None
-        else (decrypt_str(existing.smb_username) if existing else None)
-    )
-    eff_password = (
-        body.password
-        if body.password is not None
-        else (decrypt_str(existing.smb_password) if existing else None)
-    )
-    eff_net_path = (
-        body.net_path
-        if body.net_path is not None
-        else (decrypt_str(existing.smb_net_path) if existing else None)
-    )
-    eff_dir = (
-        body.dir
-        if body.dir is not None
-        else (decrypt_str(existing.smb_dir) if existing else None)
-    )
-
-    if body.enabled:
         missing = [
             name
             for name, val in [
-                ("username", eff_username),
-                ("password", eff_password),
-                ("netPath", eff_net_path),
+                ("username", body.username),
+                ("password", body.password),
+                ("netPath", body.net_path),
             ]
             if not val
         ]
         if missing:
             raise HTTPException(
                 status_code=400,
-                detail=f"SMB connection settings required when enabled: {', '.join(missing)}",
+                detail=f"SMB connection settings required: {', '.join(missing)}",
             )
 
     cfg = await crud.upsert_auto_config(
-        body.cron,
-        body.timezone,
-        body.enabled,
+        cron=body.cron,
+        timezone=body.timezone,
         username=body.username,
         password=body.password,
         net_path=body.net_path,
@@ -262,20 +220,13 @@ async def set_auto_backup(body: SBackupAutoSet, user: User = Depends(get_current
     )
 
     await _ensure_scheduler_started()
-    next_dt = _compute_next(cfg.cron, cfg.timezone) if cfg.enabled else None
 
     return SBackupAutoGet(
-        cron=cfg.cron,
+        cron=cfg.cron or "",
         timezone=cfg.timezone,
-        enabled=cfg.enabled,
-        last_backup_at=cfg.last_backup_at,
-        next_backup_at=next_dt,
-        username=decrypt_str(cfg.smb_username),
-        password=None,
         net_path=decrypt_str(cfg.smb_net_path),
         dir=decrypt_str(cfg.smb_dir),
     )
-
 
 def _now_utc():
     return datetime.now(timezone.utc)
@@ -353,8 +304,8 @@ async def _do_backup():
         return
 
     cfg = await crud.get_auto_settings()
-    if cfg is None or not cfg.enabled:
-        logging.warning("Auto-backup config missing/disabled, skip backup")
+    if cfg is None or not (cfg.cron or "").strip():
+        logging.warning("Auto-backup config missing/cron empty, skip backup")
         return
 
     tz = "UTC"
@@ -414,7 +365,7 @@ async def _reschedule_job_from_db():
         return
 
     cfg = await crud.get_auto_settings()
-    if cfg is None or not cfg.enabled:
+    if cfg is None or not (cfg.cron or "").strip():
         if _scheduler.get_job(JOB_ID):
             _scheduler.remove_job(JOB_ID)
         return

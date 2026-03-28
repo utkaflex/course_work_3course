@@ -75,6 +75,7 @@ const EquipmentStatusAddForm = ({
     resolver: zodResolver(EquipmentStatusFormSchema),
     defaultValues: {
       doc_number: "",
+      remarks: "",
       status_change_date: "",
       status_type_id: 0,
       responsible_user_id: 0,
@@ -88,6 +89,7 @@ const EquipmentStatusAddForm = ({
     setIsProcessing(true)
     axios.post(API_URL + '/equipment_status/create', {
       doc_number: data.doc_number,
+      remarks: data.remarks,
       status_change_date: new Date(),
       status_type_id: data.status_type_id,
       responsible_user_id: data.responsible_user_id,

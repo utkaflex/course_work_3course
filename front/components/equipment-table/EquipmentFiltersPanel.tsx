@@ -13,6 +13,7 @@ import {Check, ChevronsUpDown} from "lucide-react"
 import {cn} from "@/lib/utils"
 
 type Option = { value: string; label: string; color?: string }
+type RoomOption = Option & { buildingValue: string }
 type CategoryOption = { value: string; label: string; typeNames: string[] }
 
 type FilterOptions = {
@@ -21,7 +22,7 @@ type FilterOptions = {
   buildings: Option[]
   responsible_users: Option[]
   offices: Option[]
-  rooms: Option[]
+  rooms: RoomOption[]
   categories: CategoryOption[]
 }
 
@@ -76,6 +77,77 @@ export default function EquipmentFiltersPanel<TData>({
 
   const acceptedDateFilter =
     (table.getColumn("accepted_date")?.getFilterValue() as { from?: string; to?: string }) ?? {}
+
+  const selectedBuildings =
+    ((table.getColumn("building_adress")?.getFilterValue() as string[]) ?? []).filter(Boolean)
+  const selectedRooms =
+    ((table.getColumn("room")?.getFilterValue() as string[]) ?? []).filter(Boolean)
+
+  const roomToBuilding = React.useMemo(
+    () => new Map(filterOptions.rooms.map((room) => [room.value, room.buildingValue])),
+    [filterOptions.rooms]
+  )
+
+  const selectedRoomBuildings = React.useMemo(
+    () =>
+      Array.from(
+        new Set(
+          selectedRooms
+            .map((roomValue) => roomToBuilding.get(roomValue))
+            .filter((buildingValue): buildingValue is string => Boolean(buildingValue))
+        )
+      ),
+    [selectedRooms, roomToBuilding]
+  )
+
+  const availableRooms = React.useMemo(
+    () =>
+      selectedBuildings.length
+        ? filterOptions.rooms.filter((room) => selectedBuildings.includes(room.buildingValue))
+        : filterOptions.rooms,
+    [filterOptions.rooms, selectedBuildings]
+  )
+
+  const availableBuildings = React.useMemo(
+    () =>
+      selectedRoomBuildings.length
+        ? filterOptions.buildings.filter((building) => selectedRoomBuildings.includes(building.value))
+        : filterOptions.buildings,
+    [filterOptions.buildings, selectedRoomBuildings]
+  )
+
+  React.useEffect(() => {
+    const roomCol = table.getColumn("room")
+    const buildingCol = table.getColumn("building_adress")
+    if (!roomCol || !buildingCol) return
+
+    if (selectedBuildings.length) {
+      const allowedRoomValues = new Set(availableRooms.map((room) => room.value))
+      const nextSelectedRooms = selectedRooms.filter((roomValue) => allowedRoomValues.has(roomValue))
+
+      if (nextSelectedRooms.length !== selectedRooms.length) {
+        roomCol.setFilterValue(nextSelectedRooms)
+        return
+      }
+    }
+
+    if (selectedRoomBuildings.length) {
+      const allowedBuildingValues = new Set(selectedRoomBuildings)
+      const nextSelectedBuildings = selectedBuildings.filter((buildingValue) =>
+        allowedBuildingValues.has(buildingValue)
+      )
+
+      if (nextSelectedBuildings.length !== selectedBuildings.length) {
+        buildingCol.setFilterValue(nextSelectedBuildings)
+      }
+    }
+  }, [
+    table,
+    availableRooms,
+    selectedBuildings,
+    selectedRooms,
+    selectedRoomBuildings,
+  ])
 
   const setAcceptedDateFilter = (patch: Partial<{ from?: string; to?: string }>) => {
     table.getColumn("accepted_date")?.setFilterValue({
@@ -250,7 +322,7 @@ export default function EquipmentFiltersPanel<TData>({
               <label className="text-xs text-muted-foreground">Адрес</label>
               <DataTableComboboxFilter
                 column={table.getColumn("building_adress")}
-                options={filterOptions.buildings}
+                options={availableBuildings}
                 placeholder="Фильтр по адресу..."
                 searchPlaceholder="Поиск адреса..."
                 emptyText="Адрес не найден"
@@ -265,7 +337,7 @@ export default function EquipmentFiltersPanel<TData>({
               <label className="text-xs text-muted-foreground">Помещение</label>
               <DataTableComboboxFilter
                 column={table.getColumn("room")}
-                options={filterOptions.rooms}
+                options={availableRooms}
                 placeholder="Фильтр по помещению..."
                 searchPlaceholder="Поиск помещения..."
                 emptyText="Помещение не найдено"

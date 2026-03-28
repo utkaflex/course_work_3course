@@ -67,6 +67,7 @@ const EquipmentStatusUpdateForm = ({
           const status = (await axios.get(API_URL + `/equipment_status/${id}`)).data
           form.reset({
             ...status,
+            remarks: status.remarks ?? "",
             room_id: status.room_id ?? 0
           })
           setLoading(false)
@@ -88,6 +89,7 @@ const EquipmentStatusUpdateForm = ({
     resolver: zodResolver(EquipmentStatusFormSchema),
     defaultValues: {
       doc_number: "",
+      remarks: "",
       status_change_date: "",
       status_type_id: 0,
       responsible_user_id: 0,
@@ -101,6 +103,7 @@ const EquipmentStatusUpdateForm = ({
     setIsProcessing(true)
     axios.put(API_URL + `/equipment_status/${id}`, {
       doc_number: data.doc_number,
+      remarks: data.remarks,
       status_change_date: new Date(),
       status_type_id: data.status_type_id,
       responsible_user_id: data.responsible_user_id,

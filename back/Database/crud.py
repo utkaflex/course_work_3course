@@ -18,7 +18,6 @@ async def get_auto_settings() -> BackupAutoSettings | None:
 async def upsert_auto_config(
     cron: str,
     timezone: str,
-    enabled: bool,
     username: str | None = None,
     password: str | None = None,
     net_path: str | None = None,
@@ -28,7 +27,7 @@ async def upsert_auto_config(
         row = await session.get(BackupAutoSettings, 1)
         if row is None:
             row = BackupAutoSettings(
-                id=1, cron=cron, timezone=timezone, enabled=enabled
+                id=1, cron=cron, timezone=timezone
             )
 
             row.smb_username = encrypt_str(username)
@@ -40,7 +39,6 @@ async def upsert_auto_config(
         else:
             row.cron = cron
             row.timezone = timezone
-            row.enabled = enabled
 
             if username is not None:
                 row.smb_username = encrypt_str(username)

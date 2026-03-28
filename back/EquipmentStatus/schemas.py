@@ -15,6 +15,8 @@ class SEquipmentStatusBase(BaseModel):
 
     room_id: Optional[int] = None
 
+    remarks: str = ""
+
 
 class SEquipmentStatusCreate(SEquipmentStatusBase):
     pass

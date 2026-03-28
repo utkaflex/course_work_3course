@@ -12,7 +12,6 @@ type WeekdayNum = 0 | 1 | 2 | 3 | 4 | 5 | 6
 type ApiAutoBackup = {
   cron: string
   timezone: "Europe/Moscow" | "Asia/Yekaterinburg"
-  enabled: boolean
 
   netPath?: string | null
   dir?: string | null
@@ -21,7 +20,7 @@ type ApiAutoBackup = {
   next_backup_at?: string | null
 }
 
-type SaveAutoBackupPayload = Pick<ApiAutoBackup, "cron" | "timezone" | "enabled" | "netPath" | "dir"> & {
+type SaveAutoBackupPayload = Pick<ApiAutoBackup, "cron" | "timezone" | "netPath" | "dir"> & {
   username?: string
   password?: string
 }
@@ -30,7 +29,6 @@ type UiSettings = {
   time: string // "HH:MM"
   weekdays: WeekdayNum[]
   timezone: "Europe/Moscow" | "Asia/Yekaterinburg"
-  enabled: boolean
 
   netPath: string
   dir: string
@@ -108,7 +106,6 @@ const AutoBackup = () => {
   const [time, setTime] = useState<UiSettings["time"]>("09:00")
   const [weekdays, setWeekdays] = useState<UiSettings["weekdays"]>([])
   const [timezone, setTimezone] = useState<UiSettings["timezone"]>("Europe/Moscow")
-  const [enabled, setEnabled] = useState<UiSettings["enabled"]>(true)
   const [netPath, setNetPath] = useState<UiSettings["netPath"]>("")
   const [dir, setDir] = useState<UiSettings["dir"]>("")
   const [username, setUsername] = useState<UiSettings["username"]>("")
@@ -133,8 +130,6 @@ const AutoBackup = () => {
         const tz =
           res.data.timezone === "Asia/Yekaterinburg" ? "Asia/Yekaterinburg" : "Europe/Moscow"
         setTimezone(tz)
-
-        setEnabled(true)
 
         setNetPath(res.data.netPath ?? "")
         setDir(res.data.dir ?? "")
@@ -195,7 +190,6 @@ const AutoBackup = () => {
       const payload: SaveAutoBackupPayload = {
         cron,
         timezone,
-        enabled,
         netPath: netPathTrim,
         dir: dirTrim,
         username: usernameTrim,
@@ -208,7 +202,6 @@ const AutoBackup = () => {
         ...(prev ?? ({} as ApiAutoBackup)),
         cron,
         timezone,
-        enabled,
         netPath: netPathTrim,
         dir: dirTrim,
       }))
@@ -239,8 +232,6 @@ const AutoBackup = () => {
     const tz =
       serverSettings.timezone === "Asia/Yekaterinburg" ? "Asia/Yekaterinburg" : "Europe/Moscow"
     setTimezone(tz)
-
-    setEnabled(true)
 
     setNetPath(serverSettings.netPath ?? "")
     setDir(serverSettings.dir ?? "")
