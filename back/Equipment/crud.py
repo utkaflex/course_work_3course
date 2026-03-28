@@ -491,7 +491,10 @@ async def get_equipment_for_simple_table(ids: List[int]) -> list[Equipment]:
             select(Equipment)
             .options(
                 joinedload(Equipment.type),
-                joinedload(Equipment.statuses).joinedload(EquipmentStatus.room),
+                joinedload(Equipment.statuses).joinedload(EquipmentStatus.status_type),
+                joinedload(Equipment.statuses)
+                .joinedload(EquipmentStatus.room)
+                .joinedload(Rooms.building),
             )
             .where(Equipment.id.in_(ids))
         )
