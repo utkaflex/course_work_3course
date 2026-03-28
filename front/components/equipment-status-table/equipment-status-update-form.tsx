@@ -15,9 +15,11 @@ import CRUDFormForTables from '../crud-form-for-tables';
 
 const EquipmentStatusUpdateForm = ({
                                      id,
+                                     onClose,
                                      onSuccess
                                    }: {
   id: number
+  onClose?: () => void
   onSuccess: () => Promise<void> | void
 }) => {
   const [error, setError] = useState<string | undefined>("");
@@ -105,13 +107,14 @@ const EquipmentStatusUpdateForm = ({
       room_id: data.room_id,
       equipment_id: data.equipment_id,
     })
-      .then(() => {
+      .then(async () => {
         toast({
           title: "Статус обновлен",
           description: "Данные записаны в БД",
           className: "bg-white"
         })
-        onSuccess?.()
+        await onSuccess?.()
+        onClose?.()
       })
       .catch((e) => {
         if (e.response.data.detail === 'Room does not belong to building')
