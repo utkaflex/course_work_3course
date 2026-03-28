@@ -34,7 +34,6 @@ type UiSettings = {
   time: string
   weekdays: WeekdayNum[]
   timezone: "Europe/Moscow" | "Asia/Yekaterinburg"
-  enabled: boolean
 
   netPath: string
   dir: string

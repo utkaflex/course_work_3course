@@ -12,6 +12,7 @@ type TextField = {
   name: string
   label: string
   placeholder: string
+  type?: React.HTMLInputTypeAttribute
 }
 
 type ComboboxField = {
@@ -84,6 +85,7 @@ function CRUDFormForTables<TData extends FieldValues, TComboboxData extends Fiel
                 name={formItem.name as Path<TData>}
                 label={formItem.label}
                 placeholder={formItem.placeholder}
+                type={formItem.type}
                 onBlurValue={isInventory ? onInventoryBlur : undefined}
                 className={isInventory && inventoryWarning ? "bg-yellow-50 border-yellow-400 focus-visible:ring-yellow-400" : ""}
               />

@@ -9,7 +9,6 @@ class SBackupAutoSet(BaseModel):
 
     cron: str
     timezone: str = "Asia/Yekaterinburg"
-    enabled: bool = True
     username: Optional[str] = None
     password: Optional[str] = None
     net_path: Optional[str] = Field(default=None, alias="netPath")

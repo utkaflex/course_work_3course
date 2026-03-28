@@ -52,12 +52,12 @@ export const EquipmentStatusTableColumns: ColumnDef<z.infer<typeof EquipmentStat
   },
   {
     accessorKey: "responsible_user_job_name",
-    header: sortableHeader("Должность ответственного"),
+    header: sortableHeader("Должность"),
   },
 
   {
     accessorKey: "responsible_user_office_name",
-    header: sortableHeader("Подразделение ответственного"),
+    header: sortableHeader("Подразделение"),
   },
   {
     accessorKey: "room_label",
@@ -66,6 +66,10 @@ export const EquipmentStatusTableColumns: ColumnDef<z.infer<typeof EquipmentStat
   {
     accessorKey: "building_address",
     header: sortableHeader("Адрес учебного корпуса"),
+  },
+  {
+    accessorKey: "remarks",
+    header: sortableHeader("Примечание"),
   },
   {
     id: "actions",

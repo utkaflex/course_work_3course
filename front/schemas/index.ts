@@ -198,6 +198,7 @@ export const EquipmentStatusFormSchema = z.object({
   doc_number: z.string().min(1, {
     message: "Пожалуйста, введите номер документа"
   }),
+  remarks: z.string(),
   status_change_date: z.string(),
   responsible_user_id: z.number().min(1, {
     message: "Пожалуйста, выберите ответственного"
@@ -214,6 +215,7 @@ export const EquipmentStatusSchema = z.object({
   status_change_date: z.string(),
   responsible_user_id: z.number(),
   building_id: z.number(),
+  remarks: z.string().nullable().optional(),
   room: RoomSchema.nullable(),
   id: z.number()
 })
@@ -319,6 +321,7 @@ export const EquipmentStatusTableSchema = z.object({
   responsible_user_office_name: z.string(),
   building_address: z.string(),
   room_label: z.string(),
+  remarks: z.string(),
   id: z.number(),
   equipment_id: z.number(),
 })

@@ -9,6 +9,7 @@ export const textFields = [
   {
     name: "status_type_color",
     label: "Цвет статуса",
-    placeholder: "Шестнадцатеричный код (пример: #FF69B4)",
+    placeholder: "Выберите цвет",
+    type: "color",
   },
 ]

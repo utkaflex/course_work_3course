@@ -77,7 +77,7 @@ export function EquipmentDataTable<TData, TValue>({
     buildings: [] as { value: string; label: string }[],
     responsible_users: [] as { value: string; label: string }[],
     offices: [] as { value: string; label: string }[],
-    rooms: [] as { value: string; label: string }[],
+    rooms: [] as { value: string; label: string; buildingValue: string }[],
     categories: [] as { value: string; label: string, typeNames: string[] }[],
   })
 
@@ -152,6 +152,7 @@ export function EquipmentDataTable<TData, TValue>({
           rooms: roomsRes.data.map((r: any) => ({
             value: `${r.name} (${r.room_type?.room_type ?? ""}) - ${r.building.building_address}`.trim(),
             label: `${r.name} (${r.room_type?.room_type ?? ""}) - ${r.building.building_address}`.trim(),
+            buildingValue: r.building?.building_address ?? "",
           })),
           categories: categoriesRes.data.map((c: any) => ({
             value: c.category_name,

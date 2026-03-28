@@ -22,6 +22,10 @@ export default function EquipmentStatusTable({
   const fetchData = async () => {
     try {
       const newData = await Promise.all(statuses.map(async (status) => {
+        const statusDetailsPromise = status.remarks === undefined
+          ? axios.get(`${API_URL}/equipment_status/${status.id}`)
+          : Promise.resolve({data: {remarks: status.remarks}})
+
         const status_type = (await axios.get(
           `${API_URL}/equipment_status_type/${status.status_type_id}`
         )).data
@@ -36,9 +40,10 @@ export default function EquipmentStatusTable({
           responsible_user.paternity
         ].filter(Boolean).join(" ")
 
-        const [user_job, user_office, ] = await Promise.all([
+        const [user_job, user_office, statusDetailsRes] = await Promise.all([
           axios.get(`${API_URL}/responsible_users/job/${responsible_user.job_id}`),
-          axios.get(`${API_URL}/responsible_users/office/${responsible_user.office_id}`)
+          axios.get(`${API_URL}/responsible_users/office/${responsible_user.office_id}`),
+          statusDetailsPromise,
         ])
 
         const buildingLabel = status.room?.building.building_address
@@ -57,6 +62,7 @@ export default function EquipmentStatusTable({
           responsible_user_office_name: user_office.data.office_name,
           building_address: buildingLabel,
           room_label: roomLabel,
+          remarks: statusDetailsRes.data?.remarks ?? "",
           id: status.id,
           equipment_id: status.equipment_id
         } as z.infer<typeof EquipmentStatusTableSchema>

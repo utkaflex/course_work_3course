@@ -27,7 +27,7 @@ const EquipmentStatusTypeUpdateForm = ({
     resolver: zodResolver(EquipmentStatusTypeFormSchema),
     defaultValues: {
       status_type_name: "",
-      status_type_color: ""
+      status_type_color: "#000000"
     }
   });
 

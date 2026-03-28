@@ -12,12 +12,14 @@ export default function EquipmentTable({
                                          variant,
                                          showFilters,
                                          equipmentId,
-                                         userRole
-                                       }: {
+                                         userRole,
+                                         refreshToken = 0
+                                        }: {
   variant: 'main' | 'other',
   showFilters: boolean,
   equipmentId?: number,
   userRole: number
+  refreshToken?: number
 }) {
   const [data, setData] = useState<z.infer<typeof EquipmentSchema>[]>([])
 
@@ -41,7 +43,7 @@ export default function EquipmentTable({
 
   useEffect(() => {
     fetchData()
-  }, [equipmentId])
+  }, [equipmentId, refreshToken])
 
   return <EquipmentDataTable columns={EquipmentTableColumns} data={data} variant={variant} showFilters={showFilters}
                              userRole={userRole} reload={fetchData} />
