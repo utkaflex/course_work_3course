@@ -8,6 +8,7 @@ import {Button} from "@/components/ui/button"
 import {DateFromDbForm} from "../helper-functions";
 import {Checkbox} from "../ui/checkbox";
 import ContractUpdateForm from "./contract-update-form";
+import ContractAddForm from "./contract-add-form";
 import {useEffect} from "react";
 import {API_URL} from "@/constants";
 import DeleteRowForm from "../delete-row-form";
@@ -78,6 +79,12 @@ export const ContractsTableColumns: ColumnDef<z.infer<typeof ContractSchema>>[] 
           description: <>Заполните все поля и нажмите кнопку <b>Изменить</b></>,
           form: <ContractUpdateForm id={row.getValue("id")}/>,
           dropdownButtonText: "Изменить"
+        },
+        {
+          title: "Скопировать договор",
+          description: <>Проверьте данные и нажмите кнопку <b>Создать</b></>,
+          form: <ContractAddForm copyFromId={row.getValue("id")}/>,
+          dropdownButtonText: "Скопировать"
         },
         {
           title: "Удалить договор",

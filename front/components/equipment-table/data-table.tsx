@@ -25,6 +25,7 @@ import Action from "../action"
 import axios from "axios";
 import ReportDownloadButton from "@/components/report-download-button";
 import EquipmentFiltersPanel from "@/components/equipment-table/EquipmentFiltersPanel";
+import {usePathname, useSearchParams} from "next/navigation"
 
 interface EquipmentDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -33,21 +34,177 @@ interface EquipmentDataTableProps<TData, TValue> {
   showFilters: boolean
   userRole: number
   reload: () => Promise<void> | void
+  isDataLoading: boolean
+}
+
+const EQUIPMENT_TABLE_STATE_QUERY_PARAM = "equipment_state"
+
+const TEXT_FILTER_IDS = new Set([
+  "model",
+  "serial_number",
+  "inventory_number",
+  "network_name",
+])
+
+const MULTI_FILTER_IDS = new Set([
+  "type_name",
+  "responsible_user_full_name",
+  "last_status_type",
+  "building_adress",
+  "room",
+  "responsible_user_office",
+])
+
+const isObjectRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+const sanitizeFilterValue = (id: string, value: unknown): unknown => {
+  if (TEXT_FILTER_IDS.has(id)) {
+    return typeof value === "string" ? value : undefined
+  }
+
+  if (MULTI_FILTER_IDS.has(id)) {
+    if (!Array.isArray(value)) return undefined
+    return value.filter((item): item is string => typeof item === "string")
+  }
+
+  if (id === "accepted_date") {
+    if (!isObjectRecord(value)) return undefined
+
+    const from = typeof value.from === "string" ? value.from : undefined
+    const to = typeof value.to === "string" ? value.to : undefined
+
+    if (!from && !to) return undefined
+
+    return {from, to}
+  }
+
+  return undefined
+}
+
+const isEmptyFilterValue = (value: unknown) => {
+  if (typeof value === "string") return value === ""
+  if (Array.isArray(value)) return value.length === 0
+
+  if (isObjectRecord(value)) {
+    const from = typeof value.from === "string" ? value.from : undefined
+    const to = typeof value.to === "string" ? value.to : undefined
+
+    return !from && !to
+  }
+
+  return value === undefined
+}
+
+const parsePersistedTableState = (raw: string | null) => {
+  if (!raw) return null
+
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    if (!isObjectRecord(parsed)) return null
+
+    const filtersSource = isObjectRecord(parsed.filters) ? parsed.filters : {}
+    const filters = Object.entries(filtersSource).reduce<ColumnFiltersState>((acc, [id, value]) => {
+      const normalized = sanitizeFilterValue(id, value)
+
+      if (normalized === undefined || isEmptyFilterValue(normalized)) return acc
+
+      acc.push({id, value: normalized})
+      return acc
+    }, [])
+
+    const page =
+      typeof parsed.page === "number" && Number.isInteger(parsed.page) && parsed.page > 0
+        ? parsed.page - 1
+        : 0
+
+    const categories = Array.isArray(parsed.categories)
+      ? parsed.categories.filter((item): item is string => typeof item === "string")
+      : []
+
+    return {
+      filters,
+      page,
+      categories: Array.from(new Set(categories)),
+    }
+  } catch {
+    return null
+  }
+}
+
+const serializeTableState = ({
+                              filters,
+                              pageIndex,
+                              selectedCategories,
+                            }: {
+  filters: ColumnFiltersState
+  pageIndex: number
+  selectedCategories: string[]
+}) => {
+  const normalizedFilters = filters.reduce<Record<string, unknown>>((acc, filter) => {
+    const normalized = sanitizeFilterValue(filter.id, filter.value)
+
+    if (normalized === undefined || isEmptyFilterValue(normalized)) return acc
+
+    acc[filter.id] = normalized
+    return acc
+  }, {})
+
+  const categories = Array.from(new Set(selectedCategories.filter(Boolean)))
+
+  const hasFilters = Object.keys(normalizedFilters).length > 0
+  const hasCategories = categories.length > 0
+  const hasPage = pageIndex > 0
+
+  if (!hasFilters && !hasCategories && !hasPage) return null
+
+  return JSON.stringify({
+    ...(hasPage ? {page: pageIndex + 1} : {}),
+    ...(hasFilters ? {filters: normalizedFilters} : {}),
+    ...(hasCategories ? {categories} : {}),
+  })
 }
 
 export function EquipmentDataTable<TData, TValue>({
-                                                    columns,
-                                                    data,
-                                                    variant,
-                                                    showFilters,
-                                                    userRole,
-                                                    reload
-                                                  }: EquipmentDataTableProps<TData, TValue>) {
+                                                     columns,
+                                                     data,
+                                                     variant,
+                                                     showFilters,
+                                                     userRole,
+                                                     reload,
+                                                     isDataLoading
+                                                   }: EquipmentDataTableProps<TData, TValue>) {
   const actionsAllowed = userRole >= 3
+  const persistStateInUrl = variant === 'main' && showFilters
+
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const skipFirstUrlSyncRef = React.useRef(true)
+
+  const initialTableStateRef = React.useRef<{
+    filters: ColumnFiltersState
+    page: number
+    categories: string[]
+  } | null>(null)
+
+  if (initialTableStateRef.current === null) {
+    initialTableStateRef.current = persistStateInUrl
+      ? parsePersistedTableState(searchParams.get(EQUIPMENT_TABLE_STATE_QUERY_PARAM)) ?? {
+        filters: [],
+        page: 0,
+        categories: [],
+      }
+      : {
+        filters: [],
+        page: 0,
+        categories: [],
+      }
+  }
 
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
+    initialTableStateRef.current.filters
   )
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
     id: false,
@@ -67,7 +224,7 @@ export function EquipmentDataTable<TData, TValue>({
     accepted_date: variant === 'main',
   })
   const [pagination, setPagination] = React.useState({
-    pageIndex: 0,
+    pageIndex: initialTableStateRef.current.page,
     pageSize: 10,
   })
 
@@ -104,7 +261,9 @@ export function EquipmentDataTable<TData, TValue>({
   })
 
   const [isFormOpen, setIsFormOpen] = React.useState<boolean>(false)
-  const [selectedCategories, setSelectedCategories] = React.useState<string[]>([])
+  const [selectedCategories, setSelectedCategories] = React.useState<string[]>(
+    initialTableStateRef.current.categories
+  )
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -168,33 +327,62 @@ export function EquipmentDataTable<TData, TValue>({
   }, [])
 
   useEffect(() => {
-    const typeCol = table.getColumn("type_name")
-    if (!typeCol) return
+    if (isDataLoading) return
 
-    if (!selectedCategories.length) {
-      typeCol.setFilterValue([])
-      return
-    }
-
-    const unionTypeNames = Array.from(
-      new Set(
-        filterOptions.categories
-          .filter(c => selectedCategories.includes(c.value))
-          .flatMap(c => c.typeNames)
-      )
-    )
-
-    typeCol.setFilterValue(unionTypeNames)
-  }, [selectedCategories, filterOptions.categories])
-
-  useEffect(() => {
     const pageCount = table.getPageCount()
     const maxIndex = Math.max(pageCount - 1, 0)
 
     if (pagination.pageIndex > maxIndex) {
       table.setPageIndex(maxIndex)
     }
-  }, [table, pagination.pageIndex, pagination.pageSize, table.getPageCount()])
+  }, [isDataLoading, table, pagination.pageIndex, pagination.pageSize, table.getPageCount()])
+
+  useEffect(() => {
+    if (!persistStateInUrl) return
+    if (isDataLoading) return
+
+    if (skipFirstUrlSyncRef.current) {
+      skipFirstUrlSyncRef.current = false
+      return
+    }
+
+    if (typeof window === "undefined") return
+
+    const serializedState = serializeTableState({
+      filters: columnFilters,
+      pageIndex: pagination.pageIndex,
+      selectedCategories,
+    })
+
+    const params = new URLSearchParams(window.location.search)
+
+    if (serializedState) {
+      params.set(EQUIPMENT_TABLE_STATE_QUERY_PARAM, serializedState)
+    } else {
+      params.delete(EQUIPMENT_TABLE_STATE_QUERY_PARAM)
+    }
+
+    const nextQuery = params.toString()
+    const currentQuery = window.location.search.startsWith("?")
+      ? window.location.search.slice(1)
+      : window.location.search
+    const currentPathname = pathname || window.location.pathname
+
+    if (nextQuery === currentQuery) return
+
+    window.history.replaceState(
+      window.history.state,
+      "",
+      nextQuery ? `${currentPathname}?${nextQuery}` : currentPathname
+    )
+  }, [
+    columnFilters,
+    isDataLoading,
+    pagination.pageIndex,
+    pathname,
+    persistStateInUrl,
+    selectedCategories,
+  ])
 
   return (
     <>

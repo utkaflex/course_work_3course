@@ -22,8 +22,11 @@ export default function EquipmentTable({
   refreshToken?: number
 }) {
   const [data, setData] = useState<z.infer<typeof EquipmentSchema>[]>([])
+  const [isDataLoading, setIsDataLoading] = useState<boolean>(true)
 
   const fetchData = async () => {
+    setIsDataLoading(true)
+
     try {
       axios.defaults.withCredentials = true
       let response = []
@@ -38,6 +41,8 @@ export default function EquipmentTable({
       setData(response)
     } catch (error) {
       console.error('Ошибка загрузки данных:', error)
+    } finally {
+      setIsDataLoading(false)
     }
   }
 
@@ -46,5 +51,5 @@ export default function EquipmentTable({
   }, [equipmentId, refreshToken])
 
   return <EquipmentDataTable columns={EquipmentTableColumns} data={data} variant={variant} showFilters={showFilters}
-                             userRole={userRole} reload={fetchData} />
+                             userRole={userRole} reload={fetchData} isDataLoading={isDataLoading}/>
 }

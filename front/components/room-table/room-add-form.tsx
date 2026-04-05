@@ -14,7 +14,15 @@ import {textFields} from "./fields"
 type Building = { id: number; building_address: string }
 type RoomType = { id: number; room_type: string }
 
-const RoomAddForm = ({onSuccess}: {onSuccess: () => Promise<void> | void}) => {
+const RoomAddForm = ({
+                       copyFromId,
+                       onClose,
+                       onSuccess
+                     }: {
+  copyFromId?: number
+  onClose?: () => void
+  onSuccess: () => Promise<void> | void
+}) => {
   const [error, setError] = useState<string | undefined>("")
   const [isProcessing, setIsProcessing] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -52,6 +60,26 @@ const RoomAddForm = ({onSuccess}: {onSuccess: () => Promise<void> | void}) => {
     fetchData()
   }, [])
 
+  useEffect(() => {
+    if (copyFromId === undefined) return
+
+    const fetchCopyData = async () => {
+      try {
+        const roomRes = await axios.get(API_URL + `/room/${copyFromId}`)
+        const room = roomRes.data
+        form.reset({
+          name: room?.name ?? "",
+          building_id: room?.building?.id ?? 0,
+          room_type_id: room?.room_type?.id ?? 0,
+        })
+      } catch (e) {
+        console.log("Ошибка загрузки данных для копирования помещения", e)
+      }
+    }
+
+    fetchCopyData()
+  }, [copyFromId, form])
+
   const AddRowRoomTable = (data: z.infer<typeof RoomFormSchema>) => {
     setError("")
     setIsProcessing(true)
@@ -66,6 +94,7 @@ const RoomAddForm = ({onSuccess}: {onSuccess: () => Promise<void> | void}) => {
           className: "bg-white",
         })
         onSuccess?.()
+        onClose?.()
       })
       .catch((e) => {
         setError("Во время добавления записи произошла непредвиденная ошибка!")

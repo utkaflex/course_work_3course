@@ -14,9 +14,14 @@ import {comboboxFields, DataArray, textFields} from './fields';
 import CRUDFormForTables from '../crud-form-for-tables';
 
 const EquipmentStatusAddForm = ({
-                                  equipmentId, onSuccess
+                                  copyFromId,
+                                  equipmentId,
+                                  onClose,
+                                  onSuccess
                                 }: {
+  copyFromId?: number
   equipmentId: number
+  onClose?: () => void
   onSuccess?: () => void | Promise<void>
 }) => {
   const [error, setError] = useState<string | undefined>("");
@@ -84,6 +89,30 @@ const EquipmentStatusAddForm = ({
     }
   });
 
+  useEffect(() => {
+    if (copyFromId === undefined) return
+
+    const fetchCopyData = async () => {
+      try {
+        const status = (await axios.get(API_URL + `/equipment_status/${copyFromId}`)).data
+        form.reset({
+          doc_number: status?.doc_number ?? "",
+          remarks: status?.remarks ?? "",
+          status_change_date: status?.status_change_date ?? "",
+          status_type_id: status?.status_type_id ?? 0,
+          responsible_user_id: status?.responsible_user_id ?? 0,
+          room_id: status?.room_id ?? 0,
+          equipment_id: equipmentId,
+        })
+      } catch (e) {
+        console.log("Ошибка загрузки данных для копирования статуса оборудования")
+        console.log(e)
+      }
+    }
+
+    fetchCopyData()
+  }, [copyFromId, equipmentId, form])
+
   function AddRowEquipmentStatusTable(data: z.infer<typeof EquipmentStatusFormSchema>) {
     setError("")
     setIsProcessing(true)
@@ -103,6 +132,7 @@ const EquipmentStatusAddForm = ({
           className: "bg-white"
         })
         onSuccess?.()
+        onClose?.()
       })
       .catch((e) => {
         setError("Во время добавления записи произошла непредвиденная ошибка!")

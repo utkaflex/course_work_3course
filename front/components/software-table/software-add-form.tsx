@@ -8,15 +8,15 @@ import {zodResolver} from "@hookform/resolvers/zod"
 import {FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form"
 import {useForm} from "react-hook-form"
 import {useEffect, useState} from "react";
-import {SoftwareSchema} from "@/schemas";
+import {ContractSchema, SoftwareSchema} from "@/schemas";
 
-import {DateToDbForm} from "../helper-functions";
+import {DateFromDbForm, DateToDbForm} from "../helper-functions";
 import ContractsTable from "../contracts-table/contracts-table";
 import {useToast} from "@/hooks/use-toast";
 import {comboboxFields, textFields} from './fields';
 import CRUDFormForTables from '../crud-form-for-tables';
 
-export const SoftwareAddForm = () => {
+export const SoftwareAddForm = ({copyFromId}: {copyFromId?: number}) => {
   const [error, setError] = useState<string | undefined>("");
   const [loading, setLoading] = useState<boolean>(true)
   const [selectedContractIds, setSelectedContractIds] = useState<number[]>([]);
@@ -56,6 +56,37 @@ export const SoftwareAddForm = () => {
       contracts: []
     }
   });
+
+  useEffect(() => {
+    if (copyFromId === undefined) return
+
+    const fetchCopyData = async () => {
+      try {
+        const response = await axios.get(API_URL + `/software/${copyFromId}`)
+
+        form.reset({
+          name: response.data?.name ?? "",
+          short_name: response.data?.short_name ?? "",
+          program_link: response.data?.program_link ?? "",
+          version: response.data?.version ?? "",
+          version_date: DateFromDbForm(response.data?.version_date ?? ""),
+          license_id: response.data?.license_id ?? 0,
+          contracts: response.data?.contracts ?? [],
+        })
+
+        setSelectedContractIds(
+          Array.isArray(response.data?.contracts)
+            ? response.data.contracts.map((contract: z.infer<typeof ContractSchema>) => contract.id)
+            : []
+        )
+      } catch (e) {
+        console.log("Ошибка загрузки данных для копирования ПО")
+        console.log(e)
+      }
+    }
+
+    fetchCopyData()
+  }, [copyFromId, form])
 
   function AddRowSoftwareTable(data: z.infer<typeof SoftwareSchema>) {
     setError("")

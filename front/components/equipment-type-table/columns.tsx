@@ -2,6 +2,7 @@
 
 import {EquipmentTypeSchema} from "@/schemas";
 import EquipmentTypeUpdateForm from "./equipment-type-update-form";
+import EquipmentTypeAddForm from "./equipment-type-add-form";
 
 import {ColumnDef} from "@tanstack/react-table";
 import {z} from "zod";
@@ -23,6 +24,12 @@ export const EquipmentTypeTableColumns: ColumnDef<z.infer<typeof EquipmentTypeSc
           description: <>Заполните все поля и нажмите кнопку <b>Изменить</b></>,
           form: <EquipmentTypeUpdateForm id={row.getValue("id")}/>,
           dropdownButtonText: "Изменить"
+        },
+        {
+          title: "Скопировать тип оборудования",
+          description: <>Проверьте данные и нажмите кнопку <b>Создать</b></>,
+          form: <EquipmentTypeAddForm copyFromId={row.getValue("id")}/>,
+          dropdownButtonText: "Скопировать"
         },
         {
           title: "Удалить тип оборудования",

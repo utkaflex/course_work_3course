@@ -13,7 +13,7 @@ import {useToast} from "@/hooks/use-toast";
 import {comboboxFields, DataArray, textFields} from './fields';
 import CRUDFormForTables from '../crud-form-for-tables';
 
-const ResponsibleUserAddForm = () => {
+const ResponsibleUserAddForm = ({copyFromId}: {copyFromId?: number}) => {
   const [error, setError] = useState<string | undefined>("");
   const [loading, setLoading] = useState<boolean>(true)
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
@@ -61,6 +61,28 @@ const ResponsibleUserAddForm = () => {
       office_id: 0
     }
   });
+
+  useEffect(() => {
+    if (copyFromId === undefined) return
+
+    const fetchCopyData = async () => {
+      try {
+        const currentResponsibleUser = (await axios.get(API_URL + `/responsible_users/${copyFromId}`)).data
+        form.reset({
+          first_name: currentResponsibleUser?.first_name ?? "",
+          last_name: currentResponsibleUser?.last_name ?? "",
+          paternity: currentResponsibleUser?.paternity ?? "",
+          job_id: currentResponsibleUser?.job_id ?? 0,
+          office_id: currentResponsibleUser?.office_id ?? 0,
+        })
+      } catch (e) {
+        console.log("Ошибка загрузки данных для копирования ответственного лица")
+        console.log(e)
+      }
+    }
+
+    fetchCopyData()
+  }, [copyFromId, form])
 
   function AddRowResponsibleUserTable(data: z.infer<typeof SingleResponsibleUserFormSchema>) {
     setError("")

@@ -4,6 +4,7 @@ import {UserSchemaForTable} from "@/schemas";
 import {ColumnDef} from "@tanstack/react-table";
 import {z} from "zod";
 import UserUpdateForm from "./user-update-form";
+import UserAddForm from "./user-add-form";
 import ActionsButton from "../actions-button";
 import DeleteRowForm from "../delete-row-form";
 import {API_URL} from "@/constants";
@@ -39,6 +40,12 @@ export const UserTableColumns: ColumnDef<z.infer<typeof UserSchemaForTable>>[] =
           description: <>Заполните все поля и нажмите кнопку <b>Изменить</b></>,
           form: <UserUpdateForm id={row.getValue("id")}/>,
           dropdownButtonText: "Изменить данные пользователя"
+        },
+        {
+          title: "Скопировать пользователя",
+          description: <>Проверьте данные, задайте новый пароль и нажмите кнопку <b>Создать</b></>,
+          form: <UserAddForm copyFromId={row.getValue("id")}/>,
+          dropdownButtonText: "Скопировать"
         },
         {
           title: "Изменить пароль пользователя",

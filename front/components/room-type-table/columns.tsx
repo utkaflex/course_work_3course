@@ -2,6 +2,7 @@
 
 import {RoomTypeSchema} from "@/schemas"
 import RoomTypeUpdateForm from "./room-type-update-form"
+import RoomTypeAddForm from "./room-type-add-form"
 import {ColumnDef} from "@tanstack/react-table"
 import {z} from "zod"
 import {API_URL} from "@/constants"
@@ -22,6 +23,12 @@ export const RoomTypeTableColumns: ColumnDef<z.infer<typeof RoomTypeSchema>>[] =
           description: <>Заполните все поля и нажмите кнопку <b>Изменить</b></>,
           form: <RoomTypeUpdateForm id={row.getValue("id")}/>,
           dropdownButtonText: "Изменить",
+        },
+        {
+          title: "Скопировать тип помещения",
+          description: <>Проверьте данные и нажмите кнопку <b>Создать</b></>,
+          form: <RoomTypeAddForm copyFromId={row.getValue("id")}/>,
+          dropdownButtonText: "Скопировать",
         },
         {
           title: "Удалить тип помещения",

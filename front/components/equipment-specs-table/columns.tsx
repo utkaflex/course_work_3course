@@ -4,6 +4,7 @@ import {EquipmentSpecsSchema} from "@/schemas";
 import {ColumnDef} from "@tanstack/react-table";
 import {z} from "zod";
 import EquipmentSpecsUpdateForm from "./equipment-specs-update-form";
+import EquipmentSpecsAddForm from "./equipment-specs-add-form";
 import {API_URL} from "@/constants";
 import DeleteRowForm from "../delete-row-form";
 import ActionsButton from "../actions-button";
@@ -38,6 +39,12 @@ export const EquipmentSpecsTableColumns: ColumnDef<z.infer<typeof EquipmentSpecs
           description: <>Заполните все поля и нажмите кнопку <b>Изменить</b></>,
           form: <EquipmentSpecsUpdateForm id={row.getValue("id")}/>,
           dropdownButtonText: "Изменить"
+        },
+        {
+          title: "Скопировать характеристики ПО",
+          description: <>Проверьте данные и нажмите кнопку <b>Создать</b></>,
+          form: <EquipmentSpecsAddForm copyFromId={row.getValue("id")} equipmentId={row.getValue("equipment_id")}/>,
+          dropdownButtonText: "Скопировать"
         },
         {
           title: "Удалить характеристики ПО",

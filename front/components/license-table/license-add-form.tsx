@@ -1,6 +1,6 @@
 "use client"
 
-import React, {useState} from 'react'
+import React, {useEffect, useState} from 'react'
 import * as z from "zod"
 import axios from "axios";
 import {API_URL} from "@/constants";
@@ -11,7 +11,7 @@ import {LicenseFormSchema} from '@/schemas';
 import {textFields} from './fields';
 import CRUDFormForTables from '../crud-form-for-tables';
 
-const LicenseAddForm = () => {
+const LicenseAddForm = ({copyFromId}: {copyFromId?: number}) => {
   const [error, setError] = useState<string | undefined>("");
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
 
@@ -23,6 +23,24 @@ const LicenseAddForm = () => {
       license_type: ""
     }
   });
+
+  useEffect(() => {
+    if (copyFromId === undefined) return
+
+    const fetchCopyData = async () => {
+      try {
+        const response = await axios.get(API_URL + `/license/${copyFromId}`)
+        form.reset({
+          license_type: response.data?.license_type ?? ""
+        })
+      } catch (e) {
+        console.log("Ошибка загрузки данных для копирования лицензии")
+        console.log(e)
+      }
+    }
+
+    fetchCopyData()
+  }, [copyFromId, form])
 
   function AddRowLicenseTable(data: z.infer<typeof LicenseFormSchema>) {
     setError("")

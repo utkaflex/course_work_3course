@@ -2,6 +2,7 @@
 
 import {ResponsibleUserSchema} from "@/schemas";
 import ResponsibleUserUpdateForm from "./responsible-user-update-form";
+import ResponsibleUserAddForm from "./responsible-user-add-form";
 
 import {ColumnDef} from "@tanstack/react-table";
 import {z} from "zod";
@@ -31,6 +32,12 @@ export const ResponsibleUserTableColumns: ColumnDef<z.infer<typeof ResponsibleUs
           description: <>Заполните все поля и нажмите кнопку <b>Изменить</b></>,
           form: <ResponsibleUserUpdateForm id={row.getValue("id")}/>,
           dropdownButtonText: "Изменить запись"
+        },
+        {
+          title: "Скопировать ответственное лицо",
+          description: <>Проверьте данные и нажмите кнопку <b>Создать</b></>,
+          form: <ResponsibleUserAddForm copyFromId={row.getValue("id")}/>,
+          dropdownButtonText: "Скопировать"
         },
         {
           title: "Удалить ответственное лицо",

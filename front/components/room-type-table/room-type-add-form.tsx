@@ -1,7 +1,7 @@
 "use client"
 
 import {RoomTypeFormSchema} from "@/schemas"
-import React, {useState} from "react"
+import React, {useEffect, useState} from "react"
 import * as z from "zod"
 import axios from "axios"
 import {API_URL} from "@/constants"
@@ -11,7 +11,7 @@ import {useForm} from "react-hook-form"
 import {textFields} from "./fields"
 import CRUDFormForTables from "../crud-form-for-tables"
 
-const RoomTypeAddForm = () => {
+const RoomTypeAddForm = ({copyFromId}: {copyFromId?: number}) => {
   const [error, setError] = useState<string | undefined>("")
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
 
@@ -23,6 +23,24 @@ const RoomTypeAddForm = () => {
       room_type: "",
     },
   })
+
+  useEffect(() => {
+    if (copyFromId === undefined) return
+
+    const fetchCopyData = async () => {
+      try {
+        const response = await axios.get(API_URL + `/room_type/${copyFromId}`)
+        form.reset({
+          room_type: response.data?.room_type ?? "",
+        })
+      } catch (e) {
+        console.log("Ошибка загрузки данных для копирования типа помещения")
+        console.log(e)
+      }
+    }
+
+    fetchCopyData()
+  }, [copyFromId, form])
 
   function AddRowRoomTypeTable(data: z.infer<typeof RoomTypeFormSchema>) {
     setError("")

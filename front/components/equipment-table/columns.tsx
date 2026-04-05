@@ -4,6 +4,7 @@ import {EquipmentSchema} from "@/schemas";
 import {ColumnDef} from "@tanstack/react-table";
 import {z} from "zod";
 import EquipmentUpdateForm from "./equipment-update-form";
+import EquipmentAddForm from "./equipment-add-form";
 import {Button} from "../ui/button";
 import Link from "next/link";
 import {API_URL} from "@/constants";
@@ -43,6 +44,14 @@ export const EquipmentTableColumns: ColumnDef<z.infer<typeof EquipmentSchema>>[]
             await reload?.()
           }}/>,
           dropdownButtonText: "Изменить"
+        },
+        {
+          title: "Скопировать оборудование",
+          description: <>Проверьте данные и нажмите кнопку <b>Создать</b></>,
+          form: <EquipmentAddForm copyFromId={row.getValue("id")} onSuccess={async () => {
+            await reload?.()
+          }}/>,
+          dropdownButtonText: "Скопировать"
         },
         {
           title: "Удалить оборудование",

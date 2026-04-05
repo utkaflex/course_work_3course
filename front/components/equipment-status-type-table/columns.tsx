@@ -2,6 +2,7 @@
 
 import {EquipmentStatusTypeSchema} from "@/schemas";
 import EquipmentStatusTypeUpdateForm from "./equipment-status-type-update-form";
+import EquipmentStatusTypeAddForm from "./equipment-status-type-add-form";
 
 import {ColumnDef} from "@tanstack/react-table";
 import {z} from "zod";
@@ -31,6 +32,12 @@ export const EquipmentStatusTypeTableColumns: ColumnDef<z.infer<typeof Equipment
           description: <>Заполните все поля и нажмите кнопку <b>Изменить</b></>,
           form: <EquipmentStatusTypeUpdateForm id={row.getValue("id")}/>,
           dropdownButtonText: "Изменить"
+        },
+        {
+          title: "Скопировать наименование статуса",
+          description: <>Проверьте данные и нажмите кнопку <b>Создать</b></>,
+          form: <EquipmentStatusTypeAddForm copyFromId={row.getValue("id")}/>,
+          dropdownButtonText: "Скопировать"
         },
         {
           title: "Удалить наименование статуса",

@@ -1,6 +1,6 @@
 "use client"
 
-import React, {useState} from 'react'
+import React, {useEffect, useState} from 'react'
 import * as z from "zod"
 import axios from "axios";
 import {API_URL} from "@/constants";
@@ -14,8 +14,10 @@ import {textFields} from './fields';
 import CRUDFormForTables from '../crud-form-for-tables';
 
 const EquipmentSpecsAddForm = ({
+                                 copyFromId,
                                  equipmentId
                                }: {
+  copyFromId?: number
   equipmentId: number
 }) => {
   const [error, setError] = useState<string | undefined>("");
@@ -34,6 +36,29 @@ const EquipmentSpecsAddForm = ({
       equipment_id: equipmentId
     }
   });
+
+  useEffect(() => {
+    if (copyFromId === undefined) return
+
+    const fetchCopyData = async () => {
+      try {
+        const response = (await axios.get(API_URL + `/equipment_specs/${copyFromId}`)).data
+        form.reset({
+          screen_resolution: response?.screen_resolution ?? "",
+          processor_type: response?.processor_type ?? "",
+          ram_size: response?.ram_size ?? "",
+          gpu_info: response?.gpu_info ?? "",
+          storage: response?.storage ?? "",
+          equipment_id: equipmentId,
+        })
+      } catch (e) {
+        console.log("Ошибка загрузки данных для копирования характеристик оборудования")
+        console.log(e)
+      }
+    }
+
+    fetchCopyData()
+  }, [copyFromId, equipmentId, form])
 
   function AddRowEquipmentSpecsTable(data: z.infer<typeof EquipmentSpecsFormSchema>) {
     setError("")

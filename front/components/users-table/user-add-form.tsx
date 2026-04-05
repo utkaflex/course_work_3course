@@ -13,7 +13,7 @@ import {useToast} from "@/hooks/use-toast";
 import {comboboxFields, DataArray, textFields} from './fields';
 import CRUDFormForTables from '../crud-form-for-tables';
 
-const UserAddForm = () => {
+const UserAddForm = ({copyFromId}: {copyFromId?: number}) => {
   const [error, setError] = useState<string | undefined>("");
   const [loading, setLoading] = useState<boolean>(true)
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
@@ -74,6 +74,31 @@ const UserAddForm = () => {
       system_role_id: 0
     }
   });
+
+  useEffect(() => {
+    if (copyFromId === undefined) return
+
+    const fetchCopyData = async () => {
+      try {
+        const user = (await axios.get(API_URL + `/user/${copyFromId}`)).data
+        form.reset({
+          username: user?.username ?? "",
+          hashed_password: "",
+          first_name: user?.first_name ?? "",
+          last_name: user?.last_name ?? "",
+          paternity: user?.paternity ?? "",
+          job_id: user?.job_id ?? 0,
+          office_id: user?.office_id ?? 0,
+          system_role_id: user?.system_role_id ?? 0,
+        })
+      } catch (e) {
+        console.log("Ошибка загрузки данных для копирования пользователя")
+        console.log(e)
+      }
+    }
+
+    fetchCopyData()
+  }, [copyFromId, form])
 
   function AddRowUserTable(data: z.infer<typeof CreateUserFormSchema>) {
     setError("")

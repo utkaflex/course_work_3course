@@ -7,6 +7,7 @@ import {API_URL} from "@/constants"
 import DeleteRowForm from "../delete-row-form"
 import ActionsButton from "../actions-button"
 import RoomUpdateForm from "./room-update-form"
+import RoomAddForm from "./room-add-form"
 import {sortableHeader} from "@/components/sortable-header";
 
 export const RoomTableColumns: ColumnDef<z.infer<typeof RoomSchema>>[] = [
@@ -37,6 +38,14 @@ export const RoomTableColumns: ColumnDef<z.infer<typeof RoomSchema>>[] = [
             await reload?.()
           }}/>,
           dropdownButtonText: "Изменить",
+        },
+        {
+          title: "Скопировать помещение",
+          description: <>Проверьте данные и нажмите кнопку <b>Создать</b></>,
+          form: <RoomAddForm copyFromId={row.getValue("id")} onSuccess={async () => {
+            await reload?.()
+          }}/>,
+          dropdownButtonText: "Скопировать",
         },
         {
           title: "Удалить помещение",
