@@ -32,15 +32,25 @@ export function useCategoryToTypesFilter<TData>(args: {
   selectedCategories: string[]
 }) {
   const {table, categories, selectedCategories} = args
+  const previousSelectedCategoriesRef = React.useRef<string[]>(selectedCategories)
 
   React.useEffect(() => {
     const typeCol = table.getColumn("type_name")
     if (!typeCol) return
 
-    if (!selectedCategories.length) {
-      typeCol.setFilterValue([])
+    const hadCategoriesBefore = previousSelectedCategoriesRef.current.length > 0
+    const hasCategoriesNow = selectedCategories.length > 0
+
+    if (!hasCategoriesNow) {
+      if (hadCategoriesBefore) {
+        typeCol.setFilterValue([])
+      }
+
+      previousSelectedCategoriesRef.current = selectedCategories
       return
     }
+
+    if (!categories.length) return
 
     const unionTypeNames = Array.from(
       new Set(
@@ -51,6 +61,7 @@ export function useCategoryToTypesFilter<TData>(args: {
     )
 
     typeCol.setFilterValue(unionTypeNames)
+    previousSelectedCategoriesRef.current = selectedCategories
   }, [table, categories, selectedCategories])
 }
 

@@ -2,7 +2,7 @@
 
 import {ResponsibleUserJobFormSchema} from '@/schemas';
 
-import React, {useState} from 'react'
+import React, {useEffect, useState} from 'react'
 import * as z from "zod"
 import axios from "axios";
 import {API_URL} from "@/constants";
@@ -12,7 +12,7 @@ import {useForm} from 'react-hook-form';
 import {textFields} from './fields';
 import CRUDFormForTables from '../crud-form-for-tables';
 
-const ResponsibleUserJobAddForm = () => {
+const ResponsibleUserJobAddForm = ({copyFromId}: {copyFromId?: number}) => {
   const [error, setError] = useState<string | undefined>("");
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
 
@@ -24,6 +24,24 @@ const ResponsibleUserJobAddForm = () => {
       job_name: ""
     }
   });
+
+  useEffect(() => {
+    if (copyFromId === undefined) return
+
+    const fetchCopyData = async () => {
+      try {
+        const response = await axios.get(API_URL + `/responsible_users/job/${copyFromId}`)
+        form.reset({
+          job_name: response.data?.job_name ?? ""
+        })
+      } catch (e) {
+        console.log("Ошибка загрузки данных для копирования должности ответственного")
+        console.log(e)
+      }
+    }
+
+    fetchCopyData()
+  }, [copyFromId, form])
 
   function AddRowResponsibleUserJobTable(data: z.infer<typeof ResponsibleUserJobFormSchema>) {
     setError("")

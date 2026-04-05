@@ -12,9 +12,17 @@ import {EquipmentFormSchema} from "@/schemas";
 import {useToast} from "@/hooks/use-toast";
 import {comboboxFields, textFields} from './fields';
 import CRUDFormForTables from '../crud-form-for-tables';
-import {DateToDbForm} from '../helper-functions';
+import {DateFromDbForm, DateToDbForm} from '../helper-functions';
 
-const EquipmentAddForm = ({onSuccess}:{onSuccess?: () => void | Promise<void>}) => {
+const EquipmentAddForm = ({
+                            copyFromId,
+                            onClose,
+                            onSuccess
+                          }: {
+  copyFromId?: number
+  onClose?: () => void
+  onSuccess?: () => void | Promise<void>
+}) => {
   const [error, setError] = useState<string | undefined>("");
   const [loading, setLoading] = useState<boolean>(true)
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
@@ -53,6 +61,30 @@ const EquipmentAddForm = ({onSuccess}:{onSuccess?: () => void | Promise<void>}) 
     }
   });
 
+  useEffect(() => {
+    if (copyFromId === undefined) return
+
+    const fetchCopyData = async () => {
+      try {
+        const copiedEquipment = (await axios.get(API_URL + `/equipment/${copyFromId}`)).data
+        form.reset({
+          model: copiedEquipment?.model ?? "",
+          serial_number: copiedEquipment?.serial_number ?? "",
+          inventory_number: copiedEquipment?.inventory_number ?? "",
+          accepted_date: DateFromDbForm(copiedEquipment?.accepted_date ?? ""),
+          network_name: copiedEquipment?.network_name ?? "",
+          remarks: copiedEquipment?.remarks ?? "",
+          type_id: copiedEquipment?.type_id ?? 0,
+        })
+      } catch (e) {
+        console.log("Ошибка загрузки данных для копирования оборудования")
+        console.log(e)
+      }
+    }
+
+    fetchCopyData()
+  }, [copyFromId, form])
+
   function AddRowEquipmentTable(data: z.infer<typeof EquipmentFormSchema>) {
     setError("")
     setIsProcessing(true)
@@ -82,6 +114,7 @@ const EquipmentAddForm = ({onSuccess}:{onSuccess?: () => void | Promise<void>}) 
           className: "bg-white"
         })
         await onSuccess?.()
+        onClose?.()
       })
       .catch((e) => {
         if (e.response.status === 400 && e.response.data.detail === "Equipment with this serial number already exists") {

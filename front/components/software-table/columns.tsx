@@ -8,6 +8,7 @@ import {z} from "zod";
 import {Button} from "@/components/ui/button"
 import {DropdownMenu, DropdownMenuContent, DropdownMenuTrigger,} from "@/components/ui/dropdown-menu"
 import {DateFromDbForm} from "../helper-functions";
+import {SoftwareAddForm} from "./software-add-form";
 import {SoftwareUpdateForm} from "./software-update-form";
 import ContractsTable from "../contracts-table/contracts-table";
 import {API_URL} from "@/constants";
@@ -115,6 +116,12 @@ export const SoftwareTableColumns: ColumnDef<z.infer<typeof SoftwareTableSchema>
           description: <>Заполните все поля и нажмите кнопку <b>Изменить</b></>,
           form: <SoftwareUpdateForm id={row.getValue("id")}/>,
           dropdownButtonText: "Изменить запись",
+        },
+        {
+          title: "Скопировать ПО",
+          description: <>Проверьте данные и нажмите кнопку <b>Создать</b></>,
+          form: <SoftwareAddForm copyFromId={row.getValue("id")}/>,
+          dropdownButtonText: "Скопировать",
         },
         {
           title: "Удалить ПО",

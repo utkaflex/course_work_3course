@@ -2,6 +2,7 @@
 
 import {LicenseSchema} from "@/schemas";
 import LicenseUpdateForm from "./license-update-form";
+import LicenseAddForm from "./license-add-form";
 
 import {ColumnDef} from "@tanstack/react-table";
 import {z} from "zod";
@@ -23,6 +24,12 @@ export const LicensesTableColumns: ColumnDef<z.infer<typeof LicenseSchema>>[] = 
           description: <>Заполните все поля и нажмите кнопку <b>Изменить</b></>,
           form: <LicenseUpdateForm id={row.getValue("id")}/>,
           dropdownButtonText: "Изменить"
+        },
+        {
+          title: "Скопировать лицензию",
+          description: <>Проверьте данные и нажмите кнопку <b>Создать</b></>,
+          form: <LicenseAddForm copyFromId={row.getValue("id")}/>,
+          dropdownButtonText: "Скопировать"
         },
         {
           title: "Удалить лицензию",

@@ -13,7 +13,7 @@ import CRUDFormForTables from "../crud-form-for-tables"
 
 type EquipmentType = { id: number; type_name: string }
 
-const CategoryAddForm = () => {
+const CategoryAddForm = ({copyFromId}: {copyFromId?: number}) => {
   const [error, setError] = useState<string | undefined>("")
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
   const [types, setTypes] = useState<EquipmentType[]>([])
@@ -42,6 +42,25 @@ const CategoryAddForm = () => {
     }
     fetchTypes()
   }, [])
+
+  useEffect(() => {
+    if (copyFromId === undefined) return
+
+    const fetchCopyData = async () => {
+      try {
+        const categoryRes = await axios.get(API_URL + `/category/${copyFromId}`)
+        const category = categoryRes.data
+        form.reset({
+          category_name: category?.category_name ?? "",
+          type_ids: Array.isArray(category?.types) ? category.types.map((type: any) => type.id) : [],
+        })
+      } catch (e) {
+        console.log("Ошибка загрузки данных для копирования категории", e)
+      }
+    }
+
+    fetchCopyData()
+  }, [copyFromId, form])
 
   const typeOptions = useMemo(
     () => types.map(t => ({value: t.id, label: t.type_name})),

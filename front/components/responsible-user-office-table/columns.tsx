@@ -2,6 +2,7 @@
 
 import {ResponsibleUserOfficeSchema} from "@/schemas";
 import ResponsibleUserOfficeUpdateForm from "./responsible-user-office-update-form";
+import ResponsibleUserOfficeAddForm from "./responsible-user-office-add-form";
 
 import {ColumnDef} from "@tanstack/react-table";
 import {z} from "zod";
@@ -23,6 +24,12 @@ export const ResponsibleUserOfficeTableColumns: ColumnDef<z.infer<typeof Respons
           description: <>Заполните все поля и нажмите кнопку <b>Изменить</b></>,
           form: <ResponsibleUserOfficeUpdateForm id={row.getValue("id")}/>,
           dropdownButtonText: "Изменить"
+        },
+        {
+          title: "Скопировать подразделение",
+          description: <>Проверьте данные и нажмите кнопку <b>Создать</b></>,
+          form: <ResponsibleUserOfficeAddForm copyFromId={row.getValue("id")}/>,
+          dropdownButtonText: "Скопировать"
         },
         {
           title: "Удалить подразделение",

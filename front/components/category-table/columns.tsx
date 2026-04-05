@@ -2,6 +2,7 @@
 
 import {CategorySchema} from "@/schemas"
 import CategoryUpdateForm from "./category-update-form"
+import CategoryAddForm from "./category-add-form"
 import {ColumnDef} from "@tanstack/react-table"
 import {z} from "zod"
 import {API_URL} from "@/constants"
@@ -41,6 +42,12 @@ export const CategoryTableColumns: ColumnDef<z.infer<typeof CategorySchema>>[] =
           description: <>Заполните все поля и нажмите кнопку <b>Изменить</b></>,
           form: <CategoryUpdateForm id={row.getValue("id")}/>,
           dropdownButtonText: "Изменить",
+        },
+        {
+          title: "Скопировать категорию",
+          description: <>Проверьте данные и нажмите кнопку <b>Создать</b></>,
+          form: <CategoryAddForm copyFromId={row.getValue("id")}/>,
+          dropdownButtonText: "Скопировать",
         },
         {
           title: "Удалить категорию",

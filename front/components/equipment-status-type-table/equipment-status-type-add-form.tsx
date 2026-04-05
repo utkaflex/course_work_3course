@@ -2,7 +2,7 @@
 
 import {EquipmentStatusTypeFormSchema} from '@/schemas';
 
-import React, {useState} from 'react'
+import React, {useEffect, useState} from 'react'
 import * as z from "zod"
 import axios from "axios";
 import {API_URL} from "@/constants";
@@ -12,7 +12,7 @@ import {useForm} from 'react-hook-form';
 import {textFields} from './fields';
 import CRUDFormForTables from '../crud-form-for-tables';
 
-const EquipmentStatusTypeAddForm = () => {
+const EquipmentStatusTypeAddForm = ({copyFromId}: {copyFromId?: number}) => {
   const [error, setError] = useState<string | undefined>("");
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
 
@@ -25,6 +25,25 @@ const EquipmentStatusTypeAddForm = () => {
       status_type_color: "#000000"
     }
   });
+
+  useEffect(() => {
+    if (copyFromId === undefined) return
+
+    const fetchCopyData = async () => {
+      try {
+        const response = await axios.get(API_URL + `/equipment_status_type/${copyFromId}`)
+        form.reset({
+          status_type_name: response.data?.status_type_name ?? "",
+          status_type_color: response.data?.status_type_color ?? "#000000",
+        })
+      } catch (e) {
+        console.log("Ошибка загрузки данных для копирования статуса оборудования")
+        console.log(e)
+      }
+    }
+
+    fetchCopyData()
+  }, [copyFromId, form])
 
   function AddRowEquipmentStatusTypeTable(data: z.infer<typeof EquipmentStatusTypeFormSchema>) {
     setError("")

@@ -1,6 +1,6 @@
 "use client"
 
-import React, {useState} from 'react'
+import React, {useEffect, useState} from 'react'
 import * as z from "zod"
 import axios from "axios";
 import {API_URL} from "@/constants";
@@ -8,11 +8,11 @@ import {zodResolver} from "@hookform/resolvers/zod"
 import {useToast} from '@/hooks/use-toast';
 import {useForm} from 'react-hook-form';
 import {ContractFormSchema} from '@/schemas';
-import {DateToDbForm} from '../helper-functions';
+import {DateFromDbForm, DateToDbForm} from '../helper-functions';
 import {textFields} from './fields';
 import CRUDFormForTables from '../crud-form-for-tables';
 
-const ContractAddForm = () => {
+const ContractAddForm = ({copyFromId}: {copyFromId?: number}) => {
   const [error, setError] = useState<string | undefined>("");
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
 
@@ -25,6 +25,25 @@ const ContractAddForm = () => {
       contract_date: ""
     }
   });
+
+  useEffect(() => {
+    if (copyFromId === undefined) return
+
+    const fetchCopyData = async () => {
+      try {
+        const response = await axios.get(API_URL + `/contract/${copyFromId}`)
+        form.reset({
+          contract_number: response.data?.contract_number ?? "",
+          contract_date: DateFromDbForm(response.data?.contract_date ?? ""),
+        })
+      } catch (e) {
+        console.log("Ошибка загрузки данных для копирования договора")
+        console.log(e)
+      }
+    }
+
+    fetchCopyData()
+  }, [copyFromId, form])
 
   function AddRowContractTable(data: z.infer<typeof ContractFormSchema>) {
     setError("")

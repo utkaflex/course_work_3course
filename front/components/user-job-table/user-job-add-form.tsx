@@ -2,7 +2,7 @@
 
 import {UserJobFormSchema} from '@/schemas';
 
-import React, {useState} from 'react'
+import React, {useEffect, useState} from 'react'
 import * as z from "zod"
 import axios from "axios";
 import {API_URL} from "@/constants";
@@ -12,7 +12,7 @@ import {useForm} from 'react-hook-form';
 import {textFields} from './fields';
 import CRUDFormForTables from '../crud-form-for-tables';
 
-const UserJobAddForm = () => {
+const UserJobAddForm = ({copyFromId}: {copyFromId?: number}) => {
   const [error, setError] = useState<string | undefined>("");
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
 
@@ -24,6 +24,24 @@ const UserJobAddForm = () => {
       job_name: ""
     }
   });
+
+  useEffect(() => {
+    if (copyFromId === undefined) return
+
+    const fetchCopyData = async () => {
+      try {
+        const response = await axios.get(API_URL + `/job/${copyFromId}`)
+        form.reset({
+          job_name: response.data?.job_name ?? ""
+        })
+      } catch (e) {
+        console.log("Ошибка загрузки данных для копирования должности")
+        console.log(e)
+      }
+    }
+
+    fetchCopyData()
+  }, [copyFromId, form])
 
   function AddRowUserJobTable(data: z.infer<typeof UserJobFormSchema>) {
     setError("")

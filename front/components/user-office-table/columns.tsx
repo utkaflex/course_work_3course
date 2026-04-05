@@ -2,6 +2,7 @@
 
 import {UserOfficeSchema} from "@/schemas";
 import UserOfficeUpdateForm from "./user-office-update-form";
+import UserOfficeAddForm from "./user-office-add-form";
 
 import {ColumnDef} from "@tanstack/react-table";
 import {z} from "zod";
@@ -23,6 +24,12 @@ export const UserOfficeTableColumns: ColumnDef<z.infer<typeof UserOfficeSchema>>
           description: <>Заполните все поля и нажмите кнопку <b>Изменить</b></>,
           form: <UserOfficeUpdateForm id={row.getValue("id")}/>,
           dropdownButtonText: "Изменить"
+        },
+        {
+          title: "Скопировать подразделение",
+          description: <>Проверьте данные и нажмите кнопку <b>Создать</b></>,
+          form: <UserOfficeAddForm copyFromId={row.getValue("id")}/>,
+          dropdownButtonText: "Скопировать"
         },
         {
           title: "Удалить подразделение",

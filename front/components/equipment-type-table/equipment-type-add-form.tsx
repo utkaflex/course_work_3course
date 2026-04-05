@@ -2,7 +2,7 @@
 
 import {EquipmentTypeFormSchema} from '@/schemas';
 
-import React, {useState} from 'react'
+import React, {useEffect, useState} from 'react'
 import * as z from "zod"
 import axios from "axios";
 import {API_URL} from "@/constants";
@@ -12,7 +12,7 @@ import {useForm} from 'react-hook-form';
 import {textFields} from './fields';
 import CRUDFormForTables from '../crud-form-for-tables';
 
-const EquipmentTypeAddForm = () => {
+const EquipmentTypeAddForm = ({copyFromId}: {copyFromId?: number}) => {
   const [error, setError] = useState<string | undefined>("");
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
 
@@ -24,6 +24,24 @@ const EquipmentTypeAddForm = () => {
       type_name: ""
     }
   });
+
+  useEffect(() => {
+    if (copyFromId === undefined) return
+
+    const fetchCopyData = async () => {
+      try {
+        const response = await axios.get(API_URL + `/equipment_types/${copyFromId}`)
+        form.reset({
+          type_name: response.data?.type_name ?? ""
+        })
+      } catch (e) {
+        console.log("Ошибка загрузки данных для копирования типа оборудования")
+        console.log(e)
+      }
+    }
+
+    fetchCopyData()
+  }, [copyFromId, form])
 
   function AddRowEquipmentTypeTable(data: z.infer<typeof EquipmentTypeFormSchema>) {
     setError("")

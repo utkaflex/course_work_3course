@@ -2,6 +2,7 @@
 
 import {ResponsibleUserJobSchema} from "@/schemas";
 import ResponsibleUserJobUpdateForm from "./responsible-user-job-update-form";
+import ResponsibleUserJobAddForm from "./responsible-user-job-add-form";
 
 import {ColumnDef} from "@tanstack/react-table";
 import {z} from "zod";
@@ -23,6 +24,12 @@ export const ResponsibleUserJobTableColumns: ColumnDef<z.infer<typeof Responsibl
           description: <>Заполните все поля и нажмите кнопку <b>Изменить</b></>,
           form: <ResponsibleUserJobUpdateForm id={row.getValue("id")}/>,
           dropdownButtonText: "Изменить"
+        },
+        {
+          title: "Скопировать должность",
+          description: <>Проверьте данные и нажмите кнопку <b>Создать</b></>,
+          form: <ResponsibleUserJobAddForm copyFromId={row.getValue("id")}/>,
+          dropdownButtonText: "Скопировать"
         },
         {
           title: "Удалить должность",

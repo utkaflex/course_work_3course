@@ -2,6 +2,7 @@
 
 import {BuildingSchema} from "@/schemas";
 import BuildingUpdateForm from "./building-update-form";
+import BuildingAddForm from "./building-add-form";
 
 import {ColumnDef} from "@tanstack/react-table";
 import {z} from "zod";
@@ -23,6 +24,12 @@ export const BuildingTableColumns: ColumnDef<z.infer<typeof BuildingSchema>>[] =
           description: <>Заполните все поля и нажмите кнопку <b>Изменить</b></>,
           form: <BuildingUpdateForm id={row.getValue("id")}/>,
           dropdownButtonText: "Изменить"
+        },
+        {
+          title: "Скопировать адрес",
+          description: <>Проверьте данные и нажмите кнопку <b>Создать</b></>,
+          form: <BuildingAddForm copyFromId={row.getValue("id")}/>,
+          dropdownButtonText: "Скопировать"
         },
         {
           title: "Удалить адрес",

@@ -2,7 +2,7 @@
 
 import {BuildingFormSchema} from '@/schemas';
 
-import React, {useState} from 'react'
+import React, {useEffect, useState} from 'react'
 import * as z from "zod"
 import axios from "axios";
 import {API_URL} from "@/constants";
@@ -12,7 +12,7 @@ import {useForm} from 'react-hook-form';
 import {textFields} from './fields';
 import CRUDFormForTables from '../crud-form-for-tables';
 
-const BuildingAddForm = () => {
+const BuildingAddForm = ({copyFromId}: {copyFromId?: number}) => {
   const [error, setError] = useState<string | undefined>("");
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
 
@@ -24,6 +24,24 @@ const BuildingAddForm = () => {
       building_address: ""
     }
   });
+
+  useEffect(() => {
+    if (copyFromId === undefined) return
+
+    const fetchCopyData = async () => {
+      try {
+        const response = await axios.get(API_URL + `/building/${copyFromId}`)
+        form.reset({
+          building_address: response.data?.building_address ?? ""
+        })
+      } catch (e) {
+        console.log("Ошибка загрузки данных для копирования адреса корпуса")
+        console.log(e)
+      }
+    }
+
+    fetchCopyData()
+  }, [copyFromId, form])
 
   function AddRowBuildingTable(data: z.infer<typeof BuildingFormSchema>) {
     setError("")

@@ -2,6 +2,7 @@
 
 import {UserJobSchema} from "@/schemas";
 import UserJobUpdateForm from "./user-job-update-form";
+import UserJobAddForm from "./user-job-add-form";
 
 import {ColumnDef} from "@tanstack/react-table";
 import {z} from "zod";
@@ -23,6 +24,12 @@ export const UserJobTableColumns: ColumnDef<z.infer<typeof UserJobSchema>>[] = [
           description: <>Заполните все поля и нажмите кнопку <b>Изменить</b></>,
           form: <UserJobUpdateForm id={row.getValue("id")}/>,
           dropdownButtonText: "Изменить запись"
+        },
+        {
+          title: "Скопировать должность",
+          description: <>Проверьте данные и нажмите кнопку <b>Создать</b></>,
+          form: <UserJobAddForm copyFromId={row.getValue("id")}/>,
+          dropdownButtonText: "Скопировать"
         },
         {
           title: "Удалить должность",

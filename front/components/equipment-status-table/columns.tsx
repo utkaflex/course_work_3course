@@ -4,6 +4,7 @@ import {EquipmentStatusTableSchema} from "@/schemas";
 import {ColumnDef} from "@tanstack/react-table";
 import {z} from "zod";
 import EquipmentStatusUpdateForm from "./equipment-status-update-form";
+import EquipmentStatusAddForm from "./equipment-status-add-form";
 import {DatetimeFromDbForm} from "../helper-functions";
 import {API_URL} from "@/constants";
 import DeleteRowForm from "../delete-row-form";
@@ -84,6 +85,15 @@ export const EquipmentStatusTableColumns: ColumnDef<z.infer<typeof EquipmentStat
             await reload?.()
           }}/>,
           dropdownButtonText: "Изменить"
+        },
+        {
+          title: "Скопировать статус ПО",
+          description: <>Проверьте данные и нажмите кнопку <b>Создать</b></>,
+          form: <EquipmentStatusAddForm copyFromId={row.getValue("id")} equipmentId={row.getValue("equipment_id")}
+                                   onSuccess={async () => {
+                                     await reload?.()
+                                   }}/>,
+          dropdownButtonText: "Скопировать"
         },
         {
           title: "Удалить статус ПО",
