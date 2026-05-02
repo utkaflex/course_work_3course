@@ -7,6 +7,21 @@ from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 
 DATE_FMT = "DD-MM-YYYY"
 
+ALLOWED_FILTER_NAMES = {
+    "Тип оборудования",
+    "Категория",
+    "Модель",
+    "Серийный номер",
+    "Инвентарный номер",
+    "Сетевое имя",
+    "Ответственное лицо",
+    "Статус",
+    "Адрес",
+    "Помещение",
+    "Подразделение",
+    "Дата принятия от",
+    "Дата принятия до",
+}
 
 def _as_date(v):
     if v is None:
@@ -198,52 +213,30 @@ def build_complex_report_all_categories(
     wb.save(buf)
     return buf.getvalue()
 
-def build_simple_table_report(equipment_items) -> bytes:
+def build_simple_table_report(equipment_items, filters: list[dict] | None = None) -> bytes:
     """
-    Таблица (тип 3):
-    Тип, Модель, Серийный, Инвентарный, Дата принятия,
-    Аудитория (последняя), Адрес (последний), Статус (текущий)
+    Report type 3:
+    Вверху (опционально) таблица "Примененные фильтры"
+    Потом таблица оборудования как на скрине.
     """
     wb = Workbook()
     ws = wb.active
     ws.title = "Таблица"
 
     header_font = Font(bold=True)
+    title_font = Font(bold=True, size=14)
+
     center = Alignment(horizontal="center", vertical="center", wrap_text=True)
     left = Alignment(horizontal="left", vertical="center", wrap_text=True)
 
     thin = Side(style="thin")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
     header_fill = PatternFill("solid", fgColor="D9E1F2")
+    section_fill = PatternFill("solid", fgColor="F2F2F2")
 
-    headers = [
-        "Тип оборудования",
-        "Модель",
-        "Серийный номер",
-        "Инвентарный номер",
-        "Дата принятия к учету",
-        "Аудитория (последняя)",
-        "Адрес (последний)",
-        "Текущий статус",
-    ]
-    ws.append(headers)
-
-    for col in range(1, len(headers) + 1):
-        c = ws.cell(1, col)
-        c.font = header_font
-        c.alignment = center
-        c.fill = header_fill
-        c.border = border
-    ws.row_dimensions[1].height = 22
-
-    ws.column_dimensions["A"].width = 28
-    ws.column_dimensions["B"].width = 24
-    ws.column_dimensions["C"].width = 18
-    ws.column_dimensions["D"].width = 20
-    ws.column_dimensions["E"].width = 18
-    ws.column_dimensions["F"].width = 18
-    ws.column_dimensions["G"].width = 34
-    ws.column_dimensions["H"].width = 22
+    # Excel date format (как на скрине: 02.02.2023)
+    DATE_FMT_LOCAL = "DD.MM.YYYY"
 
     def _latest_status(e):
         statuses = list(getattr(e, "statuses", None) or [])
@@ -251,29 +244,119 @@ def build_simple_table_report(equipment_items) -> bytes:
             return None
         return sorted(statuses, key=lambda s: s.status_change_date, reverse=True)[0]
 
-    row_idx = 2
+    # --- 1) подготовка фильтров (только whitelist) ---
+    clean_filters: list[tuple[str, str]] = []
+    for f in (filters or []):
+        name = (f.get("name") or "").strip()
+        value = (f.get("value") or "").strip()
+        if name in ALLOWED_FILTER_NAMES:
+            clean_filters.append((name, value))
+
+    row = 1
+
+    # --- 2) таблица фильтров (если есть) ---
+    if clean_filters:
+        ws.cell(row=row, column=1, value="Примененные фильтры").font = title_font
+        row += 1
+
+        ws.append(["Фильтр", "Значение"])
+        for col in range(1, 3):
+            c = ws.cell(row=row, column=col)
+            c.font = header_font
+            c.alignment = center
+            c.fill = header_fill
+            c.border = border
+        ws.row_dimensions[row].height = 20
+        row += 1
+
+        for name, value in clean_filters:
+            ws.append([name, value])
+            for col in range(1, 3):
+                c = ws.cell(row=row, column=col)
+                c.alignment = left
+                c.border = border
+            ws.row_dimensions[row].height = 18
+            row += 1
+
+        row += 1  # пустая строка
+
+    # --- 3) заголовок секции "Оборудование" ---
+    ws.cell(row=row, column=1, value="Оборудование").font = title_font
+    row += 1
+
+    # --- 4) основная таблица ---
+    headers = [
+        "Тип оборудования",
+        "Модель оборудования",
+        "Серийный номер",
+        "Инвентарный номер",
+        "Сетевое имя",
+        "ФИО ответственного",
+        "Подразделение",
+        "Статус оборудования",
+        "Адрес корпуса",
+        "Помещение",
+        "Дата принятия к учету",
+    ]
+
+    ws.append(headers)
+    header_row = row
+    for col in range(1, len(headers) + 1):
+        c = ws.cell(row=header_row, column=col)
+        c.font = header_font
+        c.alignment = center
+        c.fill = header_fill
+        c.border = border
+    ws.row_dimensions[header_row].height = 22
+    row += 1
+
+    # ширины (примерно как на скрине)
+    widths = {
+        "A": 22, "B": 20, "C": 18, "D": 18, "E": 16,
+        "F": 26, "G": 18, "H": 18, "I": 30, "J": 18, "K": 18,
+    }
+    for col, w in widths.items():
+        ws.column_dimensions[col].width = w
+
     for e in equipment_items:
         t = getattr(e, "type", None)
         type_name = getattr(t, "type_name", "") or getattr(t, "name", "") or ""
-        accepted = _as_date(getattr(e, "accepted_date", None))
 
         latest = _latest_status(e)
 
-        room_name = None
-        building_addr = None
+        # responsible + office
+        fio = None
+        office = None
         status_name = None
+        building_addr = None
+        room_display = None
 
         if latest is not None:
+            # status
+            st = getattr(latest, "status_type", None)
+            status_name = getattr(st, "status_type_name", None) if st else None
+
+            # responsible
+            ru = getattr(latest, "responsible_user", None)
+            if ru is not None:
+                fio = f"{ru.last_name} {ru.first_name} {ru.paternity}".strip()
+                off = getattr(ru, "office", None)
+                office = getattr(off, "office_name", None) if off else None
+
+            # room + building + room_type => "112 (Аудитория)"
             room = getattr(latest, "room", None)
             if room is not None:
-                room_name = getattr(room, "name", None)
-                b = getattr(room, "building", None)
-                if b is not None:
-                    building_addr = getattr(b, "building_address", None)
+                rname = getattr(room, "name", None)
+                rtype = getattr(getattr(room, "room_type", None), "room_type", None)
+                if rname and rtype:
+                    room_display = f"{rname} ({rtype})"
+                else:
+                    room_display = rname
 
-            st = getattr(latest, "status_type", None)
-            if st is not None:
-                status_name = getattr(st, "status_type_name", None)
+                b = getattr(room, "building", None)
+                building_addr = getattr(b, "building_address", None) if b else None
+
+        accepted = _as_date(getattr(e, "accepted_date", None))
 
         ws.append(
             [
@@ -281,27 +364,32 @@ def build_simple_table_report(equipment_items) -> bytes:
                 getattr(e, "model", None),
                 getattr(e, "serial_number", None),
                 getattr(e, "inventory_number", None),
-                accepted,
-                room_name,
-                building_addr,
+                getattr(e, "network_name", None),
+                fio,
+                office,
                 status_name,
+                building_addr,
+                room_display,
+                accepted,
             ]
         )
 
-        # формат даты в колонке E
-        date_cell = ws.cell(row=row_idx, column=5)
-        date_cell.number_format = DATE_FMT
+        data_row = row
+        # дата в колонке K
+        date_cell = ws.cell(row=data_row, column=11)
+        date_cell.number_format = DATE_FMT_LOCAL
 
         for col in range(1, len(headers) + 1):
-            c = ws.cell(row_idx, col)
+            c = ws.cell(row=data_row, column=col)
             c.border = border
-            c.alignment = left if col in (1, 2, 6, 7, 8) else center
+            c.alignment = left if col in (1, 2, 6, 7, 9, 10) else center
 
-        ws.row_dimensions[row_idx].height = 18
-        row_idx += 1
+        ws.row_dimensions[data_row].height = 18
+        row += 1
 
-    ws.freeze_panes = "A2"
-    ws.auto_filter.ref = f"A1:H{max(1, ws.max_row)}"
+    # Freeze/Filter от заголовка таблицы оборудования
+    ws.freeze_panes = ws.cell(row=header_row + 1, column=1).coordinate
+    ws.auto_filter.ref = f"A{header_row}:K{max(header_row, ws.max_row)}"
 
     buf = io.BytesIO()
     wb.save(buf)
