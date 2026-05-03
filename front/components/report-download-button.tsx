@@ -25,18 +25,25 @@ type ReportType = {
   report_type_name: string
 }
 
+type ReportFilter = {
+  name: string
+  value: string
+}
+
 function ReportDownloadButton<TData>({
-                                       apiEndpoint,
-                                       buttonText = "Сформировать отчёт",
-                                       className,
-                                       tableData = [],
-                                       getId,
-                                     }: {
+                                        apiEndpoint,
+                                        buttonText = "Сформировать отчёт",
+                                        className,
+                                        tableData = [],
+                                        getId,
+                                        filters = [],
+                                      }: {
   apiEndpoint: string
   buttonText?: string
   className?: string
   tableData?: TData[]
   getId?: (row: TData) => number
+  filters?: ReportFilter[]
 }) {
   const [isOpen, setIsOpen] = useState(false)
   const [reportTypes, setReportTypes] = useState<ReportType[]>([])
@@ -77,9 +84,17 @@ function ReportDownloadButton<TData>({
       setIsProcessing(true)
       axios.defaults.withCredentials = true
 
-      const payload = {
+      const payload: {
+        ids: number[]
+        report_type_id: number
+        filters?: ReportFilter[]
+      } = {
         ids,
         report_type_id: reportTypeId,
+      }
+
+      if (reportTypeId === 3) {
+        payload.filters = filters
       }
 
       const response = await axios.post(apiEndpoint, payload, {
