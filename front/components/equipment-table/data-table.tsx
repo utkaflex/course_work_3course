@@ -39,6 +39,11 @@ interface EquipmentDataTableProps<TData, TValue> {
 
 const EQUIPMENT_TABLE_STATE_QUERY_PARAM = "equipment_state"
 
+type ReportFilterPayload = {
+  name: string
+  value: string
+}
+
 const TEXT_FILTER_IDS = new Set([
   "model",
   "serial_number",
@@ -95,6 +100,20 @@ const isEmptyFilterValue = (value: unknown) => {
   }
 
   return value === undefined
+}
+
+const toNonEmptyStringArray = (value: unknown) => {
+  if (typeof value === "string") {
+    const trimmed = value.trim()
+    return trimmed ? [trimmed] : []
+  }
+
+  if (!Array.isArray(value)) return []
+
+  return value
+    .filter((item): item is string => typeof item === "string")
+    .map((item) => item.trim())
+    .filter(Boolean)
 }
 
 const parsePersistedTableState = (raw: string | null) => {
@@ -384,6 +403,41 @@ export function EquipmentDataTable<TData, TValue>({
     selectedCategories,
   ])
 
+  const reportFilters = React.useMemo<ReportFilterPayload[]>(() => {
+    const activeFilterValues = new Map(columnFilters.map((filter) => [filter.id, filter.value]))
+    const result: ReportFilterPayload[] = []
+
+    const appendFilter = (name: string, value: unknown) => {
+      const values = toNonEmptyStringArray(value)
+      if (!values.length) return
+
+      result.push({
+        name,
+        value: values.join(", "),
+      })
+    }
+
+    appendFilter("Тип оборудования", activeFilterValues.get("type_name"))
+    appendFilter("Категория", selectedCategories)
+    appendFilter("Модель", activeFilterValues.get("model"))
+    appendFilter("Серийный номер", activeFilterValues.get("serial_number"))
+    appendFilter("Инвентарный номер", activeFilterValues.get("inventory_number"))
+    appendFilter("Сетевое имя", activeFilterValues.get("network_name"))
+    appendFilter("Ответственное лицо", activeFilterValues.get("responsible_user_full_name"))
+    appendFilter("Статус", activeFilterValues.get("last_status_type"))
+    appendFilter("Адрес", activeFilterValues.get("building_adress"))
+    appendFilter("Помещение", activeFilterValues.get("room"))
+    appendFilter("Подразделение", activeFilterValues.get("responsible_user_office"))
+
+    const acceptedDate = activeFilterValues.get("accepted_date")
+    if (isObjectRecord(acceptedDate)) {
+      appendFilter("Дата принятия от", acceptedDate.from)
+      appendFilter("Дата принятия до", acceptedDate.to)
+    }
+
+    return result
+  }, [columnFilters, selectedCategories])
+
   return (
     <>
       <Action
@@ -410,6 +464,7 @@ export function EquipmentDataTable<TData, TValue>({
               className="bg-blue-2 hover:bg-blue-700"
               apiEndpoint={API_URL + "/equipment/to_excel_file"}
               tableData={table.getFilteredRowModel().rows.map(r => r.original)}
+              filters={reportFilters}
             />
             {actionsAllowed && <Button
               className="bg-blue-2 hover:bg-blue-700"

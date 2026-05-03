@@ -42,7 +42,11 @@ class SEquipmentWithResponsible(SEquipment):
     class Config:
         from_attributes = True
 
+class SReportFilter(BaseModel):
+    name: str
+    value: str
 
 class SEquipmentExcelReport(BaseModel):
-    ids: List[int] = Field(min_length=1)
     report_type_id: int
+    ids: List[int] = Field(min_length=1)
+    filters: List[SReportFilter] = Field(default_factory=list)

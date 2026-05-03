@@ -102,6 +102,11 @@ export const EquipmentTableColumns: ColumnDef<z.infer<typeof EquipmentSchema>>[]
   {
     accessorKey: "responsible_user_full_name",
     header: sortableHeader("ФИО ответственного"),
+    filterFn: (row, columnId, filterValue: string[]) => {
+      if (!filterValue?.length) return true
+      const cellValue = row.getValue<string>(columnId)
+      return filterValue.includes(cellValue)
+    },
   },
   {
     accessorKey: "last_status_type",

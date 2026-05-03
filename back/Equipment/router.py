@@ -138,7 +138,9 @@ async def generate_equipment_excel(
         # 3: простая таблица + последняя аудитория
         elif payload.report_type_id == 3:
             equipment_full = await crud.get_equipment_for_simple_table(payload.ids)
-            content = build_simple_table_report(equipment_full)
+            # payload.filters -> list[pydantic], превратим в list[dict]
+            filters = [f.dict() for f in (payload.filters or [])]
+            content = build_simple_table_report(equipment_full, filters=filters)
 
         else:
             raise HTTPException(status_code=400, detail="Unknown report_type_id")
