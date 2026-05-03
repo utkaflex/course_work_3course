@@ -213,11 +213,13 @@ def build_complex_report_all_categories(
     wb.save(buf)
     return buf.getvalue()
 
-def build_simple_table_report(equipment_items, filters: list[dict] | None = None) -> bytes:
+def build_simple_table_report(
+    equipment_items, filters: list[dict] | None = None
+) -> bytes:
     """
     Report type 3:
-    Вверху (опционально) таблица "Примененные фильтры"
-    Потом таблица оборудования как на скрине.
+    Вверху (опционально) таблица "Примененные фильтры" в горизонтальном виде.
+    Потом таблица оборудования.
     """
     wb = Workbook()
     ws = wb.active
@@ -233,9 +235,7 @@ def build_simple_table_report(equipment_items, filters: list[dict] | None = None
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
     header_fill = PatternFill("solid", fgColor="D9E1F2")
-    section_fill = PatternFill("solid", fgColor="F2F2F2")
 
-    # Excel date format (как на скрине: 02.02.2023)
     DATE_FMT_LOCAL = "DD.MM.YYYY"
 
     def _latest_status(e):
@@ -244,41 +244,73 @@ def build_simple_table_report(equipment_items, filters: list[dict] | None = None
             return None
         return sorted(statuses, key=lambda s: s.status_change_date, reverse=True)[0]
 
-    # --- 1) подготовка фильтров (только whitelist) ---
-    clean_filters: list[tuple[str, str]] = []
-    for f in (filters or []):
+    # --- 1) подготовка фильтров (только whitelist, с группировкой по name) ---
+    grouped_filters: dict[str, list[str]] = {}
+
+    for f in filters or []:
         name = (f.get("name") or "").strip()
         value = (f.get("value") or "").strip()
-        if name in ALLOWED_FILTER_NAMES:
-            clean_filters.append((name, value))
+
+        if name not in ALLOWED_FILTER_NAMES:
+            continue
+
+        if name not in grouped_filters:
+            grouped_filters[name] = []
+
+        if value and value not in grouped_filters[name]:
+            grouped_filters[name].append(value)
+
+    clean_filters: list[tuple[str, str]] = [
+        (name, ", ".join(values)) for name, values in grouped_filters.items()
+    ]
 
     row = 1
 
     # --- 2) таблица фильтров (если есть) ---
     if clean_filters:
+        filters_last_col = len(clean_filters) + 1  # +1 из-за колонки "Фильтр/Значение"
+
         ws.cell(row=row, column=1, value="Примененные фильтры").font = title_font
+        if filters_last_col > 1:
+            ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=filters_last_col)
         row += 1
 
-        ws.append(["Фильтр", "Значение"])
-        for col in range(1, 3):
+        # строка с названиями фильтров
+        ws.cell(row=row, column=1, value="Фильтр")
+        for idx, (name, _) in enumerate(clean_filters, start=2):
+            ws.cell(row=row, column=idx, value=name)
+
+        for col in range(1, filters_last_col + 1):
             c = ws.cell(row=row, column=col)
             c.font = header_font
             c.alignment = center
             c.fill = header_fill
             c.border = border
-        ws.row_dimensions[row].height = 20
+        ws.row_dimensions[row].height = 22
         row += 1
 
-        for name, value in clean_filters:
-            ws.append([name, value])
-            for col in range(1, 3):
-                c = ws.cell(row=row, column=col)
-                c.alignment = left
-                c.border = border
-            ws.row_dimensions[row].height = 18
-            row += 1
+        # строка со значениями
+        ws.cell(row=row, column=1, value="Значение")
+        for idx, (_, value) in enumerate(clean_filters, start=2):
+            ws.cell(row=row, column=idx, value=value)
 
-        row += 1  # пустая строка
+        for col in range(1, filters_last_col + 1):
+            c = ws.cell(row=row, column=col)
+            c.border = border
+            c.alignment = left if col > 1 else center
+            if col == 1:
+                c.font = header_font
+                c.fill = header_fill
+        ws.row_dimensions[row].height = 36
+
+        # ширины колонок фильтров
+        ws.column_dimensions["A"].width = 18
+        for idx, (name, value) in enumerate(clean_filters, start=2):
+            col_letter = ws.cell(row=2, column=idx).column_letter
+            width = max(len(name), len(value), 16)
+            ws.column_dimensions[col_letter].width = min(width + 2, 28)
+
+        row += 2  # пустая строка после блока фильтров
 
     # --- 3) заголовок секции "Оборудование" ---
     ws.cell(row=row, column=1, value="Оборудование").font = title_font
@@ -299,8 +331,10 @@ def build_simple_table_report(equipment_items, filters: list[dict] | None = None
         "Дата принятия к учету",
     ]
 
-    ws.append(headers)
     header_row = row
+    for idx, header in enumerate(headers, start=1):
+        ws.cell(row=header_row, column=idx, value=header)
+
     for col in range(1, len(headers) + 1):
         c = ws.cell(row=header_row, column=col)
         c.font = header_font
@@ -310,10 +344,18 @@ def build_simple_table_report(equipment_items, filters: list[dict] | None = None
     ws.row_dimensions[header_row].height = 22
     row += 1
 
-    # ширины (примерно как на скрине)
     widths = {
-        "A": 22, "B": 20, "C": 18, "D": 18, "E": 16,
-        "F": 26, "G": 18, "H": 18, "I": 30, "J": 18, "K": 18,
+        "A": 22,
+        "B": 20,
+        "C": 18,
+        "D": 18,
+        "E": 16,
+        "F": 26,
+        "G": 18,
+        "H": 18,
+        "I": 30,
+        "J": 18,
+        "K": 18,
     }
     for col, w in widths.items():
         ws.column_dimensions[col].width = w
@@ -324,7 +366,6 @@ def build_simple_table_report(equipment_items, filters: list[dict] | None = None
 
         latest = _latest_status(e)
 
-        # responsible + office
         fio = None
         office = None
         status_name = None
@@ -332,22 +373,32 @@ def build_simple_table_report(equipment_items, filters: list[dict] | None = None
         room_display = None
 
         if latest is not None:
-            # status
             st = getattr(latest, "status_type", None)
             status_name = getattr(st, "status_type_name", None) if st else None
 
-            # responsible
             ru = getattr(latest, "responsible_user", None)
             if ru is not None:
-                fio = f"{ru.last_name} {ru.first_name} {ru.paternity}".strip()
+                fio_parts = [
+                    getattr(ru, "last_name", "") or "",
+                    getattr(ru, "first_name", "") or "",
+                    getattr(ru, "paternity", "") or "",
+                ]
+                fio = " ".join(part for part in fio_parts if part).strip()
+
                 off = getattr(ru, "office", None)
                 office = getattr(off, "office_name", None) if off else None
 
-            # room + building + room_type => "112 (Аудитория)"
             room = getattr(latest, "room", None)
             if room is not None:
                 rname = getattr(room, "name", None)
-                rtype = getattr(getattr(room, "room_type", None), "room_type", None)
+                room_type_obj = getattr(room, "room_type", None)
+
+                rtype = (
+                    getattr(room_type_obj, "room_type_name", None)
+                    or getattr(room_type_obj, "room_type", None)
+                    or getattr(room_type_obj, "name", None)
+                )
+
                 if rname and rtype:
                     room_display = f"{rname} ({rtype})"
                 else:
@@ -358,24 +409,24 @@ def build_simple_table_report(equipment_items, filters: list[dict] | None = None
 
         accepted = _as_date(getattr(e, "accepted_date", None))
 
-        ws.append(
-            [
-                type_name,
-                getattr(e, "model", None),
-                getattr(e, "serial_number", None),
-                getattr(e, "inventory_number", None),
-                getattr(e, "network_name", None),
-                fio,
-                office,
-                status_name,
-                building_addr,
-                room_display,
-                accepted,
-            ]
-        )
+        values = [
+            type_name,
+            getattr(e, "model", None),
+            getattr(e, "serial_number", None),
+            getattr(e, "inventory_number", None),
+            getattr(e, "network_name", None),
+            fio,
+            office,
+            status_name,
+            building_addr,
+            room_display,
+            accepted,
+        ]
 
         data_row = row
-        # дата в колонке K
+        for idx, value in enumerate(values, start=1):
+            ws.cell(row=data_row, column=idx, value=value)
+
         date_cell = ws.cell(row=data_row, column=11)
         date_cell.number_format = DATE_FMT_LOCAL
 
@@ -387,7 +438,6 @@ def build_simple_table_report(equipment_items, filters: list[dict] | None = None
         ws.row_dimensions[data_row].height = 18
         row += 1
 
-    # Freeze/Filter от заголовка таблицы оборудования
     ws.freeze_panes = ws.cell(row=header_row + 1, column=1).coordinate
     ws.auto_filter.ref = f"A{header_row}:K{max(header_row, ws.max_row)}"
 
